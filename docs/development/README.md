@@ -29,7 +29,7 @@ pnpm verify
 
 ## Pull-request verification
 
-The `CI` GitHub Actions workflow runs `pnpm install --frozen-lockfile` and `pnpm verify` for every pull request. It also reviews dependency changes and scans Git history for secrets. The workflow has read-only repository access and does not receive cloud credentials or deployment secrets. Never replace its `pull_request` trigger with `pull_request_target` while it installs dependencies or executes repository code.
+The `CI` GitHub Actions workflow runs `pnpm install --frozen-lockfile` and `pnpm verify` for every pull request. It also audits the locked dependency graph and scans Git history for secrets. The workflow has read-only access to repository contents and pull-request metadata and does not receive cloud credentials or deployment secrets. Never replace its `pull_request` trigger with `pull_request_target` while it installs dependencies or executes repository code.
 
 If Corepack was previously configured with a broken global pnpm shim, remove that shim using the installation method that created it, then rerun `corepack enable` and `corepack install`. Do not install an unpinned pnpm version to work around the mismatch.
 

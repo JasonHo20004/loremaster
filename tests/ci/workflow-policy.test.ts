@@ -14,8 +14,10 @@ describe('untrusted CI policy', () => {
     expect(workflow).not.toContain('pull_request_target')
   })
 
-  it('grants only read access to repository contents', () => {
-    expect(workflow).toMatch(/^permissions:\r?\n {2}contents: read$/m)
+  it('grants only the read access required by the jobs', () => {
+    expect(workflow).toMatch(
+      /^permissions:\r?\n {2}contents: read\r?\n {2}pull-requests: read$/m,
+    )
     expect(workflow).not.toMatch(/^\s+[\w-]+: write$/m)
     expect(workflow).not.toContain('id-token:')
     expect(workflow).not.toContain('secrets.')
@@ -35,5 +37,9 @@ describe('untrusted CI policy', () => {
   it('runs the frozen install and complete verification surface', () => {
     expect(workflow).toContain('run: pnpm install --frozen-lockfile')
     expect(workflow).toContain('run: pnpm verify')
+  })
+
+  it('audits locked dependencies at moderate severity', () => {
+    expect(workflow).toContain('run: pnpm audit --audit-level moderate')
   })
 })
