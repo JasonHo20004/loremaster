@@ -1,0 +1,32 @@
+{
+  "name": "loremaster-daily-case",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A daily deduction game using original fiction.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": "22.17.0",
+    "pnpm": "11.19.0"
+  },
+  "scripts": {
+    "build": "pnpm --recursive --if-present run build",
+    "clean": "pnpm --recursive --if-present run clean",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "typecheck": "pnpm --recursive --if-present run typecheck",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.20.2",
+    "eslint": "10.10.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.0"
+  }
+}

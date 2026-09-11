@@ -1,0 +1,10 @@
+# S1 and historical documents predate the S2 formatting baseline.
+docs/**
+ops/**
+pnpm-lock.yaml
+
+!docs/architecture/
+docs/architecture/**
+!docs/architecture/s2-acceptance.md
+!docs/development/
+!docs/development/**
