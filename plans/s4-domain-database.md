@@ -209,7 +209,7 @@ If a slice still exceeds one focused review, split it with another suffix before
 
 - [x] S4.1a Domain primitives and scoring — 2026-09-11; focused domain tests and full gate passed.
 - [x] S4.1b State transitions and reachable-state tests — 2026-09-11; reachable-state validation and acceptance sequences passed review.
-- [ ] S4.2a Allowlisted public projections
+- [x] S4.2a Allowlisted public projections — 2026-09-12; ownership/revision guards, recursive disclosure tests, boundary scan, review, and full gate passed.
 - [ ] S4.2b Profile and regional knowledge math
 - [ ] S4.2c Leaderboard ordering and competition rank
 - [ ] S4.3a Pinned PostgreSQL toolchain and test harness
