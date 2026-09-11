@@ -2,7 +2,7 @@
 
 A daily deduction game using original fiction, built as a portfolio for reliable delivery and operations. The MVP is one `WHO` case, a briefing and four evidence levels, guest play, results, participation streaks, regional knowledge, and a daily leaderboard.
 
-**Status:** S3 untrusted CI is implemented locally and awaiting hosted acceptance; runtime feature implementation starts in S4 after its required checks pass. There is no gameplay application or cloud deployment yet.
+**Status:** S3 untrusted CI is complete; runtime feature implementation starts in S4. There is no gameplay application or cloud deployment yet.
 
 Start with the [architecture](docs/architecture/README.md), [authoritative game rules](docs/architecture/game-rules.md), and [accepted decisions](docs/adr/README.md). The [S1](docs/architecture/s1-acceptance.md), [S2](docs/architecture/s2-acceptance.md), and [S3](docs/architecture/s3-acceptance.md) acceptance records trace stage exit checks. Local setup is documented in the [development guide](docs/development/README.md). Security requirements live in the [threat model](docs/threat-model/README.md); content requirements in the [content policy](docs/content-policy.md); cloud remains denied under the [cost admission policy](ops/cost/README.md).
 
