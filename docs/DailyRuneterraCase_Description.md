@@ -1,5 +1,7 @@
 # Daily Runeterra Case
 
+> Historical requirements inspiration only. This is not an approved content pack or the current implementation specification. See [original-content policy](content-policy.md) and [authoritative game rules](architecture/game-rules.md). Exclude this document from runtime fixtures, browser bundles and public demo assets.
+
 Một daily detective lore game dựa trên vũ trụ Liên Minh Huyền Thoại. Mỗi ngày người chơi nhận cùng một case, sử dụng kiến thức về champion, region, faction, historical events và các mối liên hệ trong Runeterra để giải.
 
 Mục tiêu là một game **nhanh, đơn giản, chơi khoảng 5–10 phút/ngày**, nhưng đủ khó để fan lore cảm thấy được thử thách và đồng thời giúp newbie dần học lore.
