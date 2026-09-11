@@ -1,6 +1,6 @@
 # Local development
 
-The S2 command surface is intentionally small and deterministic. Application frameworks, databases, containers and cloud tooling belong to later delivery stages.
+The S2 command surface is intentionally small and deterministic. S3 runs the same surface in least-privilege CI. Application frameworks, databases, containers and cloud tooling belong to later delivery stages.
 
 ## Pinned prerequisites
 
@@ -26,6 +26,10 @@ pnpm verify
 ```
 
 `pnpm verify` runs formatting, linting, type checking, tests and builds in that order. The individual commands are `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
+
+## Pull-request verification
+
+The `CI` GitHub Actions workflow runs `pnpm install --frozen-lockfile` and `pnpm verify` for every pull request. It also reviews dependency changes and scans Git history for secrets. The workflow has read-only repository access and does not receive cloud credentials or deployment secrets. Never replace its `pull_request` trigger with `pull_request_target` while it installs dependencies or executes repository code.
 
 If Corepack was previously configured with a broken global pnpm shim, remove that shim using the installation method that created it, then rerun `corepack enable` and `corepack install`. Do not install an unpinned pnpm version to work around the mismatch.
 
