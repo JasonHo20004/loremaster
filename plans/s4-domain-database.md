@@ -210,12 +210,12 @@ If a slice still exceeds one focused review, split it with another suffix before
 - [x] S4.1a Domain primitives and scoring — 2026-09-11; focused domain tests and full gate passed.
 - [x] S4.1b State transitions and reachable-state tests — 2026-09-11; reachable-state validation and acceptance sequences passed review.
 - [x] S4.2a Allowlisted public projections — 2026-09-12; ownership/revision guards, recursive disclosure tests, boundary scan, review, and full gate passed.
-- [ ] S4.2b Profile and regional knowledge math
-- [ ] S4.2c Leaderboard ordering and competition rank
-- [ ] S4.3a Pinned PostgreSQL toolchain and test harness
-- [ ] S4.3b Immutable revision and content schema
-- [ ] S4.3c Guest/session/attempt/guess/receipt schema
-- [ ] S4.3d Exactly-once effect ledgers
+- [x] S4.2b Profile and regional knowledge math — 2026-09-13; focused aggregate tests, domain typecheck, review, and full gate passed.
+- [x] S4.2c Leaderboard ordering and competition rank — 2026-09-13; focused ranking tests, domain typecheck, review, and full gate passed.
+- [x] S4.3a Pinned PostgreSQL toolchain and test harness — 2026-09-13; pinned disposable PostgreSQL, least-privilege roles, clean migration command, and Quality CI gate passed.
+- [x] S4.3b Immutable revision and content schema — 2026-09-13; exact UTC exclusion, restrictive attempt FK, graph completeness, freeze triggers, and publication race passed.
+- [x] S4.3c Guest/session/attempt/guess/receipt schema — 2026-09-13; identity, reachability, eligibility, fingerprint, immutable receipt, and retention constraints passed.
+- [x] S4.3d Exactly-once effect ledgers — 2026-09-13; duplicate/concurrent effects, solved-only consistency, and exact numeric precision passed.
 - [ ] S4.4a Bounded content pack schema and diagnostics
 - [ ] S4.4b Aster Quay server-only fixture
 - [ ] S4.5a Transactional draft and publication repository
