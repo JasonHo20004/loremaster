@@ -216,11 +216,11 @@ If a slice still exceeds one focused review, split it with another suffix before
 - [x] S4.3b Immutable revision and content schema — 2026-09-13; exact UTC exclusion, restrictive attempt FK, graph completeness, freeze triggers, and publication race passed.
 - [x] S4.3c Guest/session/attempt/guess/receipt schema — 2026-09-13; identity, reachability, eligibility, fingerprint, immutable receipt, and retention constraints passed.
 - [x] S4.3d Exactly-once effect ledgers — 2026-09-13; duplicate/concurrent effects, solved-only consistency, and exact numeric precision passed.
-- [ ] S4.4a Bounded content pack schema and diagnostics
-- [ ] S4.4b Aster Quay server-only fixture
-- [ ] S4.5a Transactional draft and publication repository
-- [ ] S4.5b Dry-run and operator CLI
-- [ ] S4.6a Current-slot, start, and owned read transactions
-- [ ] S4.6b Locked commands, versions, and idempotency
-- [ ] S4.6c Expiry and exactly-once finalization
-- [ ] S4.6d Layered acceptance and S4 exit
+- [x] S4.4a Bounded content pack schema and diagnostics — 2026-09-13; bounded strict validation, redacted deterministic diagnostics, and invalid-pack coverage passed.
+- [x] S4.4b Aster Quay server-only fixture — 2026-09-13; original fixture validation, source boundaries, and public build-context allowlist passed.
+- [x] S4.5a Transactional draft and publication repository — 2026-09-13; importer-role atomic graph writes, redacted constraint mapping, rollback, immutability, re-import, and publication races passed.
+- [x] S4.5b Dry-run and operator CLI — 2026-09-13; bounded files, read-only authoritative dry-run, machine-readable exits, compiled operator flow, and credential guidance passed.
+- [x] S4.6a Current-slot, start, and owned read transactions — 2026-09-14; allowlisted reads, immutable-revision starts, ownership isolation, and concurrent start tests passed.
+- [x] S4.6b Locked commands, versions, and idempotency — 2026-09-14; guest-before-attempt locking, post-lock database time, canonical receipts, replay, version races, and command transitions passed.
+- [x] S4.6c Expiry and exactly-once finalization — 2026-09-14; lazy reconciliation, exact regional effects, profiles, score, and competition leaderboard persistence passed under retries and contention.
+- [x] S4.6d Layered acceptance and S4 exit — 2026-09-14; 47 clean PostgreSQL tests, 135 non-database tests, boundary scans, full local gates, and review passed with S5/S6/S8 deferrals recorded.
