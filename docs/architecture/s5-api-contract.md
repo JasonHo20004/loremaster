@@ -165,7 +165,7 @@ bundle/source-map scans, and deployed artifact proof remain assigned to S6/S8.
 ## S5.1 local verification
 
 On 2026-09-14, the focused contract suite passed 15 tests. The complete local
-non-database suite passed 150 tests, the clean PostgreSQL suite retained all 47
+non-database suite passed 151 tests, the clean PostgreSQL suite retained all 47
 passes, and formatting, ESLint, every workspace typecheck/build, and
 `git diff --check` passed. Independent TypeScript and security reviews returned
 GO after outcome/projection correlation, rate-limit statuses, operation-aware

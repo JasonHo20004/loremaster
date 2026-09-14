@@ -37,4 +37,17 @@ describe('workspace scaffold', () => {
       })
     },
   )
+
+  it('builds database dependency declarations before a clean typecheck', async () => {
+    const packageJson = JSON.parse(
+      await readFile(
+        resolve(repositoryRoot, 'packages/database/package.json'),
+        'utf8',
+      ),
+    ) as { scripts?: Record<string, string> }
+
+    expect(packageJson.scripts?.pretypecheck).toBe(
+      'corepack pnpm --filter @loremaster/domain build',
+    )
+  })
 })

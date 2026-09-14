@@ -516,7 +516,7 @@ records.
 
 - [ ] S5.0 Close the delivery preflight
 - [ ] S5.1 Freeze public contracts and the status matrix — implemented and
-      reviewed locally 2026-09-14; 15 focused, 150 non-database, and 47 database
+      reviewed locally 2026-09-14; 15 focused, 151 non-database, and 47 database
       tests pass; awaiting S5.0 base/toolchain closure and clean-checkout CI
 - [ ] S5.2 Configuration, identity, and session persistence
 - [ ] S5.3a Express kernel and bounded parsing
@@ -543,3 +543,8 @@ records.
   findings were resolved locally. Formal completion remains gated by S5.0 and
   clean-checkout CI. Affected: T01–T24 transport shapes, B02–B06, B08–B10, B13,
   and the S5 identity/disclosure/replay threat-model controls.
+- 2026-09-14 — Clean-checkout CI exposed database typecheck resolving
+  `@loremaster/domain` declarations before `dist` existed. Added a pinned
+  Corepack pretypecheck prerequisite and command-surface regression test; clean
+  reproduction, recursive typecheck/build, 151 non-database tests, and 47
+  database tests pass. Affected: S5.0 toolchain reproducibility and S5.1 gate.

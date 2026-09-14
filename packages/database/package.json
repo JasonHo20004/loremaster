@@ -27,6 +27,7 @@
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
     "content:import": "node dist/content/cli.js",
+    "pretypecheck": "corepack pnpm --filter @loremaster/domain build",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
