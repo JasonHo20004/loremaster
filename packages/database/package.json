@@ -9,14 +9,28 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./content": {
+      "types": "./dist/content/index.d.ts",
+      "default": "./dist/content/index.js"
+    },
+    "./content/fixtures/aster-quay": {
+      "types": "./dist/content/fixtures/aster-quay.d.ts",
+      "default": "./dist/content/fixtures/aster-quay.js"
+    },
+    "./gameplay": {
+      "types": "./dist/gameplay/index.d.ts",
+      "default": "./dist/gameplay/index.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
+    "content:import": "node dist/content/cli.js",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@loremaster/domain": "workspace:*",
     "pg": "8.16.3"
   },
   "devDependencies": {

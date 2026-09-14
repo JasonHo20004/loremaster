@@ -19,6 +19,9 @@ down migration is for disposable local databases only; production corrections
 must be new forward migrations, and published revisions are never edited or
 rolled back in place.
 
+Operator-only validation and publication are documented in the
+[content import guide](content-import.md).
+
 The S2 command surface is intentionally small and deterministic. S3 runs the same surface in least-privilege CI. Application frameworks, databases, containers and cloud tooling belong to later delivery stages.
 
 ## Pinned prerequisites
