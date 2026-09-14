@@ -14,6 +14,10 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
+    "test": "vitest run --root ../.. tests/contracts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "4.6.4"
   }
 }

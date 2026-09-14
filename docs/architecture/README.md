@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Accepted for S1 on 2026-09-11 and implemented through the [S4 domain and database acceptance gate](s4-acceptance.md) on 2026-09-14. The blueprint defines project scope; later stages are not authorization to provision resources before their gates.
+Accepted for S1 on 2026-09-11 and implemented through the [S4 domain and database acceptance gate](s4-acceptance.md) on 2026-09-14. The [S5 API contract](s5-api-contract.md) freezes the browser/API boundary before transport implementation. The blueprint defines project scope; later stages are not authorization to provision resources before their gates.
 
 ## Boundaries and flow
 

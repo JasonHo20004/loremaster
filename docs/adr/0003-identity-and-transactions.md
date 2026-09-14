@@ -1,10 +1,12 @@
 # ADR 0003: Guest identity and synchronous authoritative writes
 
-Status: Accepted | Date: 2026-09-11
+Status: Accepted, clarified 2026-09-14 | Date: 2026-09-11
 
 Context: A client-chosen player ID allows impersonation. Retries and concurrent tabs can double-apply penalties or rewards. Hidden fields in browser bundles cannot be protected by UI logic.
 
-Decision: Use an opaque server-issued random guest token with at least 256 bits of entropy; persist only its hash. Production cookie is host-only, Secure, HttpOnly, SameSite=Lax, Path=/ (use a __Host- name). Expire sessions after 30 days absolute; loss/expiry creates a new guest without recovery. Local HTTP development uses a separately named explicitly local cookie policy, forbidden in AWS mode. Mutations require exact configured same-origin Origin plus session-bound CSRF token, JSON content type, and guest ownership. No wildcard credentialed CORS or client identity override.
+Decision: Use an opaque server-issued random guest token with at least 256 bits of entropy; persist only its hash. Production cookie is host-only, Secure, HttpOnly, SameSite=Lax, Path=/ (use a __Host- name). Expire sessions after 30 days absolute; loss/expiry creates a new guest without recovery. Local HTTP development uses a separately named explicitly local cookie policy, forbidden in AWS mode. Authenticated gameplay mutations require exact configured same-origin Origin plus session-bound CSRF token, JSON content type, guest ownership, and a guest-scoped idempotency key. No wildcard credentialed CORS or client identity override.
+
+The sole bootstrap exception is `POST /api/v1/session`: no identity or session-bound CSRF value exists before it succeeds. It accepts exactly the JSON object `{}`, requires the exact configured Origin and JSON content type, and is limited to ten creations per source IP per minute. It accepts no client-selected guest/session identity and no idempotency key. This clarification narrows the original phrase “mutations require” to authenticated gameplay mutations; it does not weaken their controls or introduce another identity path.
 
 Each command uses a guest-scoped idempotency key and canonical command/payload fingerprint. Unique database constraints arbitrate duplicate keys. Start is unique per guest/slot; gameplay also supplies expected version. Transactionally lock the attempt, check time/version, and commit guesses, terminal effects, profile, participation and solved leaderboard row with the command receipt. Lock guest profile before attempt for all paths; serialize multi-attempt expiry reconciliation by slot order. Unique finalization/participation effects guard retries. Store receipts for the guest session lifetime and reject expired sessions before replay; cleanup must not permit replay on the same surviving identity after receipt deletion.
 
@@ -14,4 +16,4 @@ Alternatives: Client-selected IDs, queued scores, hidden UI fields and optimisti
 
 Consequences: Multi-tab stale actions conflict and refresh instead of applying at an unexpected level. Guest cookies can be lost, and guests can create new identities; the leaderboard is recreational, not Sybil-resistant. Database transaction/pool pressure must be measured. Generic wrong feedback avoids relationship leakage. Expiry reconciliation and ordinary writes use the same lock order and exactly-once finalization constraints.
 
-Verification: S5 two-session isolation, CSRF, replay, different-payload key conflicts, racing mutations and expiry tests; S6/S8 bundle and response disclosure checks. Numeric limits and retention details are fixed before API implementation in the threat model.
+Verification: S5 exact-body/origin/IP-limited session bootstrap, two-session isolation, CSRF, credentialed CORS, replay, different-payload key conflicts, racing mutations and expiry tests; S6/S8 bundle and response disclosure checks. Numeric limits and retention details are fixed before API implementation in the threat model.
