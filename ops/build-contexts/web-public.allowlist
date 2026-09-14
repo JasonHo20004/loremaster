@@ -1,0 +1,10 @@
+# Inputs permitted in the future S6/S8 public web build context.
+# Content is copied by explicit entry, never by repository-root inclusion.
+apps/web
+packages/config
+packages/contracts
+packages/domain
+package.json
+pnpm-lock.yaml
+pnpm-workspace.yaml
+tsconfig.base.json

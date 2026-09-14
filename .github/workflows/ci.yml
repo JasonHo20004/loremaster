@@ -44,6 +44,9 @@ jobs:
       - name: Verify repository
         run: pnpm verify
 
+      - name: Verify clean PostgreSQL migrations and constraints
+        run: pnpm test:database
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-24.04

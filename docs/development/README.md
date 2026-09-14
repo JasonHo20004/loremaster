@@ -1,5 +1,27 @@
 # Local development
 
+## PostgreSQL integration tests
+
+Run `pnpm test:database` with Docker running. The command uses the immutable
+`postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94`
+image, creates a disposable database with ephemeral local credentials, applies
+every migration, runs the database constraint suite, and removes the container.
+It fails clearly if Docker or PostgreSQL startup is unavailable; it never skips.
+
+The container superuser is the migration identity. Migrations create separate
+`loremaster_importer` and `loremaster_runtime` group roles. Only migration
+credentials own schema objects or may perform DDL. Production login roles and
+their secrets are provisioned outside migrations and granted exactly one group
+role.
+
+Migration files are immutable and forward-managed after deployment. The paired
+down migration is for disposable local databases only; production corrections
+must be new forward migrations, and published revisions are never edited or
+rolled back in place.
+
+Operator-only validation and publication are documented in the
+[content import guide](content-import.md).
+
 The S2 command surface is intentionally small and deterministic. S3 runs the same surface in least-privilege CI. Application frameworks, databases, containers and cloud tooling belong to later delivery stages.
 
 ## Pinned prerequisites

@@ -13,10 +13,12 @@
   "scripts": {
     "build": "pnpm --recursive --if-present run build",
     "clean": "pnpm --recursive --if-present run clean",
+    "content:import": "pnpm --filter @loremaster/database build && pnpm --filter @loremaster/database content:import",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run",
+    "test": "vitest run --exclude \"tests/database/**\"",
+    "test:database": "node scripts/database-test.mjs",
     "typecheck": "pnpm --recursive --if-present run typecheck",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },

@@ -2,6 +2,7 @@
 docs/**
 ops/**
 pnpm-lock.yaml
+packages/database/migrations/*.sql
 
 !docs/architecture/
 docs/architecture/**

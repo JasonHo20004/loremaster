@@ -37,4 +37,27 @@ describe('workspace scaffold', () => {
       })
     },
   )
+
+  it('builds database dependency declarations before a clean typecheck', async () => {
+    const packageJson = JSON.parse(
+      await readFile(
+        resolve(repositoryRoot, 'packages/database/package.json'),
+        'utf8',
+      ),
+    ) as { scripts?: Record<string, string> }
+
+    expect(packageJson.scripts?.pretypecheck).toBe(
+      'corepack pnpm --filter @loremaster/domain build',
+    )
+  })
+
+  it('quotes the database exclusion so POSIX shells do not expand it', async () => {
+    const packageJson = JSON.parse(
+      await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'),
+    ) as { scripts?: Record<string, string> }
+
+    expect(packageJson.scripts?.test).toBe(
+      'vitest run --exclude "tests/database/**"',
+    )
+  })
 })

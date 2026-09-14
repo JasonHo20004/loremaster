@@ -1,0 +1,12 @@
+ALTER TABLE loremaster.case_revisions
+  DROP CONSTRAINT published_revision_metadata_is_complete,
+  DROP CONSTRAINT case_revision_content_version_format,
+  DROP CONSTRAINT case_revision_known_provenance,
+  DROP CONSTRAINT case_revision_author_bounds,
+  DROP CONSTRAINT case_revision_title_bounds,
+  DROP CONSTRAINT case_revision_case_key_format,
+  DROP COLUMN content_version,
+  DROP COLUMN provenance,
+  DROP COLUMN author,
+  DROP COLUMN title,
+  DROP COLUMN case_key;
