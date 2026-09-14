@@ -46,9 +46,11 @@ async function createPublishedCase(slotId: string): Promise<PublishedCase> {
   ])
   await db.query(
     `INSERT INTO loremaster.case_revisions
-       (id, pack_id, revision_number, slot_id, opens_at, closes_at, briefing)
+       (id, pack_id, revision_number, slot_id, opens_at, closes_at, briefing,
+        case_key, title, author, provenance, content_version)
      VALUES ($1, $2, 1, $3, $3::date::timestamp AT TIME ZONE 'UTC',
-             $3::date::timestamp AT TIME ZONE 'UTC' + interval '1 day', 'briefing')`,
+             $3::date::timestamp AT TIME ZONE 'UTC' + interval '1 day', 'briefing',
+             'test-case', 'Test case', 'Test author', 'ORIGINAL_AUTHORED', '1.0.0')`,
     [revisionId, packId, slotId],
   )
   await db.query(
@@ -92,7 +94,7 @@ async function createGuest(): Promise<{ guestId: string; sessionId: string }> {
      VALUES ($1::uuid, $2::uuid,
              decode(repeat(replace($1::text, '-', ''), 2), 'hex'),
              decode(repeat(replace($2::text, '-', ''), 2), 'hex'),
-             clock_timestamp() + interval '30 days')`,
+             clock_timestamp() + interval '29 days')`,
     [sessionId, guestId],
   )
   return { guestId, sessionId }
@@ -114,21 +116,60 @@ async function createAttempt(
   return attemptId
 }
 
+async function createExpiredReceiptFixture(slotId: string): Promise<{
+  attemptId: string
+  guestId: string
+  sessionId: string
+}> {
+  const publishedCase = await createPublishedCase(slotId)
+  const { guestId, sessionId } = await createGuest()
+  const attemptId = await createAttempt(publishedCase, guestId)
+  await db.query(
+    `INSERT INTO loremaster.command_receipts
+       (id, guest_id, session_id, idempotency_key, command_fingerprint,
+        command_kind, outcome_code, attempt_id, committed_version)
+     VALUES ($1, $2, $3, $4, decode(repeat('88', 32), 'hex'),
+             'START', 'STARTED', $5, 0)`,
+    [randomUUID(), guestId, sessionId, `receipt-${slotId}`, attemptId],
+  )
+  const expiry = await db.query<{ expired: boolean }>(
+    `UPDATE loremaster.guest_sessions
+     SET expires_at = created_at + interval '1 microsecond'
+     WHERE id = $1
+     RETURNING expires_at < clock_timestamp() AS expired`,
+    [sessionId],
+  )
+  expect(expiry.rows[0]?.expired).toBe(true)
+  return { attemptId, guestId, sessionId }
+}
+
 describe('S4.3a database toolchain', () => {
   it('applies the migration once and restricts DDL to migration credentials', async () => {
     const migration = await db.query<{ count: string }>(
       'SELECT count(*)::text AS count FROM public.loremaster_schema_migrations',
     )
-    expect(migration.rows[0]?.count).toBe('1')
+    expect(migration.rows[0]?.count).toBe('3')
 
     const privileges = await db.query<{
       importer_create: boolean
+      runtime_delete_attempts: boolean
+      runtime_delete_receipts: boolean
+      runtime_delete_sessions: boolean
+      runtime_update_finalizations: boolean
       runtime_create: boolean
     }>(`SELECT
       has_schema_privilege('loremaster_importer', 'loremaster', 'CREATE') AS importer_create,
-      has_schema_privilege('loremaster_runtime', 'loremaster', 'CREATE') AS runtime_create`)
+      has_schema_privilege('loremaster_runtime', 'loremaster', 'CREATE') AS runtime_create,
+      has_table_privilege('loremaster_runtime', 'loremaster.attempts', 'DELETE') AS runtime_delete_attempts,
+      has_table_privilege('loremaster_runtime', 'loremaster.command_receipts', 'DELETE') AS runtime_delete_receipts,
+      has_table_privilege('loremaster_runtime', 'loremaster.guest_sessions', 'DELETE') AS runtime_delete_sessions,
+      has_table_privilege('loremaster_runtime', 'loremaster.attempt_finalizations', 'UPDATE') AS runtime_update_finalizations`)
     expect(privileges.rows[0]).toEqual({
       importer_create: false,
+      runtime_delete_attempts: false,
+      runtime_delete_receipts: false,
+      runtime_delete_sessions: false,
+      runtime_update_finalizations: false,
       runtime_create: false,
     })
 
@@ -224,9 +265,11 @@ describe('S4.3b immutable content revisions', () => {
     )
     await db.query(
       `INSERT INTO loremaster.case_revisions
-         (id, pack_id, revision_number, slot_id, opens_at, closes_at, briefing)
+         (id, pack_id, revision_number, slot_id, opens_at, closes_at, briefing,
+          case_key, title, author, provenance, content_version)
        VALUES ($1, $2, 1, '2040-03-01', '2040-03-01T00:00:00Z',
-               '2040-03-02T00:00:00Z', 'briefing')`,
+               '2040-03-02T00:00:00Z', 'briefing', 'test-case', 'Test case',
+               'Test author', 'ORIGINAL_AUTHORED', '1.0.0')`,
       [revisionId, packId],
     )
     await db.query(
@@ -287,7 +330,7 @@ describe('S4.3c guest, attempt, guess, and receipt constraints', () => {
   it('enforces identity, reachable counters, one start, and fixed fingerprints', async () => {
     const publishedCase = await createPublishedCase('2040-04-01')
     const { guestId, sessionId } = await createGuest()
-    await createAttempt(publishedCase, guestId)
+    const attemptId = await createAttempt(publishedCase, guestId)
     await expect(createAttempt(publishedCase, guestId)).rejects.toMatchObject({
       code: '23505',
     })
@@ -314,9 +357,10 @@ describe('S4.3c guest, attempt, guess, and receipt constraints', () => {
     await db.query(
       `INSERT INTO loremaster.command_receipts
          (id, guest_id, session_id, idempotency_key, command_fingerprint,
-          command_kind, outcome_code)
-       VALUES ($1, $2, $3, 'key', decode(repeat('33', 32), 'hex'), 'GUESS', 'ACCEPTED')`,
-      [randomUUID(), guestId, sessionId],
+          command_kind, outcome_code, attempt_id, committed_version)
+       VALUES ($1, $2, $3, 'key', decode(repeat('33', 32), 'hex'),
+               'GUESS', 'WRONG', $4, 0)`,
+      [randomUUID(), guestId, sessionId, attemptId],
     )
     await expect(
       db.query(
@@ -329,9 +373,10 @@ describe('S4.3c guest, attempt, guess, and receipt constraints', () => {
       db.query(
         `INSERT INTO loremaster.command_receipts
            (id, guest_id, session_id, idempotency_key, command_fingerprint,
-            command_kind, outcome_code)
-         VALUES ($1, $2, $3, 'key', decode(repeat('44', 32), 'hex'), 'REVEAL', 'ACCEPTED')`,
-        [randomUUID(), guestId, sessionId],
+            command_kind, outcome_code, attempt_id, committed_version)
+         VALUES ($1, $2, $3, 'key', decode(repeat('44', 32), 'hex'),
+                 'REVEAL', 'REVEALED', $4, 0)`,
+        [randomUUID(), guestId, sessionId, attemptId],
       ),
     ).rejects.toMatchObject({ code: '23505' })
     await expect(
@@ -365,9 +410,10 @@ describe('S4.3c guest, attempt, guess, and receipt constraints', () => {
     ).rejects.toMatchObject({ code: '23503' })
   })
 
-  it('permits receipt cleanup only after the authenticating session expires', async () => {
+  it('permits receipt cleanup only after expiry and prevents identity resurrection', async () => {
     const guestId = randomUUID()
     const sessionId = randomUUID()
+    const publishedCase = await createPublishedCase('2040-04-04')
     await db.query(
       'INSERT INTO loremaster.guests (id, pseudonym) VALUES ($1, $2)',
       [guestId, 'Expired Guest'],
@@ -379,27 +425,122 @@ describe('S4.3c guest, attempt, guess, and receipt constraints', () => {
                clock_timestamp(), clock_timestamp() + interval '1 day')`,
       [sessionId, guestId],
     )
+    const attemptId = await createAttempt(publishedCase, guestId)
     await db.query(
       `INSERT INTO loremaster.command_receipts
          (id, guest_id, session_id, idempotency_key, command_fingerprint,
-          command_kind, outcome_code)
+          command_kind, outcome_code, attempt_id, committed_version)
        VALUES ($1, $2, $3, 'expired-key', decode(repeat('77', 32), 'hex'),
-               'START', 'ACCEPTED')`,
-      [randomUUID(), guestId, sessionId],
+               'START', 'STARTED', $4, 0)`,
+      [randomUUID(), guestId, sessionId, attemptId],
     )
-    await db.query(
+    await expect(
+      db.query('DELETE FROM loremaster.command_receipts WHERE guest_id = $1', [
+        guestId,
+      ]),
+    ).rejects.toMatchObject({ code: '55000' })
+    const expiry = await db.query<{ expired: boolean }>(
       `UPDATE loremaster.guest_sessions
-       SET created_at = clock_timestamp() - interval '2 days',
-           expires_at = clock_timestamp() - interval '1 day'
-       WHERE id = $1`,
+       SET expires_at = created_at + interval '1 microsecond'
+       WHERE id = $1
+       RETURNING expires_at < clock_timestamp() AS expired`,
       [sessionId],
     )
+    expect(expiry.rows[0]?.expired).toBe(true)
     const deleted = await db.query(
       'DELETE FROM loremaster.command_receipts WHERE guest_id = $1',
       [guestId],
     )
     expect(deleted.rowCount).toBe(1)
+    await expect(
+      db.query(
+        `INSERT INTO loremaster.guest_sessions
+           (id, guest_id, token_hash, csrf_hash, expires_at)
+         VALUES ($1::uuid, $2::uuid,
+                 decode(repeat(replace($1::text, '-', ''), 2), 'hex'),
+                 decode(repeat(replace($2::text, '-', ''), 2), 'hex'),
+                 clock_timestamp() + interval '1 day')`,
+        [randomUUID(), guestId],
+      ),
+    ).rejects.toMatchObject({ code: '23505' })
   })
+
+  it('keeps retained session identity and creation time immutable', async () => {
+    const { sessionId } = await createGuest()
+
+    await expect(
+      db.query('UPDATE loremaster.guest_sessions SET id = $1 WHERE id = $2', [
+        randomUUID(),
+        sessionId,
+      ]),
+    ).rejects.toMatchObject({ code: '55000' })
+    await expect(
+      db.query(
+        `UPDATE loremaster.guest_sessions
+         SET created_at = created_at - interval '1 second'
+         WHERE id = $1`,
+        [sessionId],
+      ),
+    ).rejects.toMatchObject({ code: '55000' })
+  })
+
+  it.each([
+    ['a concurrent session insert', '2040-04-05', 'INSERT'],
+    ['a concurrent session expiry extension', '2040-04-06', 'UPDATE'],
+  ] as const)(
+    'rejects %s after cleanup wins the guest lock',
+    async (_label, fixtureSlot, operation) => {
+      const fixture = await createExpiredReceiptFixture(fixtureSlot)
+      const sessionWriter = await db.connect()
+      const receiptCleaner = await db.connect()
+      const concurrentSessionId = randomUUID()
+      try {
+        await receiptCleaner.query('BEGIN')
+        await receiptCleaner.query(
+          'DELETE FROM loremaster.command_receipts WHERE guest_id = $1',
+          [fixture.guestId],
+        )
+
+        let settled = false
+        const pendingSessionWrite = (
+          operation === 'INSERT'
+            ? sessionWriter.query(
+                `INSERT INTO loremaster.guest_sessions
+               (id, guest_id, token_hash, csrf_hash, expires_at)
+             VALUES ($1::uuid, $2::uuid,
+                     decode(repeat(replace($1::text, '-', ''), 2), 'hex'),
+                     decode(repeat(replace($2::text, '-', ''), 2), 'hex'),
+                     clock_timestamp() + interval '1 day')`,
+                [concurrentSessionId, fixture.guestId],
+              )
+            : sessionWriter.query(
+                `UPDATE loremaster.guest_sessions
+             SET expires_at = clock_timestamp() + interval '1 day'
+             WHERE id = $1`,
+                [fixture.sessionId],
+              )
+        )
+          .then(
+            () => ({ error: undefined }),
+            (error: unknown) => ({ error }),
+          )
+          .finally(() => {
+            settled = true
+          })
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        expect(settled).toBe(false)
+        await receiptCleaner.query('COMMIT')
+        const result = await pendingSessionWrite
+        expect(result.error).toMatchObject({
+          code: operation === 'INSERT' ? '23505' : '55000',
+        })
+      } finally {
+        await receiptCleaner.query('ROLLBACK').catch(() => undefined)
+        sessionWriter.release()
+        receiptCleaner.release()
+      }
+    },
+  )
 })
 
 describe('S4.3d exactly-once effect ledgers', () => {
