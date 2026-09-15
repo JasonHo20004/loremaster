@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import process, { env, execPath, stderr } from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
+import { URL } from 'node:url'
 
 const POSTGRES_IMAGE =
   'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94'
@@ -88,20 +89,53 @@ try {
   const { database, closeDatabase, migrateToLatest } =
     await import('../packages/database/dist/index.js')
   const db = database(connectionString)
+  let runtimeConnectionString
   try {
     const applied = await migrateToLatest(db)
     if (applied.length === 0)
       throw new Error('Clean database applied no migrations')
+
+    const runtimeLogin = `loremaster_test_runtime_${randomUUID().replaceAll('-', '')}`
+    const runtimePassword = randomUUID()
+    const statement = await db.query(
+      `SELECT format(
+         'CREATE ROLE %I LOGIN PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT',
+         $1::text, $2::text
+       ) AS sql`,
+      [runtimeLogin, runtimePassword],
+    )
+    if (typeof statement.rows[0]?.sql !== 'string')
+      throw new Error('Runtime login statement was not generated')
+    await db.query(statement.rows[0].sql)
+    const grant = await db.query(
+      "SELECT format('GRANT loremaster_runtime TO %I', $1::text) AS sql",
+      [runtimeLogin],
+    )
+    if (typeof grant.rows[0]?.sql !== 'string')
+      throw new Error('Runtime role grant was not generated')
+    await db.query(grant.rows[0].sql)
+    const runtimeUrl = new URL(connectionString)
+    runtimeUrl.username = runtimeLogin
+    runtimeUrl.password = runtimePassword
+    runtimeConnectionString = runtimeUrl.toString()
   } finally {
     await closeDatabase(db)
   }
+
+  if (runtimeConnectionString === undefined)
+    throw new Error('Runtime database login was not created')
+  await waitForDatabase(runtimeConnectionString)
 
   const result = spawnSync(
     execPath,
     ['node_modules/vitest/vitest.mjs', 'run', 'tests/database'],
     {
       stdio: 'inherit',
-      env: { ...env, LOREMASTER_TEST_DATABASE_URL: connectionString },
+      env: {
+        ...env,
+        LOREMASTER_TEST_DATABASE_URL: connectionString,
+        LOREMASTER_TEST_RUNTIME_DATABASE_URL: runtimeConnectionString,
+      },
     },
   )
   if (result.error !== undefined) throw result.error
