@@ -558,4 +558,4 @@ records.
   tests. Corrected CI/docs to use `pnpm run verify` because pnpm 11's bare
   `pnpm verify` resolves to an unrelated built-in command. S5.0 remains open
   until CI passes this correction. Affected: S5.0 reproducibility and all later
-  root verification gates. Reviewer: delivery review pending.
+  root verification gates. Reviewer: delivery review GO.
