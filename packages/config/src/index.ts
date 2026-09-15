@@ -79,7 +79,7 @@ type EnvironmentKey = (typeof ENVIRONMENT_KEYS)[number]
 type Environment = Readonly<Record<string, string | undefined>>
 
 const allowedKeys = new Set<string>(ENVIRONMENT_KEYS)
-const cursorVersionPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,31}$/u
+const cursorVersionPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,15}$/u
 const cookieNamePattern = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/u
 
 export class ConfigurationError extends Error {

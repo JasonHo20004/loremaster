@@ -534,9 +534,18 @@ records.
 - [ ] S5.3e Redacted telemetry primitives — implemented and locally verified
       2026-09-15; awaiting independent TypeScript/security review and
       clean-checkout CI
-- [ ] S5.4 Protected gameplay routes
-- [ ] S5.5 Suggestions, profile, and paginated leaderboard
-- [ ] S5.6 API composition and local developer workflow
+- [ ] S5.4 Protected gameplay routes — implemented and locally typechecked;
+      14 focused route tests, all 218 non-database tests, and all 59 disposable
+      PostgreSQL tests pass; independent review and clean-checkout CI remain
+      pending
+- [ ] S5.5 Suggestions, profile, and paginated leaderboard — implemented and
+      locally typechecked; 4 focused route tests and all 218 non-database tests
+      plus all 59 disposable PostgreSQL tests pass; independent review and
+      clean-checkout CI remain pending
+- [ ] S5.6 API composition and local developer workflow — implemented and
+      locally verified; 221 non-database, 59 repository/database, and 1 composed
+      API/PostgreSQL integration test pass with all direct root verification
+      stages; independent review and clean-checkout CI remain pending
 - [ ] S5.7 Adversarial transport and disclosure gate
 - [ ] S5.8 S5 acceptance and handoff to S6
 
@@ -634,3 +643,30 @@ records.
   pending independent TypeScript/security review and clean-checkout CI.
   Affected: S5 log/metric disclosure, bounded-cardinality, request-ID, route,
   status, and timing controls.
+- 2026-09-15 — Implemented S5.4 gameplay route adapters and S5.5 scoped
+  suggestions, reconciled profile transport, authenticated slot-bound cursors,
+  and rank-preserving keyset leaderboard pagination. Added a forward migration
+  for public entity IDs so frozen slug contracts do not disclose or reject
+  internal UUIDs; existing rows receive bounded opaque IDs and new imports keep
+  authored IDs. Focused route tests (18 total), all 218 non-database tests,
+  changed-package typechecks, formatting, lint, diff checks, and all 59 tests
+  against a clean disposable PostgreSQL 17.6 database pass. Independent
+  TypeScript/database/security review and CI remain pending, so both progress
+  boxes stay open. Affected: T01–T21, T23–T25, B02–B06, B08–B10, gameplay
+  disclosure/idempotency, suggestion ownership, and leaderboard cursor/rank
+  controls.
+- 2026-09-15 — Implemented S5.6 explicit API composition with session,
+  gameplay, reporting, liveness, and least-privilege readiness handlers;
+  bounded request controls and allowlisted telemetry are wired through one
+  factory. Added loopback startup, signal-driven HTTP draining, forced close at
+  the drain deadline, pool shutdown, safe startup/shutdown messages, pinned
+  build/dev/start/test commands, a stable composed-API PostgreSQL harness, CI
+  coverage, and complete local curl/environment/role documentation. Cursor key
+  identifiers now fail configuration before pool creation when they cannot fit
+  the frozen envelope. All 221 non-database tests, 59 clean PostgreSQL tests,
+  and the composed API PostgreSQL integration test pass; formatting, lint, all
+  ten workspace typechecks/builds, script syntax, and diff checks pass directly.
+  The exact `pnpm run verify` wrapper remains blocked by the previously recorded
+  stale host pnpm shim, and independent review/clean-checkout CI remain pending.
+  Affected: S5 startup safety, least privilege, readiness/liveness, session
+  bootstrap, local workflow, graceful shutdown, and S7 limiter-fallback handoff.

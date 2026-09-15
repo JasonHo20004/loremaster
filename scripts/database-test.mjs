@@ -1,5 +1,6 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
+import { globSync } from 'node:fs'
 import process, { env, execPath, stderr } from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { URL } from 'node:url'
@@ -8,7 +9,12 @@ const POSTGRES_IMAGE =
   'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94'
 const containerName = `loremaster-db-test-${randomUUID()}`
 const password = randomUUID()
+const target = process.argv[2] ?? 'database'
 let started = false
+
+if (target !== 'database' && target !== 'api') {
+  throw new Error('Database test target must be `database` or `api`')
+}
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, {
@@ -50,15 +56,22 @@ try {
     )
   }
 
-  run(
-    execPath,
-    [
-      'node_modules/typescript/bin/tsc',
-      '-p',
-      'packages/database/tsconfig.json',
-    ],
-    { stdio: 'inherit' },
-  )
+  const projects =
+    target === 'api'
+      ? [
+          'packages/domain/tsconfig.json',
+          'packages/database/tsconfig.json',
+          'packages/config/tsconfig.json',
+          'packages/contracts/tsconfig.json',
+          'packages/observability/tsconfig.json',
+          'apps/api/tsconfig.json',
+        ]
+      : ['packages/domain/tsconfig.json', 'packages/database/tsconfig.json']
+  for (const project of projects) {
+    run(execPath, ['node_modules/typescript/bin/tsc', '-p', project], {
+      stdio: 'inherit',
+    })
+  }
 
   run('docker', [
     'run',
@@ -126,9 +139,15 @@ try {
     throw new Error('Runtime database login was not created')
   await waitForDatabase(runtimeConnectionString)
 
+  const testFiles =
+    target === 'database'
+      ? ['tests/database']
+      : globSync('tests/api/**/*.database.test.ts').sort()
+  if (testFiles.length === 0)
+    throw new Error(`No ${target} database tests were found`)
   const result = spawnSync(
     execPath,
-    ['node_modules/vitest/vitest.mjs', 'run', 'tests/database'],
+    ['node_modules/vitest/vitest.mjs', 'run', ...testFiles],
     {
       stdio: 'inherit',
       env: {

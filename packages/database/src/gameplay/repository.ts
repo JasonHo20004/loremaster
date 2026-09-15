@@ -4,5 +4,9 @@ export {
   readOwnedAttempt,
   startCurrentAttempt,
 } from './attempts.js'
-export { readDailyLeaderboard } from './leaderboard.js'
+export {
+  readDailyLeaderboard,
+  readDailyLeaderboardPage,
+} from './leaderboard.js'
 export { readProfile } from './profile.js'
+export { readAttemptSuggestions } from './suggestions.js'

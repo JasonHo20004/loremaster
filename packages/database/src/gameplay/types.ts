@@ -90,3 +90,28 @@ export interface LeaderboardEntry {
   readonly score: number
   readonly rank: number
 }
+
+export interface LeaderboardPosition {
+  readonly attemptId: string
+  readonly elapsedMilliseconds: number
+  readonly evidenceLevel: EvidenceLevel
+  readonly totalWrongGuesses: number
+}
+
+export interface LeaderboardPage {
+  readonly items: readonly LeaderboardEntry[]
+  readonly nextPosition: LeaderboardPosition | null
+}
+
+export interface LeaderboardPageRequest {
+  readonly cursor?: LeaderboardPosition
+  readonly limit: number
+  readonly slotId: string
+}
+
+export interface EntitySuggestion {
+  readonly aliases: readonly string[]
+  readonly canonicalName: string
+  readonly entityId: string
+  readonly publicRole: string
+}

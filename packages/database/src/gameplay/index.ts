@@ -1,7 +1,9 @@
 export {
   executeGameplayCommand,
+  readAttemptSuggestions,
   readCurrentCase,
   readDailyLeaderboard,
+  readDailyLeaderboardPage,
   readOwnedAttempt,
   readProfile,
   startCurrentAttempt,

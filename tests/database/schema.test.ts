@@ -55,9 +55,14 @@ async function createPublishedCase(slotId: string): Promise<PublishedCase> {
   )
   await db.query(
     `INSERT INTO loremaster.case_entities
-       (revision_id, entity_id, canonical_name, role)
-     VALUES ($1, $2, $3, 'suspect')`,
-    [revisionId, entityId, `Entity ${entityId}`],
+       (revision_id, entity_id, public_id, canonical_name, role)
+     VALUES ($1, $2, $3, $4, 'suspect')`,
+    [
+      revisionId,
+      entityId,
+      `entity_${entityId.replaceAll('-', '')}`,
+      `Entity ${entityId}`,
+    ],
   )
   await db.query(
     `INSERT INTO loremaster.revision_regions (revision_id, region_id, display_name)
@@ -148,7 +153,7 @@ describe('S4.3a database toolchain', () => {
     const migration = await db.query<{ count: string }>(
       'SELECT count(*)::text AS count FROM public.loremaster_schema_migrations',
     )
-    expect(migration.rows[0]?.count).toBe('3')
+    expect(migration.rows[0]?.count).toBe('4')
 
     const privileges = await db.query<{
       importer_create: boolean
@@ -274,9 +279,9 @@ describe('S4.3b immutable content revisions', () => {
     )
     await db.query(
       `INSERT INTO loremaster.case_entities
-         (revision_id, entity_id, canonical_name, role)
-       VALUES ($1, $2, 'Entity', 'suspect')`,
-      [revisionId, entityId],
+         (revision_id, entity_id, public_id, canonical_name, role)
+       VALUES ($1, $2, $3, 'Entity', 'suspect')`,
+      [revisionId, entityId, `entity_${entityId.replaceAll('-', '')}`],
     )
     for (let order = 1; order <= 4; order += 1) {
       await db.query(

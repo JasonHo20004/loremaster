@@ -377,15 +377,21 @@ export async function executeGameplayCommand(
       let committedOutcomeCode: GameplayCommandOutcomeCode
       let guessedEntityId: string | undefined
       if (request.command.kind === 'GUESS') {
-        const entity = await client.query<{ correct: boolean }>(
-          `SELECT (entity.entity_id = revision.answer_entity_id) AS correct
+        const entity = await client.query<{
+          correct: boolean
+          entity_id: string
+        }>(
+          `SELECT (entity.entity_id = revision.answer_entity_id) AS correct,
+                  entity.entity_id::text
          FROM loremaster.case_entities entity JOIN loremaster.case_revisions revision ON revision.id = entity.revision_id
-         WHERE entity.revision_id = $1 AND entity.entity_id = $2 AND entity.is_eligible`,
+         WHERE entity.revision_id = $1
+           AND (entity.public_id = $2 OR entity.entity_id::text = $2)
+           AND entity.is_eligible`,
           [row.revision_id, request.command.entityId],
         )
         if (entity.rows[0] === undefined)
           return { ok: false, code: 'UNKNOWN_ENTITY' }
-        guessedEntityId = request.command.entityId
+        guessedEntityId = entity.rows[0].entity_id
         transition = applyGuess(before, entity.rows[0].correct)
         committedOutcomeCode = entity.rows[0].correct ? 'CORRECT' : 'WRONG'
       } else if (request.command.kind === 'REVEAL') {

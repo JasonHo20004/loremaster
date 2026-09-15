@@ -6,8 +6,10 @@ import { asterQuayContentPack } from '../../packages/database/dist/content/fixtu
 import { importContentPack } from '../../packages/database/dist/content/index.js'
 import {
   executeGameplayCommand,
+  readAttemptSuggestions,
   readCurrentCase,
   readDailyLeaderboard,
+  readDailyLeaderboardPage,
   readOwnedAttempt,
   readProfile,
   startCurrentAttempt,
@@ -201,6 +203,9 @@ describe('S4.6 gameplay repository', () => {
     })
     expect(replay).toMatchObject({ ok: true, replayed: true })
     if (!first.ok || !replay.ok) throw new Error('start unexpectedly rejected')
+    expect(first.projection.suggestions.map((item) => item.entityId)).toContain(
+      'mira-vale',
+    )
     expect(replay.projection.attemptId).toBe(first.projection.attemptId)
     expect(replay.projection.startedAt).toBe(first.projection.startedAt)
     expect(Date.parse(first.projection.startedAt)).toBeLessThan(
@@ -837,6 +842,63 @@ describe('S4.6 gameplay repository', () => {
       attemptId: ids.get('zero-score'),
       score: 0,
     })
+
+    const firstPage = await readDailyLeaderboardPage(db, {
+      slotId: leaderboardSlot,
+      limit: 3,
+    })
+    expect(firstPage.items.map((entry) => entry.rank)).toEqual([1, 2, 3])
+    expect(firstPage.nextPosition).not.toBeNull()
+    const secondPage = await readDailyLeaderboardPage(db, {
+      slotId: leaderboardSlot,
+      limit: 3,
+      cursor: firstPage.nextPosition!,
+    })
+    expect(secondPage.items.map((entry) => entry.rank)).toEqual([3, 5, 6])
+    expect(secondPage.items.map((entry) => entry.attemptId)).toEqual(
+      entries.slice(3).map((entry) => entry.attemptId),
+    )
+    expect(secondPage.nextPosition).toBeNull()
+    await expect(
+      readDailyLeaderboardPage(db, {
+        slotId: leaderboardSlot,
+        limit: 3,
+        cursor: {
+          ...firstPage.nextPosition!,
+          elapsedMilliseconds: firstPage.nextPosition!.elapsedMilliseconds + 1,
+        },
+      }),
+    ).rejects.toThrow('invalid leaderboard cursor')
+  })
+
+  it('returns bounded deterministic suggestions only for an owned current active attempt (B08-B10)', async () => {
+    const actor = await identity()
+    const attemptId = await seedActiveAttempt(actor.guestId)
+    const suggestions = await readAttemptSuggestions(
+      db,
+      actor.guestId,
+      attemptId,
+      'mira',
+    )
+    expect(suggestions).toHaveLength(1)
+    expect(suggestions?.[0]).toMatchObject({
+      entityId: 'mira-vale',
+      canonicalName: 'Mira Vale',
+      publicRole: expect.stringContaining('archivist'),
+      aliases: ['Mira'],
+    })
+
+    const foreign = await identity()
+    expect(
+      await readAttemptSuggestions(db, foreign.guestId, attemptId, 'mira'),
+    ).toBeUndefined()
+    await db.query(
+      "UPDATE loremaster.attempts SET state='GIVEN_UP', terminal_at=clock_timestamp() WHERE id=$1",
+      [attemptId],
+    )
+    expect(
+      await readAttemptSuggestions(db, actor.guestId, attemptId, 'mira'),
+    ).toBeUndefined()
   })
 
   it('rejects evidence overflow without a version or receipt (T07/T10)', async () => {

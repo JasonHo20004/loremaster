@@ -160,6 +160,19 @@ describe('server environment configuration', () => {
     }
   })
 
+  it('rejects cursor key identifiers that cannot fit the public envelope', () => {
+    expect(() =>
+      parseServerEnvironment({
+        ...validEnvironment(),
+        LOREMASTER_API_CURSOR_ACTIVE_VERSION: 'a'.repeat(17),
+      }),
+    ).toThrowError(
+      expect.objectContaining({
+        fields: ['LOREMASTER_API_CURSOR_ACTIVE_VERSION'],
+      }),
+    )
+  })
+
   it('reports field names without secret values', () => {
     const secret = 'not-valid-secret-material'
     expect.assertions(2)
