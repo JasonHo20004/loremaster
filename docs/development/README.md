@@ -119,6 +119,13 @@ Operator-only validation and publication are documented in the
 The command surface remains pinned and deterministic. CI runs both repository
 database tests and composed API database tests with ephemeral credentials.
 
+The local S5 acceptance baseline is 223 non-database tests, 59 repository/
+database tests, and 7 composed HTTP/PostgreSQL tests. See the
+[S5 acceptance record](../architecture/s5-acceptance.md) for focused race,
+timeout, rate-limit and disclosure counts and for the browser/deployment proofs
+that remain assigned to S6 and S8. A missing Docker daemon or PostgreSQL startup
+is a failure, never a skipped acceptance result.
+
 ## Pinned prerequisites
 
 - WSL2 with a current Ubuntu distribution
@@ -152,4 +159,4 @@ If Corepack was previously configured with a broken global pnpm shim, remove tha
 
 ## Workspace boundaries
 
-Apps live under `apps/*`; shared libraries live under `packages/*`. S2 packages export only scaffold metadata so the command surface can be exercised without prematurely implementing features assigned to S4-S7.
+Apps live under `apps/*`; shared libraries live under `packages/*`. S6 browser code may import browser-safe `@loremaster/contracts` exports and call the frozen `/api/v1` surface. It must not import API/database modules, the operator importer, authored fixtures, answers, explanations, or sources.

@@ -59,16 +59,21 @@ describe('S5.6 composed API with least-privilege PostgreSQL', () => {
     expect(csrfToken).toMatch(/^[A-Za-z0-9_-]{43}$/u)
 
     await api.get('/api/v1/session').expect(200, created.body)
-    await api.get('/api/v1/cases/current').expect(200, {
-      data: { view: 'NO_CASE' },
+    const profile = await api.get('/api/v1/profile').expect(200)
+    expect(profile.body.data).toMatchObject({
+      currentStreak: 0,
+      longestStreak: 0,
+      solvedCount: 0,
+      failedCount: 0,
+      accuracyPercentage: 0,
     })
-    const start = await api
-      .post('/api/v1/cases/current/attempt')
-      .set('Origin', origin)
-      .set('Idempotency-Key', 'clean-database-start')
-      .set('X-CSRF-Token', csrfToken!)
-      .send({})
-      .expect(409)
-    expect(start.body.error.code).toBe('NO_CURRENT_CASE')
+    expect(profile.body.data.regionalKnowledge).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          regionId: 'aster-quay',
+          sampleCount: 0,
+        }),
+      ]),
+    )
   })
 })

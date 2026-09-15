@@ -460,7 +460,7 @@ gates. Exit: every S5-owned threat-model row has a named executable proof.
 Rollback: tests/evidence only; fix failures in the owning slice rather than
 weakening assertions.
 
-Primary files: `tests/api/adversarial.integration.test.ts`,
+Primary files: `tests/api/adversarial.database.test.ts`,
 `tests/api/disclosure.test.ts`, and the API database harness. The stable focused
 command introduced by S5.6 is `pnpm test:api:database`.
 
@@ -546,8 +546,15 @@ records.
       locally verified; 221 non-database, 59 repository/database, and 1 composed
       API/PostgreSQL integration test pass with all direct root verification
       stages; independent review and clean-checkout CI remain pending
-- [ ] S5.7 Adversarial transport and disclosure gate
-- [ ] S5.8 S5 acceptance and handoff to S6
+- [ ] S5.7 Adversarial transport and disclosure gate — implemented and locally
+      verified; 6 composed adversarial journeys plus the S5.6 smoke journey pass
+      against clean PostgreSQL, and all 223 non-database tests/direct root gates
+      pass; independent review and clean-checkout CI remain pending
+- [ ] S5.8 S5 acceptance and handoff to S6 — local acceptance record created
+      with T01–T25, required B-cases, threat controls, suite counts, S6/S8
+      deferrals, dependency/license/lockfile review, and local source/history
+      secret scan; independent acceptance review and clean-checkout CI remain
+      pending
 
 ## Plan mutation log
 
@@ -670,3 +677,31 @@ records.
   stale host pnpm shim, and independent review/clean-checkout CI remain pending.
   Affected: S5 startup safety, least privilege, readiness/liveness, session
   bootstrap, local workflow, graceful shutdown, and S7 limiter-fallback handoff.
+- 2026-09-15 — Implemented the S5.7 composed adversarial gate over malformed
+  and duplicate JSON fields, repeated security headers/query parameters,
+  unknown/wrong/overlong inputs, media types, encoded paths, body bounds,
+  Origin/CSRF, cross-guest ownership, suggestion terminality, canonical replay,
+  changed-payload conflicts, same-version races, forged forwarding, bounded
+  limiter identity storage, held-lock timeout rollback, and same-key recovery.
+  Capture scans reject tokens, guesses, content, raw URLs, SQL, and
+  high-cardinality labels; static scans keep importer/fixture and URL-fetching
+  paths out of the API/public packages. Six adversarial journeys plus the S5.6
+  smoke journey pass against a clean disposable PostgreSQL 17.6 database; all
+  223 non-database tests, formatting, lint, ten workspace typechecks/builds,
+  script syntax, and diff checks pass directly. The exact root wrapper remains
+  blocked by the recorded stale host pnpm shim; independent security/TypeScript/
+  database review and clean-checkout CI remain pending. Affected: all S5-owned
+  transport, replay, ownership-disclosure, abuse-control, timeout-integrity,
+  telemetry-disclosure, and server-only content-boundary controls.
+- 2026-09-15 — Created the S5.8 acceptance record mapping every required
+  gameplay/boundary case and threat-model row to named executable evidence and
+  honest PASS/PARTIAL/DEFERRED ownership. Recorded 223 non-database, 59 clean
+  PostgreSQL, 7 composed HTTP/PostgreSQL, and focused race/timeout/rate-limit/
+  disclosure results; the production dependency audit reports no known
+  vulnerabilities, runtime licenses are MIT/ISC/BSD-3-Clause, the acceptance
+  diff does not change the lockfile, and a high-confidence working-tree/full-
+  history secret scan found no signatures. Updated architecture, development,
+  threat-model and root status wording and froze the S6 browser-safe handoff.
+  Formal S5 completion remains open pending independent review and clean-
+  checkout CI; T03/T22 remain with S6 and T25 with S8. Affected: T01–T25,
+  B02–B06, B08–B10, B13, and every threat-model row.
