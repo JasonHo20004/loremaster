@@ -132,7 +132,10 @@ class JsonScanner {
   }
 }
 
-async function readBoundedBody(request: Request): Promise<Buffer> {
+async function readBoundedBody(
+  request: Request,
+  signal?: AbortSignal,
+): Promise<Buffer> {
   const declaredLength = request.headers['content-length']
   if (
     declaredLength !== undefined &&
@@ -147,12 +150,20 @@ async function readBoundedBody(request: Request): Promise<Buffer> {
     const chunks: Buffer[] = []
     let total = 0
     let finished = false
+    const cleanup = () => {
+      request.removeListener('data', receive)
+      request.removeListener('end', complete)
+      request.removeListener('aborted', abortRequest)
+      request.removeListener('error', failRequest)
+      signal?.removeEventListener('abort', timeout)
+    }
     const fail = (error: unknown): void => {
       if (finished) return
       finished = true
+      cleanup()
       reject(error)
     }
-    request.on('data', (chunk: Buffer | string) => {
+    const receive = (chunk: Buffer | string) => {
       if (finished) return
       const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)
       total += buffer.byteLength
@@ -162,19 +173,33 @@ async function readBoundedBody(request: Request): Promise<Buffer> {
         return
       }
       chunks.push(buffer)
-    })
-    request.on('end', () => {
+    }
+    const complete = () => {
       if (finished) return
       finished = true
+      cleanup()
       resolve(Buffer.concat(chunks, total))
-    })
-    request.on('aborted', () => fail(new PublicHttpError('INVALID_REQUEST')))
-    request.on('error', () => fail(new PublicHttpError('INVALID_REQUEST')))
+    }
+    const abortRequest = () => fail(new PublicHttpError('INVALID_REQUEST'))
+    const failRequest = () => fail(new PublicHttpError('INVALID_REQUEST'))
+    const timeout = () => {
+      request.resume()
+      fail(new PublicHttpError('REQUEST_TIMEOUT'))
+    }
+    request.on('data', receive)
+    request.on('end', complete)
+    request.on('aborted', abortRequest)
+    request.on('error', failRequest)
+    signal?.addEventListener('abort', timeout, { once: true })
+    if (signal?.aborted === true) timeout()
   })
 }
 
-export async function parseBoundedJsonBody(request: Request): Promise<unknown> {
-  const raw = await readBoundedBody(request)
+export async function parseBoundedJsonBody(
+  request: Request,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  const raw = await readBoundedBody(request, signal)
   let source: string
   try {
     source = new TextDecoder('utf-8', { fatal: true }).decode(raw)

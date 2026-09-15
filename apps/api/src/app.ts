@@ -13,6 +13,7 @@ import {
   PUBLIC_ERROR_FIELD_PATHS,
   type ApiOperationId,
 } from '@loremaster/contracts'
+import { isDatabaseTimeoutError } from '@loremaster/database'
 
 import type {
   KernelDependencies,
@@ -184,7 +185,10 @@ function parseWithSchema(
   return result.data
 }
 
-function requestValidator(operation: FrozenOperation): RequestHandler {
+function requestValidator(
+  operation: FrozenOperation,
+  dependencies: KernelDependencies,
+): RequestHandler {
   return async (request, _response, next) => {
     try {
       rejectRepeatedSecurityHeaders(request)
@@ -200,7 +204,13 @@ function requestValidator(operation: FrozenOperation): RequestHandler {
       state.body =
         bodySchema === undefined
           ? undefined
-          : parseWithSchema(bodySchema, await parseBoundedJsonBody(request))
+          : parseWithSchema(
+              bodySchema,
+              await parseBoundedJsonBody(
+                request,
+                dependencies.controls.deadline.contextFor(request).signal,
+              ),
+            )
       state.headers = parseWithSchema(
         schemaFor(operation, 'headersSchema'),
         normalizedHeaders(request, operation),
@@ -236,6 +246,7 @@ function invokeHandler(
       const context: KernelHandlerContext = {
         body: state.body,
         clock: dependencies.clock,
+        deadline: dependencies.controls.deadline.contextFor(request),
         headers: state.headers,
         ...(identity === undefined ? {} : { identity }),
         operationId,
@@ -272,7 +283,7 @@ function registerOperation(
     dependencies.controls.auth.forOperation(operationId),
     dependencies.controls.csrf.forOperation(operationId),
     dependencies.controls.limiter.forOperation(operationId),
-    requestValidator(operation),
+    requestValidator(operation, dependencies),
     invokeHandler(operationId, dependencies),
   ]
   if (operation.method === 'GET') application.get(operation.path, ...middleware)
@@ -294,7 +305,9 @@ function errorHandler(): ErrorRequestHandler {
       requestId,
       error instanceof PublicHttpError
         ? error
-        : new PublicHttpError('INTERNAL_ERROR'),
+        : isDatabaseTimeoutError(error)
+          ? new PublicHttpError('REQUEST_TIMEOUT')
+          : new PublicHttpError('INTERNAL_ERROR'),
     )
   }
 }
@@ -330,7 +343,7 @@ export function createApplication(dependencies: KernelDependencies): Express {
     response.setHeader('X-Frame-Options', 'DENY')
     next()
   })
-  application.use(dependencies.controls.deadline)
+  application.use(dependencies.controls.deadline.middleware)
   application.use(dependencies.controls.logger)
   application.use(dependencies.controls.cors)
 

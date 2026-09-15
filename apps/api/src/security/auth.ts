@@ -2,12 +2,14 @@ import type { CookieConfiguration } from '@loremaster/config'
 import type { Request } from 'express'
 
 import { API_OPERATIONS } from '@loremaster/contracts'
+import type { DeadlineContext } from '@loremaster/database'
 
 import type {
   AuthenticatedIdentity,
   AuthenticatedSession,
   AuthenticationControl,
   Clock,
+  DeadlineControl,
 } from '../http/dependencies.js'
 import { PublicHttpError } from '../http/errors.js'
 import { clearSessionCookies, readUniqueCookie } from './cookies.js'
@@ -17,6 +19,7 @@ const TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/u
 export interface SessionSecurityStore {
   authenticate(
     authenticationToken: string,
+    deadline: DeadlineContext,
   ): Promise<AuthenticatedSession | null>
   verifyCsrfToken(session: AuthenticatedSession, csrfToken: string): boolean
 }
@@ -27,6 +30,7 @@ export function createAuthenticationControl(options: {
     readonly session: CookieConfiguration
   }
   readonly clock: Clock
+  readonly deadline: DeadlineControl
   readonly sessions: SessionSecurityStore
 }): AuthenticationControl {
   const sessionsByRequest = new WeakMap<Request, AuthenticatedSession>()
@@ -66,8 +70,10 @@ export function createAuthenticationControl(options: {
         }
 
         try {
-          const identity =
-            await options.sessions.authenticate(authenticationToken)
+          const identity = await options.sessions.authenticate(
+            authenticationToken,
+            options.deadline.contextFor(request),
+          )
           if (
             identity === null ||
             identity.expiresAt.getTime() <= options.clock.now()
@@ -78,7 +84,15 @@ export function createAuthenticationControl(options: {
           }
           sessionsByRequest.set(request, identity)
           next()
-        } catch {
+        } catch (error) {
+          if (
+            typeof error === 'object' &&
+            error !== null &&
+            (error as { readonly code?: unknown }).code === 'DATABASE_TIMEOUT'
+          ) {
+            next(error)
+            return
+          }
           next(new PublicHttpError('SERVICE_UNAVAILABLE'))
         }
       }

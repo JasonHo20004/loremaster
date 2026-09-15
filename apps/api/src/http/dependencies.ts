@@ -1,6 +1,7 @@
 import type { Request, RequestHandler, Response } from 'express'
 
 import type { ApiOperationId } from '@loremaster/contracts'
+import type { DeadlineContext } from '@loremaster/database'
 
 export interface Clock {
   now(): number
@@ -28,11 +29,16 @@ export interface AuthenticationControl extends OperationMiddleware {
   sessionFor(request: Request): AuthenticatedSession | undefined
 }
 
+export interface DeadlineControl {
+  readonly middleware: RequestHandler
+  contextFor(request: Request): DeadlineContext
+}
+
 export interface KernelControls {
   readonly auth: AuthenticationControl
   readonly cors: RequestHandler
   readonly csrf: OperationMiddleware
-  readonly deadline: RequestHandler
+  readonly deadline: DeadlineControl
   readonly limiter: OperationMiddleware
   readonly logger: RequestHandler
   readonly policy: OperationMiddleware
@@ -41,6 +47,7 @@ export interface KernelControls {
 export interface KernelHandlerContext {
   readonly body: unknown
   readonly clock: Clock
+  readonly deadline: DeadlineContext
   readonly headers: unknown
   readonly identity?: AuthenticatedIdentity
   readonly operationId: ApiOperationId
