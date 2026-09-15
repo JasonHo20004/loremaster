@@ -6,6 +6,7 @@ import request from 'supertest'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createApplication } from '../../apps/api/src/app.js'
+import { createDeadlineControl } from '../../apps/api/src/http/deadline.js'
 import type {
   AuthenticatedIdentity,
   AuthenticatedSession,
@@ -131,7 +132,13 @@ function dependencies(
   cookies = localCookies,
 ): KernelDependencies {
   const clock = { now: () => 1_700_000_000_000 }
-  const auth = createAuthenticationControl({ clock, cookies, sessions })
+  const deadline = createDeadlineControl({ clock, timeoutMs: 5_000 })
+  const auth = createAuthenticationControl({
+    clock,
+    cookies,
+    deadline,
+    sessions,
+  })
   const noOp: RequestHandler = (_request, _response, next) => next()
   return {
     clock,
@@ -139,7 +146,7 @@ function dependencies(
       auth,
       cors: createCorsMiddleware(ORIGIN),
       csrf: createCsrfControl({ auth, csrfCookie: cookies.csrf, sessions }),
-      deadline: noOp,
+      deadline,
       limiter: noOpOperation(),
       logger: noOp,
       policy: createRequestPolicy(ORIGIN),

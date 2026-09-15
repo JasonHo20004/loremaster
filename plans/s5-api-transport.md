@@ -590,3 +590,27 @@ records.
   production dependency audit pass. Formal progress remains open pending
   independent review and clean-checkout CI. Affected: S5 authentication, cookie,
   CSRF, Origin/CORS, ownership-disclosure, and transport-policy controls.
+- 2026-09-15 — Implemented S5.3c with a shared request/database deadline
+  context, deadline-aware parsing and authentication, bounded pool acquisition,
+  maximum 1-second lock and 3-second statement limits, pre-commit disconnect
+  cancellation by connection destruction, completed rollback/connection-close
+  waits, and stable timeout classification. Existing database call forms remain
+  compatible while all session, gameplay, profile, and leaderboard operations
+  accept the deadline context. Focused API and disposable-PostgreSQL tests cover
+  incomplete bodies, pool exhaustion, held locks, long statements, disconnects,
+  rollback failure, absence of post-timeout writes, and same-key recovery.
+  Formal progress remains open pending independent review and clean-checkout CI.
+  Affected: S5 deadline, cancellation, transaction-integrity, idempotency-retry,
+  and timeout-disclosure controls.
+- 2026-09-15 — Implemented S5.3d with explicit CIDR proxy trust, canonical
+  IPv4/IPv6 source identities, right-to-left forwarding-chain resolution, and a
+  replica-local fixed-window limiter for the frozen session, mutation, and
+  autocomplete guest/IP ceilings. Minute rollover clears state deterministically;
+  new identities are rejected at configured hard caps and 429 responses carry an
+  integer `Retry-After`. Focused tests cover untrusted forwarding headers,
+  left-side spoofing, equivalent IPv6 forms, malformed/oversized chains, storage
+  exhaustion, exact category limits, and window expiry. The replica-local
+  aggregate weakness is documented in code and must remain as a fallback when a
+  shared limiter is added. Formal progress remains open pending independent
+  review and clean-checkout CI. Affected: S5 trusted-proxy, abuse-control,
+  bounded-memory, availability, and rate-limit response controls.

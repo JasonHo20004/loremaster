@@ -31,6 +31,7 @@ function dependencies(
       next()
     },
   })
+  const controller = new AbortController()
   return {
     clock: { now: () => 1_700_000_000_000 },
     controls: {
@@ -41,7 +42,14 @@ function dependencies(
       },
       cors: globalControl('cors'),
       csrf: operationControl('csrf'),
-      deadline: globalControl('deadline'),
+      deadline: {
+        contextFor: () => ({
+          deadlineAt: 1_700_000_005_000,
+          signal: controller.signal,
+          now: () => 1_700_000_000_000,
+        }),
+        middleware: globalControl('deadline'),
+      },
       limiter: operationControl('limiter'),
       logger: globalControl('logger'),
       policy: operationControl('policy'),
