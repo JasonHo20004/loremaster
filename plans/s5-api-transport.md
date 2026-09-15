@@ -568,3 +568,14 @@ records.
   workspace typechecks/builds, formatting, lint, and diff checks pass locally;
   formal progress remains open pending independent review and CI. Affected:
   S5 identity, cookie, configuration, least-privilege, and disclosure controls.
+- 2026-09-15 — Implemented S5.3a with pinned Express 5.2.1, an injectable
+  operation kernel, server-generated request IDs, conservative response
+  headers, exact 16 KiB UTF-8 JSON parsing, recursive duplicate-key detection,
+  frozen-contract validation, stable public errors, and success projection
+  validation. The focused kernel command passes 11 tests; 168 non-database and
+  52 database tests, all workspace typechecks/builds, formatting, lint, and
+  diff checks pass locally. The root `pnpm run verify` wrapper remains blocked
+  only by the host's stale child-process pnpm shim, so its exact stages were run
+  directly. Formal progress remains open pending independent review and CI.
+  Affected: S5 parsing, validation, request-ID, disclosure, and kernel-composition
+  controls.

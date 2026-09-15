@@ -6,6 +6,17 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
+    "pretest": "corepack pnpm --filter @loremaster/contracts build",
+    "pretypecheck": "corepack pnpm --filter @loremaster/contracts build",
+    "test": "vitest run --root ../.. tests/api",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@loremaster/contracts": "workspace:*",
+    "express": "5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "22.20.2"
   }
 }
