@@ -186,9 +186,15 @@ async function insertPackGraph(
     entityIds.set(entity.id, storedEntityId)
     await client.query(
       `INSERT INTO loremaster.case_entities
-         (revision_id, entity_id, canonical_name, role)
-       VALUES ($1, $2, $3, $4)`,
-      [revisionId, storedEntityId, entity.canonicalName, entity.role],
+         (revision_id, entity_id, public_id, canonical_name, role)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        revisionId,
+        storedEntityId,
+        entity.id,
+        entity.canonicalName,
+        entity.role,
+      ],
     )
     for (const alias of entity.aliases) {
       await client.query(

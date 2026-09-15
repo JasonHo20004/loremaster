@@ -51,13 +51,19 @@ describe('workspace scaffold', () => {
     )
   })
 
-  it('quotes the database exclusion so POSIX shells do not expand it', async () => {
+  it('quotes database exclusions and exposes both PostgreSQL gates', async () => {
     const packageJson = JSON.parse(
       await readFile(resolve(repositoryRoot, 'package.json'), 'utf8'),
     ) as { scripts?: Record<string, string> }
 
     expect(packageJson.scripts?.test).toBe(
-      'vitest run --exclude "tests/database/**"',
+      'vitest run --exclude "tests/database/**" --exclude "tests/api/**/*.database.test.ts"',
+    )
+    expect(packageJson.scripts?.['test:database']).toBe(
+      'node scripts/database-test.mjs',
+    )
+    expect(packageJson.scripts?.['test:api:database']).toBe(
+      'node scripts/database-test.mjs api',
     )
   })
 })

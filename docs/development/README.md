@@ -1,5 +1,99 @@
 # Local development
 
+## Running the API locally
+
+The API requires a PostgreSQL login that is a member of the
+`loremaster_runtime` group role. Do not use migration-owner or importer
+credentials for the server. Migrations and content publication are separate
+operator actions; API startup never applies either one.
+
+Set the following environment variables with local placeholder values replaced
+by credentials created for your machine:
+
+```bash
+export LOREMASTER_API_MODE=local
+export DATABASE_URL='postgresql://<runtime-login>:<runtime-password>@127.0.0.1:5432/<database-name>'
+export LOREMASTER_API_ORIGIN='http://localhost:5173'
+export LOREMASTER_API_CURSOR_ACTIVE_VERSION='local-v1'
+export LOREMASTER_API_CURSOR_ACTIVE_KEY='<base64url-encoded-random-32-byte-key>'
+export PORT=3000
+```
+
+Generate a local cursor key without printing unrelated environment values:
+
+```bash
+node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url') + '\n')"
+```
+
+Optional `LOREMASTER_API_TRUSTED_PROXIES` entries must be explicit IP addresses
+or CIDRs. Leave it unset when connecting directly. Production additionally
+requires HTTPS origin and the fixed `__Host-` cookie names. Configuration
+rejects unknown `LOREMASTER_API_*` variables, short cursor keys, unsafe origins,
+changed timeout hierarchy, and production-incompatible cookies before opening
+the database pool.
+
+From the repository root, use one of these pinned commands:
+
+```bash
+pnpm --filter @loremaster/api dev
+pnpm --filter @loremaster/api start
+pnpm --filter @loremaster/api build
+pnpm --filter @loremaster/api test
+pnpm test:api:database
+```
+
+`dev` rebuilds the API and its workspace dependencies and gracefully restarts it
+when their source files change. `start` runs the compiled server. The focused
+database command creates a clean PostgreSQL container, provisions a login with
+only runtime-role membership, exercises the composed HTTP API, and fails rather
+than skipping when Docker is unavailable.
+
+Liveness does not access PostgreSQL. Readiness executes a bounded read-only
+transaction after `SET LOCAL ROLE loremaster_runtime`; it never migrates,
+publishes content, or returns a raw database error. On `SIGINT` or `SIGTERM`, the
+server stops accepting connections, allows in-flight requests up to the drain
+deadline, closes remaining HTTP connections, and then closes the pool.
+
+### Exercising the session and gameplay boundary
+
+The following example preserves both cookies in a jar. Values are placeholders;
+do not paste real tokens into documentation, commits, issue trackers, or logs.
+
+```bash
+API_BASE='http://127.0.0.1:3000'
+WEB_ORIGIN='http://localhost:5173'
+COOKIE_JAR="$(mktemp)"
+
+curl --fail-with-body --cookie-jar "$COOKIE_JAR" \
+  --header "Origin: $WEB_ORIGIN" \
+  --header 'Content-Type: application/json' \
+  --data '{}' \
+  "$API_BASE/api/v1/session"
+
+CSRF_TOKEN="$(awk '$6 == "loremaster_local_csrf" { print $7 }' "$COOKIE_JAR")"
+
+curl --fail-with-body --cookie "$COOKIE_JAR" \
+  "$API_BASE/api/v1/cases/current"
+
+curl --fail-with-body --cookie "$COOKIE_JAR" \
+  --header "Origin: $WEB_ORIGIN" \
+  --header 'Content-Type: application/json' \
+  --header "X-CSRF-Token: $CSRF_TOKEN" \
+  --header 'Idempotency-Key: <unique-start-key>' \
+  --data '{}' \
+  "$API_BASE/api/v1/cases/current/attempt"
+```
+
+Reuse an idempotency key only for a byte-equivalent logical retry. A changed
+payload with the same key is a conflict. Command calls use the same cookie,
+Origin, CSRF, content-type, and idempotency headers, with the returned attempt ID
+in `/api/v1/attempts/<attempt-id>/commands`.
+
+The in-memory limiter is intentionally bounded and replica-local. Multiple API
+replicas therefore permit the sum of their local ceilings. S7 may add a shared
+Redis ceiling, but it must retain this local limiter as the availability and
+memory-safety fallback when Redis is unavailable.
+
 ## PostgreSQL integration tests
 
 Run `pnpm test:database` with Docker running. The command uses the immutable
@@ -22,7 +116,15 @@ rolled back in place.
 Operator-only validation and publication are documented in the
 [content import guide](content-import.md).
 
-The S2 command surface is intentionally small and deterministic. S3 runs the same surface in least-privilege CI. Application frameworks, databases, containers and cloud tooling belong to later delivery stages.
+The command surface remains pinned and deterministic. CI runs both repository
+database tests and composed API database tests with ephemeral credentials.
+
+The local S5 acceptance baseline is 223 non-database tests, 59 repository/
+database tests, and 7 composed HTTP/PostgreSQL tests. See the
+[S5 acceptance record](../architecture/s5-acceptance.md) for focused race,
+timeout, rate-limit and disclosure counts and for the browser/deployment proofs
+that remain assigned to S6 and S8. A missing Docker daemon or PostgreSQL startup
+is a failure, never a skipped acceptance result.
 
 ## Pinned prerequisites
 
@@ -57,4 +159,4 @@ If Corepack was previously configured with a broken global pnpm shim, remove tha
 
 ## Workspace boundaries
 
-Apps live under `apps/*`; shared libraries live under `packages/*`. S2 packages export only scaffold metadata so the command surface can be exercised without prematurely implementing features assigned to S4-S7.
+Apps live under `apps/*`; shared libraries live under `packages/*`. S6 browser code may import browser-safe `@loremaster/contracts` exports and call the frozen `/api/v1` surface. It must not import API/database modules, the operator importer, authored fixtures, answers, explanations, or sources.

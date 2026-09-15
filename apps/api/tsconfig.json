@@ -1,5 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "outDir": "dist", "rootDir": "src" },
+  "compilerOptions": {
+    "outDir": "dist",
+    "paths": {
+      "@loremaster/config": ["../../packages/config/dist/index.d.ts"],
+      "@loremaster/contracts": ["../../packages/contracts/dist/index.d.ts"],
+      "@loremaster/database": ["../../packages/database/dist/index.d.ts"],
+      "@loremaster/observability": [
+        "../../packages/observability/dist/index.d.ts"
+      ]
+    },
+    "rootDir": "src",
+    "types": ["node"]
+  },
   "include": ["src/**/*.ts"]
 }

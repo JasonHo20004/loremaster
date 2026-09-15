@@ -460,7 +460,7 @@ gates. Exit: every S5-owned threat-model row has a named executable proof.
 Rollback: tests/evidence only; fix failures in the owning slice rather than
 weakening assertions.
 
-Primary files: `tests/api/adversarial.integration.test.ts`,
+Primary files: `tests/api/adversarial.database.test.ts`,
 `tests/api/disclosure.test.ts`, and the API database harness. The stable focused
 command introduced by S5.6 is `pnpm test:api:database`.
 
@@ -521,17 +521,40 @@ records.
 - [ ] S5.1 Freeze public contracts and the status matrix — implemented and
       reviewed locally 2026-09-14; 15 focused, 151 non-database, and 47 database
       tests pass; awaiting S5.0 base/toolchain closure and clean-checkout CI
-- [ ] S5.2 Configuration, identity, and session persistence
-- [ ] S5.3a Express kernel and bounded parsing
-- [ ] S5.3b Authentication, cookies, CSRF, and CORS
-- [ ] S5.3c End-to-end deadlines and cancellable transactions
-- [ ] S5.3d Trusted source IP and bounded abuse controls
-- [ ] S5.3e Redacted telemetry primitives
-- [ ] S5.4 Protected gameplay routes
-- [ ] S5.5 Suggestions, profile, and paginated leaderboard
-- [ ] S5.6 API composition and local developer workflow
-- [ ] S5.7 Adversarial transport and disclosure gate
-- [ ] S5.8 S5 acceptance and handoff to S6
+- [ ] S5.2 Configuration, identity, and session persistence — implemented and
+      locally verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3a Express kernel and bounded parsing — implemented and locally
+      verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3b Authentication, cookies, CSRF, and CORS — implemented and locally
+      verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3c End-to-end deadlines and cancellable transactions — implemented and
+      locally verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3d Trusted source IP and bounded abuse controls — implemented and
+      locally verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3e Redacted telemetry primitives — implemented and locally verified
+      2026-09-15; awaiting independent TypeScript/security review and
+      clean-checkout CI
+- [ ] S5.4 Protected gameplay routes — implemented and locally typechecked;
+      14 focused route tests, all 218 non-database tests, and all 59 disposable
+      PostgreSQL tests pass; independent review and clean-checkout CI remain
+      pending
+- [ ] S5.5 Suggestions, profile, and paginated leaderboard — implemented and
+      locally typechecked; 4 focused route tests and all 218 non-database tests
+      plus all 59 disposable PostgreSQL tests pass; independent review and
+      clean-checkout CI remain pending
+- [ ] S5.6 API composition and local developer workflow — implemented and
+      locally verified; 221 non-database, 59 repository/database, and 1 composed
+      API/PostgreSQL integration test pass with all direct root verification
+      stages; independent review and clean-checkout CI remain pending
+- [ ] S5.7 Adversarial transport and disclosure gate — implemented and locally
+      verified; 6 composed adversarial journeys plus the S5.6 smoke journey pass
+      against clean PostgreSQL, and all 223 non-database tests/direct root gates
+      pass; independent review and clean-checkout CI remain pending
+- [ ] S5.8 S5 acceptance and handoff to S6 — local acceptance record created
+      with T01–T25, required B-cases, threat controls, suite counts, S6/S8
+      deferrals, dependency/license/lockfile review, and local source/history
+      secret scan; independent acceptance review and clean-checkout CI remain
+      pending
 
 ## Plan mutation log
 
@@ -559,3 +582,126 @@ records.
   `pnpm verify` resolves to an unrelated built-in command. S5.0 remains open
   until CI passes this correction. Affected: S5.0 reproducibility and all later
   root verification gates. Reviewer: delivery review GO.
+- 2026-09-15 — Implemented S5.2 strict server configuration and hash-only guest
+  session persistence using the existing S4 schema; no new migration was
+  necessary. Extended the disposable PostgreSQL harness with a login granted
+  only the `loremaster_runtime` group role and proved readiness, identity,
+  expiry, isolation, CSRF binding, DDL/content/migration denial, and secret-safe
+  failures. Focused config tests, 157 non-database tests, 52 database tests,
+  workspace typechecks/builds, formatting, lint, and diff checks pass locally;
+  formal progress remains open pending independent review and CI. Affected:
+  S5 identity, cookie, configuration, least-privilege, and disclosure controls.
+- 2026-09-15 — Implemented S5.3a with pinned Express 5.2.1, an injectable
+  operation kernel, server-generated request IDs, conservative response
+  headers, exact 16 KiB UTF-8 JSON parsing, recursive duplicate-key detection,
+  frozen-contract validation, stable public errors, and success projection
+  validation. The focused kernel command passes 11 tests; 168 non-database and
+  52 database tests, all workspace typechecks/builds, formatting, lint, and
+  diff checks pass locally. The root `pnpm run verify` wrapper remains blocked
+  only by the host's stale child-process pnpm shim, so its exact stages were run
+  directly. Formal progress remains open pending independent review and CI.
+  Affected: S5 parsing, validation, request-ID, disclosure, and kernel-composition
+  controls.
+- 2026-09-15 — Implemented S5.3b cookie-authentication resolution with injected
+  expiry checks, mode-specific issue/clear attributes, exact Origin enforcement,
+  session-bound double-submit CSRF, strict JSON integration, and credentialed
+  CORS/preflight allowlists without wildcards. Raw authentication tokens and CSRF
+  verifier hashes remain outside handler contexts; invalid, expired, and unknown
+  credentials share one public response. The focused suite passes 18 tests;
+  `pnpm run verify` passes 186 non-database tests plus all workspace formatting,
+  lint, typecheck, and build gates; 52 runtime-role database tests and the
+  production dependency audit pass. Formal progress remains open pending
+  independent review and clean-checkout CI. Affected: S5 authentication, cookie,
+  CSRF, Origin/CORS, ownership-disclosure, and transport-policy controls.
+- 2026-09-15 — Implemented S5.3c with a shared request/database deadline
+  context, deadline-aware parsing and authentication, bounded pool acquisition,
+  maximum 1-second lock and 3-second statement limits, pre-commit disconnect
+  cancellation by connection destruction, completed rollback/connection-close
+  waits, and stable timeout classification. Existing database call forms remain
+  compatible while all session, gameplay, profile, and leaderboard operations
+  accept the deadline context. Focused API and disposable-PostgreSQL tests cover
+  incomplete bodies, pool exhaustion, held locks, long statements, disconnects,
+  rollback failure, absence of post-timeout writes, and same-key recovery.
+  Formal progress remains open pending independent review and clean-checkout CI.
+  Affected: S5 deadline, cancellation, transaction-integrity, idempotency-retry,
+  and timeout-disclosure controls.
+- 2026-09-15 — Implemented S5.3d with explicit CIDR proxy trust, canonical
+  IPv4/IPv6 source identities, right-to-left forwarding-chain resolution, and a
+  replica-local fixed-window limiter for the frozen session, mutation, and
+  autocomplete guest/IP ceilings. Minute rollover clears state deterministically;
+  new identities are rejected at configured hard caps and 429 responses carry an
+  integer `Retry-After`. Focused tests cover untrusted forwarding headers,
+  left-side spoofing, equivalent IPv6 forms, malformed/oversized chains, storage
+  exhaustion, exact category limits, and window expiry. The replica-local
+  aggregate weakness is documented in code and must remain as a fallback when a
+  shared limiter is added. Formal progress remains open pending independent
+  review and clean-checkout CI. Affected: S5 trusted-proxy, abuse-control,
+  bounded-memory, availability, and rate-limit response controls.
+- 2026-09-15 — Implemented S5.3e with allowlist-only structured request logs,
+  fixed metric names and bounded operation/status-class labels, route templates
+  sourced only from the frozen operation table, constant unmatched-route labels,
+  and capture adapters for disclosure tests. Secret-shaped cookies, raw URLs,
+  guesses, identifiers, and arbitrary object properties are absent from captured
+  output. Focused telemetry/kernel tests pass 15 tests; all 200 non-database and
+  58 database tests, workspace typechecks/builds, formatting, and diff checks
+  pass locally. The root wrapper remains affected by the already-recorded host
+  pnpm shim defect, so its exact stages were run directly through Corepack; lint
+  passed after the final no-op adapter cleanup. Formal completion remains open
+  pending independent TypeScript/security review and clean-checkout CI.
+  Affected: S5 log/metric disclosure, bounded-cardinality, request-ID, route,
+  status, and timing controls.
+- 2026-09-15 — Implemented S5.4 gameplay route adapters and S5.5 scoped
+  suggestions, reconciled profile transport, authenticated slot-bound cursors,
+  and rank-preserving keyset leaderboard pagination. Added a forward migration
+  for public entity IDs so frozen slug contracts do not disclose or reject
+  internal UUIDs; existing rows receive bounded opaque IDs and new imports keep
+  authored IDs. Focused route tests (18 total), all 218 non-database tests,
+  changed-package typechecks, formatting, lint, diff checks, and all 59 tests
+  against a clean disposable PostgreSQL 17.6 database pass. Independent
+  TypeScript/database/security review and CI remain pending, so both progress
+  boxes stay open. Affected: T01–T21, T23–T25, B02–B06, B08–B10, gameplay
+  disclosure/idempotency, suggestion ownership, and leaderboard cursor/rank
+  controls.
+- 2026-09-15 — Implemented S5.6 explicit API composition with session,
+  gameplay, reporting, liveness, and least-privilege readiness handlers;
+  bounded request controls and allowlisted telemetry are wired through one
+  factory. Added loopback startup, signal-driven HTTP draining, forced close at
+  the drain deadline, pool shutdown, safe startup/shutdown messages, pinned
+  build/dev/start/test commands, a stable composed-API PostgreSQL harness, CI
+  coverage, and complete local curl/environment/role documentation. Cursor key
+  identifiers now fail configuration before pool creation when they cannot fit
+  the frozen envelope. All 221 non-database tests, 59 clean PostgreSQL tests,
+  and the composed API PostgreSQL integration test pass; formatting, lint, all
+  ten workspace typechecks/builds, script syntax, and diff checks pass directly.
+  The exact `pnpm run verify` wrapper remains blocked by the previously recorded
+  stale host pnpm shim, and independent review/clean-checkout CI remain pending.
+  Affected: S5 startup safety, least privilege, readiness/liveness, session
+  bootstrap, local workflow, graceful shutdown, and S7 limiter-fallback handoff.
+- 2026-09-15 — Implemented the S5.7 composed adversarial gate over malformed
+  and duplicate JSON fields, repeated security headers/query parameters,
+  unknown/wrong/overlong inputs, media types, encoded paths, body bounds,
+  Origin/CSRF, cross-guest ownership, suggestion terminality, canonical replay,
+  changed-payload conflicts, same-version races, forged forwarding, bounded
+  limiter identity storage, held-lock timeout rollback, and same-key recovery.
+  Capture scans reject tokens, guesses, content, raw URLs, SQL, and
+  high-cardinality labels; static scans keep importer/fixture and URL-fetching
+  paths out of the API/public packages. Six adversarial journeys plus the S5.6
+  smoke journey pass against a clean disposable PostgreSQL 17.6 database; all
+  223 non-database tests, formatting, lint, ten workspace typechecks/builds,
+  script syntax, and diff checks pass directly. The exact root wrapper remains
+  blocked by the recorded stale host pnpm shim; independent security/TypeScript/
+  database review and clean-checkout CI remain pending. Affected: all S5-owned
+  transport, replay, ownership-disclosure, abuse-control, timeout-integrity,
+  telemetry-disclosure, and server-only content-boundary controls.
+- 2026-09-15 — Created the S5.8 acceptance record mapping every required
+  gameplay/boundary case and threat-model row to named executable evidence and
+  honest PASS/PARTIAL/DEFERRED ownership. Recorded 223 non-database, 59 clean
+  PostgreSQL, 7 composed HTTP/PostgreSQL, and focused race/timeout/rate-limit/
+  disclosure results; the production dependency audit reports no known
+  vulnerabilities, runtime licenses are MIT/ISC/BSD-3-Clause, the acceptance
+  diff does not change the lockfile, and a high-confidence working-tree/full-
+  history secret scan found no signatures. Updated architecture, development,
+  threat-model and root status wording and froze the S6 browser-safe handoff.
+  Formal S5 completion remains open pending independent review and clean-
+  checkout CI; T03/T22 remain with S6 and T25 with S8. Affected: T01–T25,
+  B02–B06, B08–B10, B13, and every threat-model row.

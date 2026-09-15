@@ -1,6 +1,6 @@
-# S1 threat model
+# Threat model
 
-Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and future AWS. Assets: hidden solutions, attempt integrity, session tokens, secrets and cloud credit. Browser inputs, imported files, queue payloads and untrusted PRs cross trust boundaries. The API/database own identity and truth. These are requirements and planned tests, not implemented mitigations.
+Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and future AWS. Assets: hidden solutions, attempt integrity, session tokens, secrets and cloud credit. Browser inputs, imported files, queue payloads and untrusted PRs cross trust boundaries. The API/database own identity and truth. Controls through S5 have local executable evidence in the [S5 acceptance record](../architecture/s5-acceptance.md); S6-S12 items below remain requirements, not implemented claims.
 
 | Threat / attack | Required control | Verification owner / stage |
 | --- | --- | --- |

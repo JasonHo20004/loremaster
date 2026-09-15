@@ -6,6 +6,23 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
+    "dev": "node ../../scripts/api-dev.mjs",
+    "pretest": "corepack pnpm --filter @loremaster/database... --filter @loremaster/config --filter @loremaster/contracts --filter @loremaster/observability build",
+    "prestart": "corepack pnpm --filter @loremaster/api... build",
+    "pretypecheck": "corepack pnpm --filter @loremaster/database... --filter @loremaster/config --filter @loremaster/contracts --filter @loremaster/observability build",
+    "start": "node dist/index.js",
+    "test": "vitest run --root ../.. tests/api --exclude \"tests/api/**/*.database.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@loremaster/config": "workspace:*",
+    "@loremaster/contracts": "workspace:*",
+    "@loremaster/database": "workspace:*",
+    "@loremaster/observability": "workspace:*",
+    "express": "5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "22.20.2"
   }
 }

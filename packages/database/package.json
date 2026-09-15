@@ -21,6 +21,10 @@
     "./gameplay": {
       "types": "./dist/gameplay/index.d.ts",
       "default": "./dist/gameplay/index.js"
+    },
+    "./identity": {
+      "types": "./dist/identity/index.d.ts",
+      "default": "./dist/identity/index.js"
     }
   },
   "scripts": {

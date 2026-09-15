@@ -78,16 +78,28 @@ async function hydrateCase(
     briefing: string
     answer_entity_id: string
   }>(
-    `SELECT id::text, slot_id::text, opens_at, closes_at, briefing, answer_entity_id::text
-     FROM loremaster.case_revisions WHERE id = $1 AND status = 'PUBLISHED'`,
+    `SELECT revision.id::text, revision.slot_id::text, revision.opens_at,
+            revision.closes_at, revision.briefing,
+            answer.public_id AS answer_entity_id
+     FROM loremaster.case_revisions revision
+     JOIN loremaster.case_entities answer
+       ON answer.revision_id=revision.id
+      AND answer.entity_id=revision.answer_entity_id
+     WHERE revision.id = $1 AND revision.status = 'PUBLISHED'`,
     [revisionId],
   )
   const revision = revisionResult.rows[0]
   if (revision === undefined)
     throw new Error('published case revision is missing')
   const [entities, aliases, evidence, sources] = await Promise.all([
-    client.query<{ entity_id: string; canonical_name: string; role: string }>(
-      `SELECT entity_id::text, canonical_name, role FROM loremaster.case_entities
+    client.query<{
+      entity_id: string
+      stored_entity_id: string
+      canonical_name: string
+      role: string
+    }>(
+      `SELECT public_id AS entity_id, entity_id::text AS stored_entity_id,
+              canonical_name, role FROM loremaster.case_entities
        WHERE revision_id = $1 AND is_eligible ORDER BY canonical_name, entity_id`,
       [revisionId],
     ),
@@ -136,7 +148,7 @@ async function hydrateCase(
       canonicalName: entity.canonical_name,
       publicRole: entity.role,
       aliases: aliases.rows
-        .filter((alias) => alias.entity_id === entity.entity_id)
+        .filter((alias) => alias.entity_id === entity.stored_entity_id)
         .map((alias) => alias.alias),
     })),
     evidence: evidenceSet,
@@ -153,8 +165,12 @@ export async function hydrateProjection(
     entity_id: string
     guessed_at: Date
   }>(
-    `SELECT id::text, entity_id::text, guessed_at FROM loremaster.guesses
-     WHERE attempt_id = $1 ORDER BY guess_number`,
+    `SELECT guess.id::text, entity.public_id AS entity_id, guess.guessed_at
+     FROM loremaster.guesses guess
+     JOIN loremaster.case_entities entity
+       ON entity.revision_id=guess.revision_id
+      AND entity.entity_id=guess.entity_id
+     WHERE guess.attempt_id = $1 ORDER BY guess.guess_number`,
     [row.id],
   )
   const record: PrivateAttemptRecord = {
