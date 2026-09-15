@@ -26,6 +26,7 @@ import {
   type PublicFieldError,
 } from './http/errors.js'
 import { parseBoundedJsonBody } from './http/raw-json.js'
+import { identifyTelemetryOperation } from './http/telemetry.js'
 
 type FrozenOperation = (typeof API_OPERATIONS)[ApiOperationId]
 type SchemaKey = 'bodySchema' | 'headersSchema' | 'pathSchema' | 'querySchema'
@@ -279,6 +280,7 @@ function registerOperation(
   const operation = API_OPERATIONS[operationId]
   if (dependencies.handlers[operationId] === undefined) return
   const middleware = [
+    identifyTelemetryOperation(operationId, operation.path),
     dependencies.controls.policy.forOperation(operationId),
     dependencies.controls.auth.forOperation(operationId),
     dependencies.controls.csrf.forOperation(operationId),
@@ -343,8 +345,8 @@ export function createApplication(dependencies: KernelDependencies): Express {
     response.setHeader('X-Frame-Options', 'DENY')
     next()
   })
-  application.use(dependencies.controls.deadline.middleware)
   application.use(dependencies.controls.logger)
+  application.use(dependencies.controls.deadline.middleware)
   application.use(dependencies.controls.cors)
 
   for (const operationId of Object.keys(API_OPERATIONS) as ApiOperationId[]) {

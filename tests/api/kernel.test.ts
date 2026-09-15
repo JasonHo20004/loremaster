@@ -109,8 +109,8 @@ describe('S5.3a Express kernel', () => {
     })
     expect(response.headers['x-powered-by']).toBeUndefined()
     expect(events).toEqual([
-      'deadline',
       'logger',
+      'deadline',
       'cors',
       'policy:createSession',
       'auth:createSession',

@@ -521,12 +521,19 @@ records.
 - [ ] S5.1 Freeze public contracts and the status matrix — implemented and
       reviewed locally 2026-09-14; 15 focused, 151 non-database, and 47 database
       tests pass; awaiting S5.0 base/toolchain closure and clean-checkout CI
-- [ ] S5.2 Configuration, identity, and session persistence
-- [ ] S5.3a Express kernel and bounded parsing
-- [ ] S5.3b Authentication, cookies, CSRF, and CORS
-- [ ] S5.3c End-to-end deadlines and cancellable transactions
-- [ ] S5.3d Trusted source IP and bounded abuse controls
-- [ ] S5.3e Redacted telemetry primitives
+- [ ] S5.2 Configuration, identity, and session persistence — implemented and
+      locally verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3a Express kernel and bounded parsing — implemented and locally
+      verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3b Authentication, cookies, CSRF, and CORS — implemented and locally
+      verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3c End-to-end deadlines and cancellable transactions — implemented and
+      locally verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3d Trusted source IP and bounded abuse controls — implemented and
+      locally verified; awaiting independent review and clean-checkout CI
+- [ ] S5.3e Redacted telemetry primitives — implemented and locally verified
+      2026-09-15; awaiting independent TypeScript/security review and
+      clean-checkout CI
 - [ ] S5.4 Protected gameplay routes
 - [ ] S5.5 Suggestions, profile, and paginated leaderboard
 - [ ] S5.6 API composition and local developer workflow
@@ -614,3 +621,16 @@ records.
   shared limiter is added. Formal progress remains open pending independent
   review and clean-checkout CI. Affected: S5 trusted-proxy, abuse-control,
   bounded-memory, availability, and rate-limit response controls.
+- 2026-09-15 — Implemented S5.3e with allowlist-only structured request logs,
+  fixed metric names and bounded operation/status-class labels, route templates
+  sourced only from the frozen operation table, constant unmatched-route labels,
+  and capture adapters for disclosure tests. Secret-shaped cookies, raw URLs,
+  guesses, identifiers, and arbitrary object properties are absent from captured
+  output. Focused telemetry/kernel tests pass 15 tests; all 200 non-database and
+  58 database tests, workspace typechecks/builds, formatting, and diff checks
+  pass locally. The root wrapper remains affected by the already-recorded host
+  pnpm shim defect, so its exact stages were run directly through Corepack; lint
+  passed after the final no-op adapter cleanup. Formal completion remains open
+  pending independent TypeScript/security review and clean-checkout CI.
+  Affected: S5 log/metric disclosure, bounded-cardinality, request-ID, route,
+  status, and timing controls.
