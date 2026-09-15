@@ -6,16 +6,20 @@ authoritative state out of PostgreSQL or disclosing private case content.
 
 ## Readiness decision
 
-S5 is **technically ready to begin on top of `domain-engine`, but delivery is
-conditional on the preflight gate below**.
+S5 is **based on the reviewed S4 merge and locally ready; completion of the
+delivery preflight remains conditional on CI for the S5.0 command correction**.
 
-Evidence checked on 2026-09-14:
+The formal S5 base is `fa47243` (`Merge pull request #4 from
+JasonHo20004/domain-engine`). The S5 branch is `codex/s5-api`; the merge contains
+topic head `0b5202b` and the final S4 feature commit `8be6c8b`.
 
-- `domain-engine` is synchronized with `origin/domain-engine` and contains the
-  completed S4 work. It is eight commits ahead of local `main`.
+Evidence checked on 2026-09-15:
+
+- S4 PR #4 is merged into `origin/main` at `fa47243`, and `codex/s5-api` is
+  based directly on that reviewed merge.
 - Formatting and ESLint pass when invoked through the pinned Corepack pnpm.
 - All ten workspace TypeScript configurations typecheck and build.
-- All 135 non-database tests pass.
+- All 152 non-database tests pass.
 - All 47 tests pass against a clean disposable PostgreSQL 17.6 container.
 - `packages/database` exports typed current-case, start, owned-attempt, command,
   profile, and leaderboard operations for an API adapter.
@@ -25,15 +29,12 @@ Evidence checked on 2026-09-14:
 
 Delivery caveats:
 
-- S4 is not present on `main`; do not create an independent S5 line from
-  `main`. Merge S4 first, or explicitly branch S5 from the reviewed
-  `domain-engine` head and preserve that dependency.
 - GitHub CLI is unavailable in this environment, so PR creation/checks require
-  the GitHub UI or installation of `gh`; this does not block local coding.
+  the GitHub UI. S5 uses the UI and does not depend on `gh`.
 - The global/fallback pnpm shim is inconsistent outside the managed session.
-  Use Node 22.17.0 plus `corepack enable`, `corepack install`, and pnpm 11.19.0
-  before relying on the root `pnpm verify` command. Direct Corepack execution
-  demonstrated that the repository itself is green.
+  A Corepack shim scoped to the session proves Node 22.17.0 and pnpm 11.19.0;
+  CI continues to use `corepack enable` and `corepack install`. Use the explicit
+  `pnpm run verify` form because pnpm 11 has an unrelated built-in `verify`.
 - `apps/api`, `packages/contracts`, `packages/config`, and
   `packages/observability` are still scaffolds. The database does not yet expose
   session creation/authentication or keyset leaderboard pagination. These are
@@ -159,13 +160,13 @@ This slice changes no application behavior.
   record the base commit in the PR description.
 - Repair/replace the stale pnpm shim using Corepack, verify Node 22.17.0 and pnpm
   11.19.0, install with `--frozen-lockfile`, and run the unmodified root gates.
-- Confirm `pnpm verify`, `pnpm test:database`, and `git diff --check` on a clean
+- Confirm `pnpm run verify`, `pnpm test:database`, and `git diff --check` on a clean
   checkout. Confirm CI uses the same commands and retains read-only permissions.
 - Decide whether PR operations use the GitHub UI or install `gh`; do not make
   local API work depend on the CLI.
 
 Verify: `node --version`, `pnpm --version`, `pnpm install --frozen-lockfile`,
-`pnpm verify`, `pnpm test:database`, `git diff --check`. Exit: a single S4 base
+`pnpm run verify`, `pnpm test:database`, `git diff --check`. Exit: a single S4 base
 is named and all gates pass from a clean checkout. Rollback: discard only the
 S5 branch/tool shim change; never rewrite or reset the S4 commits.
 
@@ -205,7 +206,7 @@ elapsedMilliseconds,attemptId)` authenticated with HMAC; parse, authenticate,
 Primary files: `packages/contracts/src/`, `tests/contracts/`, and the S5 status
 matrix under `docs/architecture/`. Verify: `pnpm --filter
 @loremaster/contracts test`, `pnpm --filter @loremaster/contracts typecheck`,
-`pnpm verify`. Exit:
+`pnpm run verify`. Exit:
 every route and rejection has one validated public representation, and handlers
 need no ad-hoc body parsing. Rollback: remove contract modules/tests before any
 handler depends on them.
@@ -243,7 +244,7 @@ methods or logs.
 Primary files: `packages/config/src/`,
 `packages/database/src/identity/`, a new forward migration only if required,
 `tests/config/`, and `tests/database/session-repository.test.ts`. Verify:
-`pnpm --filter @loremaster/config test`, `pnpm test:database`, then `pnpm
+`pnpm --filter @loremaster/config test`, `pnpm test:database`, then `pnpm run
 verify`. Exit: an HTTP adapter can resolve a
 trusted identity without receiving a client-selected guest/session ID. Rollback:
 remove new repository code; correct deployed schema only with a forward migration.
@@ -267,7 +268,7 @@ errors, and headers; later slices plug controls into explicit interfaces.
 Primary files: `apps/api/src/app.ts`, `apps/api/src/http/`,
 `tests/api/kernel.test.ts`, `apps/api/package.json`, and `pnpm-lock.yaml`.
 Verify: `pnpm --filter @loremaster/api test -- kernel`, API typecheck/build,
-`pnpm verify`. Exit: bounded validated requests reach an injected no-op handler
+`pnpm run verify`. Exit: bounded validated requests reach an injected no-op handler
 and all parse failures use the stable envelope. Rollback: remove the kernel and
 dependency additions; database behavior is unchanged.
 
@@ -285,7 +286,7 @@ is the sole no-auth mutation and still requires exact Origin plus IP limiting.
 
 Primary files: `apps/api/src/security/auth.ts`, `csrf.ts`, `cors.ts`,
 `cookies.ts`, and `tests/api/auth-policy.test.ts`. Verify: `pnpm --filter
-@loremaster/api test -- auth-policy`, `pnpm verify`, and runtime-role integration
+@loremaster/api test -- auth-policy`, `pnpm run verify`, and runtime-role integration
 tests. Exit: a protected no-op handler cannot run without all identity policies.
 Rollback: remove these middleware registrations; keep S5.2 database operations.
 
@@ -311,7 +312,7 @@ Primary files: `packages/database/src/gameplay/runtime.ts`, a shared database
 deadline type, `apps/api/src/http/deadline.ts`,
 `tests/database/transaction-timeout.test.ts`, and
 `tests/api/timeout.integration.test.ts`. Verify: `pnpm test:database`, `pnpm
---filter @loremaster/api test -- timeout`, `pnpm verify`. Exit: all timeout paths
+--filter @loremaster/api test -- timeout`, `pnpm run verify`. Exit: all timeout paths
 prove transaction completion/rollback before an error response. Rollback: retain
 the old transaction overload during migration; remove it only after every S5
 caller passes the deadline context. Schema remains unchanged.
@@ -331,7 +332,7 @@ shared limiter.
 
 Primary files: `apps/api/src/security/source-ip.ts`, `rate-limit.ts`, and
 `tests/api/rate-limit.test.ts`. Verify: `pnpm --filter @loremaster/api test --
-rate-limit`, `pnpm verify`. Exit: proxy forgery and storage-exhaustion tables
+rate-limit`, `pnpm run verify`. Exit: proxy forgery and storage-exhaustion tables
 pass. Rollback: unregister this middleware only on a non-deployed branch; S5
 cannot ship without a bounded fallback.
 
@@ -348,7 +349,7 @@ to prove the API cannot leak secrets.
 
 Primary files: `packages/observability/src/`, `apps/api/src/http/telemetry.ts`,
 `tests/observability/`, and `tests/api/telemetry.test.ts`. Verify: focused
-observability/API tests and `pnpm verify`. Exit: secret-shaped fixtures never
+observability/API tests and `pnpm run verify`. Exit: secret-shaped fixtures never
 appear in captured output. Rollback: remove telemetry adapter registration; do
 not replace it with console logging of request/error objects.
 
@@ -374,7 +375,7 @@ Primary files: `apps/api/src/routes/gameplay.ts`,
 `tests/api/gameplay-routes.test.ts`, and
 `tests/api/gameplay.integration.test.ts`. Verify: `pnpm --filter
 @loremaster/api test -- gameplay`, PostgreSQL-backed HTTP integration tests,
-`pnpm verify`, `pnpm test:database`. Exit: every gameplay
+`pnpm run verify`, `pnpm test:database`. Exit: every gameplay
 transport assertion has executable evidence and no route duplicates domain
 logic. Rollback: remove route adapters/tests; S4 repositories remain usable.
 
@@ -403,7 +404,7 @@ Primary files: `packages/database/src/gameplay/suggestions.ts`,
 `leaderboard.ts`, `apps/api/src/routes/reporting.ts`,
 `tests/database/reporting.test.ts`, and `tests/api/reporting.integration.test.ts`.
 Verify: repository pagination/suggestion tests, PostgreSQL-backed route tests,
-`pnpm verify`, `pnpm test:database`. Exit: all S5 reporting/pagination deferrals
+`pnpm run verify`, `pnpm test:database`. Exit: all S5 reporting/pagination deferrals
 in the S4 matrix are closed. Rollback: retain old internal leaderboard read API
 until callers migrate; remove new routes/repository overloads together.
 
@@ -482,7 +483,7 @@ artifacts, Redis, containers, and cloud evidence remain explicitly deferred.
 - State the S6 handoff contract: browser-safe contracts and API base behavior are
   stable; secret fixtures remain server-only; browser/bundle proofs are still due.
 
-Verify: `pnpm verify`, focused API command, `pnpm test:database`, dependency
+Verify: `pnpm run verify`, focused API command, `pnpm test:database`, dependency
 audit, secret scan, `git diff --check`, clean-checkout CI. Exit: S5 acceptance is
 traceable and S6 can build without importing server modules. Rollback:
 documentation/status only; production schema changes remain forward-managed.
@@ -514,7 +515,9 @@ records.
 
 ## Progress
 
-- [ ] S5.0 Close the delivery preflight
+- [ ] S5.0 Close the delivery preflight — formal base `fa47243` recorded; frozen
+      install, `pnpm run verify` (152 non-database tests), and 47 database tests
+      pass locally on 2026-09-15; awaiting CI for the corrected command surface
 - [ ] S5.1 Freeze public contracts and the status matrix — implemented and
       reviewed locally 2026-09-14; 15 focused, 151 non-database, and 47 database
       tests pass; awaiting S5.0 base/toolchain closure and clean-checkout CI
@@ -548,3 +551,11 @@ records.
   Corepack pretypecheck prerequisite and command-surface regression test; clean
   reproduction, recursive typecheck/build, 151 non-database tests, and 47
   database tests pass. Affected: S5.0 toolchain reproducibility and S5.1 gate.
+- 2026-09-15 — Based `codex/s5-api` on reviewed S4 merge `fa47243` (PR #4;
+  topic head `0b5202b`, final S4 feature commit `8be6c8b`) and selected GitHub UI
+  for PR operations. Corepack proved Node 22.17.0/pnpm 11.19.0 and a frozen
+  install; the real aggregate gate passed with 152 non-database and 47 database
+  tests. Corrected CI/docs to use `pnpm run verify` because pnpm 11's bare
+  `pnpm verify` resolves to an unrelated built-in command. S5.0 remains open
+  until CI passes this correction. Affected: S5.0 reproducibility and all later
+  root verification gates. Reviewer: delivery review pending.
