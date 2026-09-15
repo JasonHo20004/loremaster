@@ -36,7 +36,8 @@ describe('untrusted CI policy', () => {
 
   it('runs the frozen install and complete verification surface', () => {
     expect(workflow).toContain('run: pnpm install --frozen-lockfile')
-    expect(workflow).toContain('run: pnpm verify')
+    expect(workflow).toContain('run: pnpm run verify')
+    expect(workflow).not.toMatch(/^\s*run: pnpm verify\s*$/m)
     expect(workflow).toContain('run: pnpm test:database')
   })
 

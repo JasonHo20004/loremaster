@@ -44,14 +44,14 @@ nvm use
 corepack enable
 corepack install
 pnpm install --frozen-lockfile
-pnpm verify
+pnpm run verify
 ```
 
-`pnpm verify` runs formatting, linting, type checking, tests and builds in that order. The individual commands are `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
+`pnpm run verify` runs formatting, linting, type checking, tests and builds in that order. Use the explicit `run` because pnpm 11 also provides an unrelated built-in `verify` command. The individual commands are `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm test` and `pnpm build`.
 
 ## Pull-request verification
 
-The `CI` GitHub Actions workflow runs `pnpm install --frozen-lockfile` and `pnpm verify` for every pull request. It also audits the locked dependency graph and scans Git history for secrets. The workflow has read-only access to repository contents and pull-request metadata and does not receive cloud credentials or deployment secrets. Never replace its `pull_request` trigger with `pull_request_target` while it installs dependencies or executes repository code.
+The `CI` GitHub Actions workflow runs `pnpm install --frozen-lockfile` and `pnpm run verify` for every pull request. It also audits the locked dependency graph and scans Git history for secrets. The workflow has read-only access to repository contents and pull-request metadata and does not receive cloud credentials or deployment secrets. Never replace its `pull_request` trigger with `pull_request_target` while it installs dependencies or executes repository code.
 
 If Corepack was previously configured with a broken global pnpm shim, remove that shim using the installation method that created it, then rerun `corepack enable` and `corepack install`. Do not install an unpinned pnpm version to work around the mismatch.
 

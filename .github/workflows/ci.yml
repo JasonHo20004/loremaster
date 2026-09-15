@@ -42,7 +42,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Verify repository
-        run: pnpm verify
+        run: pnpm run verify
 
       - name: Verify clean PostgreSQL migrations and constraints
         run: pnpm test:database
