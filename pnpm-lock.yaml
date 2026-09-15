@@ -38,6 +38,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@loremaster/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@loremaster/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

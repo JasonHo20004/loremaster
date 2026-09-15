@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from 'express'
+import type { Request, RequestHandler, Response } from 'express'
 
 import type { ApiOperationId } from '@loremaster/contracts'
 
@@ -8,12 +8,30 @@ export interface Clock {
 
 export type ApiRepository = object
 
+export interface AuthenticatedIdentity {
+  readonly expiresAt: Date
+  readonly guestId: string
+  readonly pseudonym: string
+  readonly sessionId: string
+}
+
+export interface AuthenticatedSession extends AuthenticatedIdentity {
+  readonly csrfHash: Uint8Array
+}
+
 export interface OperationMiddleware {
   forOperation(operationId: ApiOperationId): RequestHandler
 }
 
+export interface AuthenticationControl extends OperationMiddleware {
+  identityFor(request: Request): AuthenticatedIdentity | undefined
+  sessionFor(request: Request): AuthenticatedSession | undefined
+}
+
 export interface KernelControls {
-  readonly auth: OperationMiddleware
+  readonly auth: AuthenticationControl
+  readonly cors: RequestHandler
+  readonly csrf: OperationMiddleware
   readonly deadline: RequestHandler
   readonly limiter: OperationMiddleware
   readonly logger: RequestHandler
@@ -24,12 +42,14 @@ export interface KernelHandlerContext {
   readonly body: unknown
   readonly clock: Clock
   readonly headers: unknown
+  readonly identity?: AuthenticatedIdentity
   readonly operationId: ApiOperationId
   readonly params: unknown
   readonly query: unknown
   readonly receivedAt: number
   readonly repository: ApiRepository
   readonly request: Request
+  readonly response: Response
   readonly requestId: string
 }
 

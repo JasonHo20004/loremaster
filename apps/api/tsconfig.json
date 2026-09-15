@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "paths": {
+      "@loremaster/config": ["../../packages/config/dist/index.d.ts"],
       "@loremaster/contracts": ["../../packages/contracts/dist/index.d.ts"]
     },
     "rootDir": "src",

@@ -579,3 +579,14 @@ records.
   directly. Formal progress remains open pending independent review and CI.
   Affected: S5 parsing, validation, request-ID, disclosure, and kernel-composition
   controls.
+- 2026-09-15 — Implemented S5.3b cookie-authentication resolution with injected
+  expiry checks, mode-specific issue/clear attributes, exact Origin enforcement,
+  session-bound double-submit CSRF, strict JSON integration, and credentialed
+  CORS/preflight allowlists without wildcards. Raw authentication tokens and CSRF
+  verifier hashes remain outside handler contexts; invalid, expired, and unknown
+  credentials share one public response. The focused suite passes 18 tests;
+  `pnpm run verify` passes 186 non-database tests plus all workspace formatting,
+  lint, typecheck, and build gates; 52 runtime-role database tests and the
+  production dependency audit pass. Formal progress remains open pending
+  independent review and clean-checkout CI. Affected: S5 authentication, cookie,
+  CSRF, Origin/CORS, ownership-disclosure, and transport-policy controls.

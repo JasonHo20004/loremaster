@@ -232,16 +232,19 @@ function invokeHandler(
   return async (request, response, next) => {
     try {
       const state = stateFor(request)
+      const identity = dependencies.controls.auth.identityFor(request)
       const context: KernelHandlerContext = {
         body: state.body,
         clock: dependencies.clock,
         headers: state.headers,
+        ...(identity === undefined ? {} : { identity }),
         operationId,
         params: state.params,
         query: state.query,
         receivedAt: state.receivedAt,
         repository: dependencies.repository,
         request,
+        response,
         requestId: state.requestId,
       }
       const result = await handler(context)
@@ -266,8 +269,9 @@ function registerOperation(
   if (dependencies.handlers[operationId] === undefined) return
   const middleware = [
     dependencies.controls.policy.forOperation(operationId),
-    dependencies.controls.limiter.forOperation(operationId),
     dependencies.controls.auth.forOperation(operationId),
+    dependencies.controls.csrf.forOperation(operationId),
+    dependencies.controls.limiter.forOperation(operationId),
     requestValidator(operation),
     invokeHandler(operationId, dependencies),
   ]
@@ -328,6 +332,7 @@ export function createApplication(dependencies: KernelDependencies): Express {
   })
   application.use(dependencies.controls.deadline)
   application.use(dependencies.controls.logger)
+  application.use(dependencies.controls.cors)
 
   for (const operationId of Object.keys(API_OPERATIONS) as ApiOperationId[]) {
     registerOperation(application, operationId, dependencies)

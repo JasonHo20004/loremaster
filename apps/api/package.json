@@ -6,12 +6,13 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
-    "pretest": "corepack pnpm --filter @loremaster/contracts build",
-    "pretypecheck": "corepack pnpm --filter @loremaster/contracts build",
+    "pretest": "corepack pnpm --filter @loremaster/config --filter @loremaster/contracts build",
+    "pretypecheck": "corepack pnpm --filter @loremaster/config --filter @loremaster/contracts build",
     "test": "vitest run --root ../.. tests/api",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@loremaster/config": "workspace:*",
     "@loremaster/contracts": "workspace:*",
     "express": "5.2.1"
   },

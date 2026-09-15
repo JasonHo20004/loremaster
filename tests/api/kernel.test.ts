@@ -34,7 +34,13 @@ function dependencies(
   return {
     clock: { now: () => 1_700_000_000_000 },
     controls: {
-      auth: operationControl('auth'),
+      auth: {
+        ...operationControl('auth'),
+        identityFor: () => undefined,
+        sessionFor: () => undefined,
+      },
+      cors: globalControl('cors'),
+      csrf: operationControl('csrf'),
       deadline: globalControl('deadline'),
       limiter: operationControl('limiter'),
       logger: globalControl('logger'),
@@ -97,9 +103,11 @@ describe('S5.3a Express kernel', () => {
     expect(events).toEqual([
       'deadline',
       'logger',
+      'cors',
       'policy:createSession',
-      'limiter:createSession',
       'auth:createSession',
+      'csrf:createSession',
+      'limiter:createSession',
       'handler',
     ])
   })
