@@ -559,3 +559,12 @@ records.
   `pnpm verify` resolves to an unrelated built-in command. S5.0 remains open
   until CI passes this correction. Affected: S5.0 reproducibility and all later
   root verification gates. Reviewer: delivery review GO.
+- 2026-09-15 — Implemented S5.2 strict server configuration and hash-only guest
+  session persistence using the existing S4 schema; no new migration was
+  necessary. Extended the disposable PostgreSQL harness with a login granted
+  only the `loremaster_runtime` group role and proved readiness, identity,
+  expiry, isolation, CSRF binding, DDL/content/migration denial, and secret-safe
+  failures. Focused config tests, 157 non-database tests, 52 database tests,
+  workspace typechecks/builds, formatting, lint, and diff checks pass locally;
+  formal progress remains open pending independent review and CI. Affected:
+  S5 identity, cookie, configuration, least-privilege, and disclosure controls.

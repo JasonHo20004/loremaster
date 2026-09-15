@@ -38,7 +38,11 @@ importers:
 
   apps/worker: {}
 
-  packages/config: {}
+  packages/config:
+    devDependencies:
+      '@types/node':
+        specifier: 22.20.2
+        version: 22.20.2
 
   packages/contracts:
     dependencies:
