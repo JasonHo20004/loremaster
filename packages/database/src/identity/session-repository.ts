@@ -5,8 +5,8 @@ import {
   timingSafeEqual,
 } from 'node:crypto'
 
-import type { PoolClient } from 'pg'
-
+import { isDatabaseTimeoutError, type DeadlineContext } from '../deadline.js'
+import { transaction } from '../gameplay/runtime.js'
 import type { Database } from '../migrate.js'
 
 const secretPattern = /^[A-Za-z0-9_-]{43}$/u
@@ -69,7 +69,10 @@ function isUniqueViolation(error: unknown): boolean {
   )
 }
 
-async function createOnce(db: Database): Promise<CreatedGuestSession> {
+async function createOnce(
+  db: Database,
+  deadline?: DeadlineContext,
+): Promise<CreatedGuestSession> {
   const guestId = randomUUID()
   const sessionId = randomUUID()
   const authenticationToken = generateSecret()
@@ -78,13 +81,11 @@ async function createOnce(db: Database): Promise<CreatedGuestSession> {
   const authenticationHash = hashSecret(authenticationToken)
   const csrfHash = hashSecret(csrfToken)
 
-  let client: PoolClient | undefined
-  try {
-    client = await db.connect()
-    await client.query('BEGIN')
-    await client.query('SET LOCAL ROLE loremaster_runtime')
-    const result = await client.query<SessionRow>(
-      `WITH instant AS (SELECT clock_timestamp() AS now),
+  return transaction(
+    db,
+    async (client) => {
+      const result = await client.query<SessionRow>(
+        `WITH instant AS (SELECT clock_timestamp() AS now),
        inserted_guest AS (
          INSERT INTO loremaster.guests (id, pseudonym, created_at)
          SELECT $1::uuid, $2::text, now FROM instant
@@ -98,35 +99,33 @@ async function createOnce(db: Database): Promise<CreatedGuestSession> {
        RETURNING guest_id::text, id::text AS session_id, csrf_hash,
                  expires_at,
                  (SELECT pseudonym FROM inserted_guest) AS pseudonym`,
-      [guestId, pseudonym, sessionId, authenticationHash, csrfHash],
-    )
-    const row = result.rows[0]
-    if (row === undefined) throw new SessionPersistenceError()
-    await client.query('COMMIT')
-    return {
-      guestId: row.guest_id,
-      sessionId: row.session_id,
-      pseudonym: row.pseudonym,
-      expiresAt: row.expires_at,
-      csrfHash: new Uint8Array(row.csrf_hash),
-      authenticationToken,
-      csrfToken,
-    }
-  } catch (error) {
-    await client?.query('ROLLBACK').catch(() => undefined)
-    throw error
-  } finally {
-    client?.release()
-  }
+        [guestId, pseudonym, sessionId, authenticationHash, csrfHash],
+      )
+      const row = result.rows[0]
+      if (row === undefined) throw new SessionPersistenceError()
+      return {
+        guestId: row.guest_id,
+        sessionId: row.session_id,
+        pseudonym: row.pseudonym,
+        expiresAt: row.expires_at,
+        csrfHash: new Uint8Array(row.csrf_hash),
+        authenticationToken,
+        csrfToken,
+      }
+    },
+    { deadline },
+  )
 }
 
 export async function createGuestSession(
   db: Database,
+  deadline?: DeadlineContext,
 ): Promise<CreatedGuestSession> {
   for (let attempt = 1; attempt <= maximumCreateAttempts; attempt += 1) {
     try {
-      return await createOnce(db)
+      return await createOnce(db, deadline)
     } catch (error) {
+      if (isDatabaseTimeoutError(error)) throw error
       if (!isUniqueViolation(error) || attempt === maximumCreateAttempts) {
         throw new SessionPersistenceError()
       }
@@ -138,38 +137,38 @@ export async function createGuestSession(
 export async function authenticateSession(
   db: Database,
   authenticationToken: string,
+  deadline?: DeadlineContext,
 ): Promise<AuthenticatedSession | null> {
   if (!secretPattern.test(authenticationToken)) return null
   const authenticationHash = hashSecret(authenticationToken)
-  let client: PoolClient | undefined
   try {
-    client = await db.connect()
-    await client.query('BEGIN READ ONLY')
-    await client.query('SET LOCAL ROLE loremaster_runtime')
-    const result = await client.query<SessionRow>(
-      `SELECT session.guest_id::text, session.id::text AS session_id,
+    return await transaction(
+      db,
+      async (client) => {
+        const result = await client.query<SessionRow>(
+          `SELECT session.guest_id::text, session.id::text AS session_id,
               session.csrf_hash, session.expires_at, guest.pseudonym
        FROM loremaster.guest_sessions session
        JOIN loremaster.guests guest ON guest.id = session.guest_id
        WHERE session.token_hash = $1::bytea
          AND session.expires_at > clock_timestamp()`,
-      [authenticationHash],
+          [authenticationHash],
+        )
+        const row = result.rows[0]
+        if (row === undefined) return null
+        return {
+          guestId: row.guest_id,
+          sessionId: row.session_id,
+          pseudonym: row.pseudonym,
+          expiresAt: row.expires_at,
+          csrfHash: new Uint8Array(row.csrf_hash),
+        }
+      },
+      { deadline, readOnly: true },
     )
-    await client.query('COMMIT')
-    const row = result.rows[0]
-    if (row === undefined) return null
-    return {
-      guestId: row.guest_id,
-      sessionId: row.session_id,
-      pseudonym: row.pseudonym,
-      expiresAt: row.expires_at,
-      csrfHash: new Uint8Array(row.csrf_hash),
-    }
-  } catch {
-    await client?.query('ROLLBACK').catch(() => undefined)
+  } catch (error) {
+    if (isDatabaseTimeoutError(error)) throw error
     throw new SessionPersistenceError()
-  } finally {
-    client?.release()
   }
 }
 

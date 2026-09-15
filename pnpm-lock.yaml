@@ -44,6 +44,9 @@ importers:
       '@loremaster/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@loremaster/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       express:
         specifier: 5.2.1
         version: 5.2.1
