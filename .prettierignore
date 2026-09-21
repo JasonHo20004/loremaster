@@ -3,6 +3,8 @@ docs/**
 ops/**
 pnpm-lock.yaml
 packages/database/migrations/*.sql
+**/playwright-report/**
+**/test-results/**
 
 !docs/architecture/
 docs/architecture/**

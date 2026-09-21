@@ -9,7 +9,6 @@ const repositoryRoot = fileURLToPath(new URL('../..', import.meta.url))
 const expectedWorkspaces = [
   'apps/api',
   'apps/queue-observer',
-  'apps/web',
   'apps/worker',
   'packages/config',
   'packages/contracts',
@@ -37,6 +36,22 @@ describe('workspace scaffold', () => {
       })
     },
   )
+
+  it('gives the browser workspace deterministic build and test surfaces', async () => {
+    const packageJson = JSON.parse(
+      await readFile(resolve(repositoryRoot, 'apps/web/package.json'), 'utf8'),
+    ) as { scripts?: Record<string, string> }
+
+    expect(packageJson.scripts).toMatchObject({
+      build: 'tsc -b && vite build',
+      clean: 'node ../../scripts/clean.mjs',
+      dev: 'vite --host localhost --port 5173',
+      preview: 'vite preview --host 127.0.0.1 --port 4173',
+      'test:component': 'vitest run --config vitest.config.ts',
+      'test:e2e': 'playwright test',
+      typecheck: 'tsc -b',
+    })
+  })
 
   it('builds database dependency declarations before a clean typecheck', async () => {
     const packageJson = JSON.parse(

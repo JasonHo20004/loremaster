@@ -1,20 +1,21 @@
 # S6 web application construction plan
 
-Date: 2026-09-16. Objective: build the accessible React/Vite browser client
+Date: 2026-09-21. Objective: build the accessible React/Vite browser client
 for the accepted daily-case gameplay, profile, and leaderboard flows without
 duplicating the frozen API contract, starting attempts implicitly, or exposing
 server-only case content in browser artifacts.
 
 ## Readiness decision
 
-S6 is **ready to plan but implementation must begin with a delivery preflight**.
+S6.0 is **complete**. S6.1 may begin from the reviewed S5 merge after the
+2026-09-21 preflight evidence below. No S6.1 dependency or application change
+was made during preflight.
 
-The current branch is `api-transport` at `f66e563`. S5 is implemented and its
-local acceptance evidence is recorded, but independent review and clean-checkout
-CI are still pending. S6 must either base on the reviewed S5 merge or record an
-explicit, reviewed exception before application work begins.
+The S6 branch is `web-ui`. Its reviewed S5 base is the `main` merge commit for
+PR #6, `b8c408961d831beada66004bd30fc124204b2e13`; merge commit `265f22e` joins
+that base into the branch without changing the PR head tree.
 
-Repository facts checked on 2026-09-16:
+Repository facts rechecked on 2026-09-21:
 
 - `apps/web` is only a TypeScript scaffold; it has no React, Vite, browser test,
   or runtime dependency yet.
@@ -77,17 +78,17 @@ The application has one persistent shell with Current Case, Profile, and Daily
 Leaderboard destinations. Current Case is driven entirely by the frozen
 projection discriminator:
 
-| Projection/state | Browser presentation and permitted actions |
-| --- | --- |
-| Session initializing | Non-destructive loading state; no gameplay controls |
-| `NO_CASE` | Honest no-case message and UTC refresh guidance; no timer or start |
-| `NOT_STARTED` | Slot window and explicit Start action; no briefing clock yet |
-| `ACTIVE` | Briefing, evidence `1..e`, counters, prior guesses, canonical entity selection, Guess, Reveal when `e < 4`, and Give Up |
-| `SOLVED` | Success summary, answer, all evidence/explanations/sources, profile link, and slot leaderboard |
-| `GIVEN_UP`, `EXHAUSTED`, `EXPIRED` | Clear terminal reason plus the unsealed solution and reporting links |
-| Recoverable read failure | Retry action that does not mutate state |
-| Uncertain mutation | Block new actions; retry the exact pending operation or reconcile the owned attempt |
-| Session expired | Explain identity loss, clear only client-owned pending data, and require an explicit new guest session decision when an attempt could be lost |
+| Projection/state                   | Browser presentation and permitted actions                                                                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Session initializing               | Non-destructive loading state; no gameplay controls                                                                                           |
+| `NO_CASE`                          | Honest no-case message and UTC refresh guidance; no timer or start                                                                            |
+| `NOT_STARTED`                      | Slot window and explicit Start action; no briefing clock yet                                                                                  |
+| `ACTIVE`                           | Briefing, evidence `1..e`, counters, prior guesses, canonical entity selection, Guess, Reveal when `e < 4`, and Give Up                       |
+| `SOLVED`                           | Success summary, answer, all evidence/explanations/sources, profile link, and slot leaderboard                                                |
+| `GIVEN_UP`, `EXHAUSTED`, `EXPIRED` | Clear terminal reason plus the unsealed solution and reporting links                                                                          |
+| Recoverable read failure           | Retry action that does not mutate state                                                                                                       |
+| Uncertain mutation                 | Block new actions; retry the exact pending operation or reconcile the owned attempt                                                           |
+| Session expired                    | Explain identity loss, clear only client-owned pending data, and require an explicit new guest session decision when an attempt could be lost |
 
 Destructive terminal actions such as Give Up require confirmation. Reveal states
 its consequence but does not claim participation. Timers are informational,
@@ -115,17 +116,17 @@ not isolated mocks alone.
 
 ## Execution matrix
 
-| Slice | Risk | Primary review | Parallel group |
-| --- | --- | --- | --- |
-| S6.0 | Medium | Delivery review | Preflight only |
-| S6.1 | Medium | TypeScript/build review | Foundation |
-| S6.2 | High | TypeScript and security review | Client boundary |
-| S6.3 | Critical | State-machine and security review | Serial gate |
-| S6.4 | High | Accessibility and product review | P1 with S6.5 |
-| S6.5 | Medium | Accessibility and contract review | P1 with S6.4 |
-| S6.6 | High | Accessibility and responsive UI review | Composition |
-| S6.7 | Critical | Independent E2E/security review | Serial gate |
-| S6.8 | High | Independent acceptance review | Serial exit |
+| Slice | Risk     | Primary review                         | Parallel group  |
+| ----- | -------- | -------------------------------------- | --------------- |
+| S6.0  | Medium   | Delivery review                        | Preflight only  |
+| S6.1  | Medium   | TypeScript/build review                | Foundation      |
+| S6.2  | High     | TypeScript and security review         | Client boundary |
+| S6.3  | Critical | State-machine and security review      | Serial gate     |
+| S6.4  | High     | Accessibility and product review       | P1 with S6.5    |
+| S6.5  | Medium   | Accessibility and contract review      | P1 with S6.4    |
+| S6.6  | High     | Accessibility and responsive UI review | Composition     |
+| S6.7  | Critical | Independent E2E/security review        | Serial gate     |
+| S6.8  | High     | Independent acceptance review          | Serial exit     |
 
 ## S6.0 - Close the delivery preflight
 
@@ -147,6 +148,40 @@ Exit: one reviewed S5 base is named and all pre-existing gates pass. Rollback:
 discard only the S6 branch/tooling work; do not rewrite S5 history.
 
 Primary files: this plan and delivery evidence only.
+
+### S6.0 preflight evidence (2026-09-21)
+
+Decision: **PASS**. The named S5 base is reviewed and every pre-existing gate
+passes. S6.1 remains outside this preflight change.
+
+- Base and review: GitHub records PR #6 as merged from `api-transport` into
+  `main` on 2026-09-15 at
+  `b8c408961d831beada66004bd30fc124204b2e13`, with all three CI checks passing.
+  GitHub records no formal reviewer approval; the independent delivery review
+  was therefore completed in this S6.0 preflight against the merge tree, S5
+  acceptance record, frozen contract, and current gates. The merge tree is
+  identical to reviewed PR head `f66e563b9a362feeecb84d9adae31555e83261a1`.
+- Toolchain and install: Node `22.17.0` matches `.nvmrc`, `.node-version`, and
+  `engines.node`; Corepack selected pnpm `11.19.0`, matching `packageManager`
+  and `engines.pnpm`; `corepack pnpm install --frozen-lockfile` passed with the
+  lockfile unchanged. A stale machine-wide pnpm shim was not used; a temporary
+  Corepack shim exposed the pinned pnpm to scripts that invoke `pnpm`.
+- Existing gates: `pnpm run verify` passed; `pnpm test:database` passed 59/59
+  tests; `pnpm test:api:database` passed 7/7 tests; `git diff --check` passed.
+  PR #6's clean-checkout CI also passed its Quality, Dependency audit, and
+  Secret scan jobs.
+- Frozen browser boundary: the contract suite parses representative serialized
+  success, error, current-case, attempt, command, profile, suggestion, and
+  leaderboard responses. The configured local origin is exactly
+  `http://localhost:5173`; config, CORS/auth-policy, kernel, and composed
+  HTTP/PostgreSQL tests accept it while rejecting missing, mismatched, or
+  repeated mutation origins. This matches `CORS_POLICY`'s
+  `EXACT_CONFIGURED_ORIGIN` and credentialed, non-wildcard contract.
+- Dependency baseline: `pnpm audit --audit-level moderate` reported no known
+  vulnerabilities. The installed pre-S6 graph contains 245 unique third-party
+  package/version pairs: 204 MIT, 15 Apache-2.0, 14 ISC, 6 BSD-2-Clause,
+  3 BSD-3-Clause, 2 MPL-2.0, and 1 BlueOak-1.0.0; none lacked a declared
+  license. Repeat both audit and license inventory after S6 dependencies change.
 
 ## S6.1 - Establish the browser foundation
 
@@ -175,6 +210,40 @@ and scaffold changes.
 Primary files: `apps/web/package.json`, `apps/web/index.html`,
 `apps/web/vite.config.ts`, `apps/web/tsconfig*.json`, `apps/web/src/main.tsx`,
 shell/styles, and focused web boundary tests.
+
+### S6.1 foundation evidence (2026-09-21)
+
+Decision: **PASS**. The TypeScript scaffold is now the smallest browser build
+and test surface required for later S6 slices; it contains no gameplay or API
+transport behavior.
+
+- Tooling: React and React DOM `19.3.0`, Vite `8.3.0`, the React plugin `6.1.1`,
+  Playwright `1.63.0`, and the Vitest browser adapter `5.0.0` are exact pins.
+  The adapter matches the repository's Vitest `5.0.0`; peer checks pass and no
+  broad UI framework was added.
+- Browser shell: Vite owns the sole `apps/web/dist` public root. React mounts a
+  semantic, responsive Current Case/Profile/Daily Ledger shell behind an error
+  boundary and URL-backed view state. The original archive styling uses the
+  supplied visual references for hierarchy and teal/gold contrast without
+  copying their art or introducing third-party assets.
+- Configuration boundary: the only public variable is
+  `VITE_API_BASE_URL`. It accepts exactly `/api/v1`, a secure absolute API base,
+  or a loopback HTTP base for local development; credentials, queries,
+  fragments, ambiguous paths, and insecure remote HTTP are rejected. Vite's
+  local `/api` proxy preserves the browser Origin and accepts only an exact
+  loopback target.
+- Named verification: web typecheck/build passed; 31 focused workspace tests,
+  2 Chromium component tests, and the Chromium route/refresh E2E journey passed.
+  Desktop `1280x720` and mobile `390x844` renderings were inspected against the
+  references. The full non-database suite passed 242/242 tests, every workspace
+  typecheck/build passed, and formatting, lint, peer, and diff checks passed.
+- Disclosure and dependencies: source-boundary tests reject server/private
+  imports and content markers. A post-build bundle/source-map smoke scan found
+  no server module or private narrative markers; final disclosure proof remains
+  assigned to S6.7. The moderate dependency audit reported no known
+  vulnerabilities. The installed graph contains 279 unique third-party
+  package/version pairs (235 MIT, 18 Apache-2.0, 14 ISC, 6 BSD-2-Clause,
+  3 BSD-3-Clause, 2 MPL-2.0, and 1 BlueOak-1.0.0); none lacked a license.
 
 ## S6.2 - Build the contract-driven API client and session bootstrap
 
@@ -405,8 +474,8 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 
 ## Progress
 
-- [ ] S6.0 Close the delivery preflight
-- [ ] S6.1 Establish the browser foundation
+- [x] S6.0 Close the delivery preflight
+- [x] S6.1 Establish the browser foundation
 - [ ] S6.2 Build the contract-driven API client and session bootstrap
 - [ ] S6.3 Implement hydration, pending-command recovery, refresh, and rollover
 - [ ] S6.4 Deliver the accessible gameplay experience
@@ -416,6 +485,11 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [ ] S6.8 Record S6 acceptance and hand off to S7
 
 ## Plan mutation log
+
+- 2026-09-21 - Executed S6.1 after the preflight pass: pinned the browser and
+  real-browser test dependencies, replaced the web scaffold with the Vite/React
+  shell, added strict public configuration and import boundaries, and recorded
+  focused, root-gate, audit, license, visual, and artifact-scan evidence.
 
 - 2026-09-16 - Initial S6 plan drafted from the reviewed repository boundaries,
   frozen S5 contract, S4/S5 acceptance deferrals, game rules, threat model, and
