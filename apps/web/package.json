@@ -13,6 +13,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@loremaster/contracts": "workspace:*",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },

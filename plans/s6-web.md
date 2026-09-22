@@ -273,6 +273,37 @@ retry. Rollback: remove the adapter while retaining the browser scaffold.
 
 Primary files: `apps/web/src/api/*`, `apps/web/src/session/*`, and focused tests.
 
+### S6.2 client/session evidence (2026-09-22)
+
+Decision: **PASS**. Browser callers now cross one contract-derived transport
+boundary, and startup restores an existing guest before creating a replacement
+session only for a validated authentication-required response or an explicit
+new-session action.
+
+- Contract boundary: the client is keyed by `API_OPERATIONS`, infers request and
+  response types from its exported schemas, validates path/query/body inputs,
+  and accepts a response only when its status, JSON media type, and strict
+  success/error schema agree. Requests use `credentials: include`; paths and
+  query strings are built centrally.
+- Session security: bootstrap sends exact `{}`. Gameplay mutations read only the
+  exported local or production CSRF cookie name at call time, validate the
+  token, attach one supplied idempotency key, and neither persist nor expose
+  cookie, request-body, or browser exception values.
+- Failure and retry safety: cancellation, transport failure, malformed response,
+  validated public errors, and rate limiting map to a closed client error model.
+  Only validated public request IDs are retained. `Retry-After` is accepted as a
+  bounded integer delay. Contract retry policy drives read backoff and explicit
+  mutation replay/refresh/new-key directives; the automatic retry entry point is
+  restricted to GET operations at both type and runtime boundaries.
+- Verification: 15 focused client/session tests passed, including credentials,
+  headers, CSRF lookup, aborts, schema rejection, sanitized observation events,
+  401 bootstrap, 429 delay metadata, and every stable error presentation
+  category. `pnpm run verify` passed with 257/257 non-database tests, all
+  workspace typechecks/builds, lint, and formatting. The retained Chromium
+  component suite passed 2/2 and the shell refresh E2E passed 1/1. The moderate
+  dependency audit reported no known vulnerabilities; the only dependency
+  addition is the existing `@loremaster/contracts` workspace package.
+
 ## S6.3 - Implement hydration, pending-command recovery, refresh, and rollover
 
 Context: navigation, reload, timeout, and midnight must not reset an attempt or
@@ -306,6 +337,44 @@ the controller/pending store without changing the API contract.
 
 Primary files: `apps/web/src/state/*`, `apps/web/src/api/idempotency.ts`,
 `apps/web/src/api/pending-operation.ts`, and state tests.
+
+### S6.3 hydration/recovery evidence (2026-09-22)
+
+Decision: **PASS**. The shared controller reconstructs gameplay from validated
+session/current-case/owned-attempt reads, serializes mutation intentions before
+transmission, and keeps browser navigation, timers, and storage subordinate to
+authoritative server projections.
+
+- Hydration and reads: session and current case hydrate independently of URL
+  state; attempt projections are followed through the owned-attempt endpoint.
+  Equal reads deduplicate, replacement reads abort obsolete work, and generation
+  checks prevent late responses from overwriting newer state. Session bootstrap
+  is abortable, and an expired identity with a stored intent requires an explicit
+  replacement-session decision.
+- Mutation recovery: Web Crypto produces contract-valid idempotency keys. One
+  strict, 2,048-character-bounded `sessionStorage` record contains only the
+  operation kind, exact path/body/key, creation time, and non-narrative slot
+  reconciliation fields. Storage succeeds before transmission; failures prevent
+  the mutation. Cookies, CSRF values, responses, briefing/evidence, and answers
+  are never persisted.
+- Replay and reconciliation: unresolved operations block new mutations. Replay
+  reuses the exact key and body; stale-version rejection clears the rejected
+  record, refreshes the owned attempt, and requires a new player action/key.
+  Reconciliation clears a command only when a terminal projection proves its
+  exact terminal outcome; a version increase alone is insufficient. Start replay
+  first confirms the same target slot so an old intention cannot start a new UTC
+  case. Session loss cancels reads and clears client-owned pending state.
+- Refresh and rollover: `closesAt` schedules an informational refresh without
+  authorizing actions. Focus and visible-state recovery force fresh reads. When
+  Current Case advances, the new slot projection replaces only Current Case and
+  the old owned attempt remains available by its immutable attempt ID.
+- Verification: 18 focused S6.3 state/recovery tests pass for deduplication,
+  out-of-order reads, ACTIVE reload, storage failure, same-key replay, stale
+  version, conservative terminal reconciliation, session expiry, explicit
+  replacement sessions, focus/visibility refresh, and UTC rollover. The full
+  non-database suite passes 275/275 tests, retained Chromium component tests pass
+  2/2, the shell refresh E2E passes 1/1, and the moderate dependency audit reports
+  no known vulnerabilities. No third-party dependency was added.
 
 ## S6.4 - Deliver the accessible gameplay experience
 
@@ -476,8 +545,8 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 
 - [x] S6.0 Close the delivery preflight
 - [x] S6.1 Establish the browser foundation
-- [ ] S6.2 Build the contract-driven API client and session bootstrap
-- [ ] S6.3 Implement hydration, pending-command recovery, refresh, and rollover
+- [x] S6.2 Build the contract-driven API client and session bootstrap
+- [x] S6.3 Implement hydration, pending-command recovery, refresh, and rollover
 - [ ] S6.4 Deliver the accessible gameplay experience
 - [ ] S6.5 Deliver profile and daily leaderboard views
 - [ ] S6.6 Complete responsive design and accessibility
@@ -485,6 +554,18 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [ ] S6.8 Record S6 acceptance and hand off to S7
 
 ## Plan mutation log
+
+- 2026-09-22 - Executed S6.3: added latest-read coordination, an authoritative
+  application controller, cryptographic idempotency keys, bounded pending-intent
+  storage, exact replay and conservative reconciliation, abortable hydration,
+  focus/visibility refresh, and UTC rollover preservation. No endpoint, domain
+  rule, or server projection was changed.
+
+- 2026-09-22 - Executed S6.2: added the schema-derived browser API client,
+  closed public error model, contract-policy retry directives, mode-aware CSRF
+  lookup, and restore-before-create session bootstrap with focused transport and
+  security tests. No frozen endpoint, schema, cookie policy, or retry policy was
+  changed.
 
 - 2026-09-21 - Executed S6.1 after the preflight pass: pinned the browser and
   real-browser test dependencies, replaced the web scaffold with the Vite/React
