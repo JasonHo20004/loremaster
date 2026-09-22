@@ -192,7 +192,8 @@ export class ApiClient {
     this.#apiBaseUrl = new URL(options.apiBaseUrl.href)
     this.#browserOrigin = options.browserOrigin ?? defaultBrowserOrigin()
     this.#cookieSource = options.cookieSource ?? defaultCookieSource
-    this.#fetch = options.fetchImplementation ?? fetch
+    this.#fetch =
+      options.fetchImplementation ?? globalThis.fetch.bind(globalThis)
     this.#observe = options.observe
     this.#sleep = options.sleep ?? defaultSleep
   }

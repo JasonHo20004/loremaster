@@ -407,6 +407,40 @@ gameplay components without changing the controller/client.
 
 Primary files: `apps/web/src/gameplay/*` and gameplay tests.
 
+### S6.4 gameplay evidence (2026-09-22)
+
+Decision: **PASS**. Current Case now renders every contract projection and
+delegates all gameplay truth, versioning, recovery, and mutation outcomes to the
+S6.3 controller.
+
+- Projection-driven play: NO_CASE, NOT_STARTED, ACTIVE, and all four terminal
+  outcomes are exhaustive views. Starting remains explicit; ACTIVE briefing,
+  ordered evidence, counters, UTC close time, and generic guess history come
+  directly from the validated server projection. A refreshed stale projection
+  permits a deliberate new action, while in-flight or uncertain mutations block
+  every new gameplay mutation.
+- Canonical selection: the labeled combobox bounds and debounces searches,
+  aborts superseded reads, supports pointer and arrow/Enter selection, announces
+  result counts, rejects repeated selections, and cannot submit free text.
+  Guess requests contain only the selected entity ID and displayed projection
+  version.
+- Recovery and accessibility: uncertain results offer exact replay or an
+  authoritative check without claiming failure. Safe mutation errors receive
+  focus, Give Up uses a keyboard-contained alert dialog with Escape/cancel focus
+  restoration, and Reveal states its participation effect. Level four exposes
+  no further Reveal action.
+- Terminal disclosure: solved, given-up, exhausted, and expired copy remains
+  distinct. The answer and exactly four evidence explanations/source-reference
+  groups render as inert React text; hostile tag-, handler-, and URL-like values
+  create no script, image, link, or remote fetch.
+- Verification: 7 focused gameplay Chromium tests plus the 2 retained shell
+  component tests pass; the mocked production-build Playwright refresh journey
+  passes; the complete non-database suite passes 275/275; all workspace
+  TypeScript builds, formatting, lint, the Vite production build, diff checks,
+  and the moderate dependency audit pass. The browser journey also exposed and
+  fixed the native `fetch` receiver binding that transport mocks could not
+  exercise. No dependency or frozen API shape changed.
+
 ## S6.5 - Deliver profile and daily leaderboard views
 
 Context: reporting must remain useful without implying client-side score/rank
@@ -547,13 +581,19 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [x] S6.1 Establish the browser foundation
 - [x] S6.2 Build the contract-driven API client and session bootstrap
 - [x] S6.3 Implement hydration, pending-command recovery, refresh, and rollover
-- [ ] S6.4 Deliver the accessible gameplay experience
+- [x] S6.4 Deliver the accessible gameplay experience
 - [ ] S6.5 Deliver profile and daily leaderboard views
 - [ ] S6.6 Complete responsive design and accessibility
 - [ ] S6.7 Run the real-browser and disclosure acceptance gate
 - [ ] S6.8 Record S6 acceptance and hand off to S7
 
 ## Plan mutation log
+
+- 2026-09-22 - Executed S6.4: composed the controller-backed Current Case UI,
+  canonical keyboard/pointer entity selection, mutation recovery and focus
+  behavior, terminal solution disclosure, hostile-text coverage, and mocked
+  production-browser verification. No server rule, endpoint, contract, or
+  third-party dependency changed.
 
 - 2026-09-22 - Executed S6.3: added latest-read coordination, an authoritative
   application controller, cryptographic idempotency keys, bounded pending-intent
