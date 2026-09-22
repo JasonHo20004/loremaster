@@ -298,7 +298,8 @@ footer strong {
   color: #97978c;
 }
 .gameplay-stack,
-.gameplay {
+.gameplay,
+.report-card {
   width: min(100%, 48rem);
   margin: 0 auto;
 }
@@ -313,6 +314,97 @@ footer strong {
   background: var(--paper);
   border: 1px solid var(--line);
   overflow-wrap: anywhere;
+}
+.report-card {
+  padding: clamp(1.25rem, 4vw, 2.75rem);
+  color: #302f24;
+  background: #d8cca6;
+  border: 1px solid #a69b77;
+  overflow-wrap: anywhere;
+}
+.report-stack {
+  display: grid;
+  gap: 2rem;
+}
+.report-card h2 {
+  margin: 0 0 0.75rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+.profile-summary {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0;
+  border-block: 1px solid #a69b77;
+}
+.profile-summary div {
+  min-width: 0;
+  padding: 1rem 0.65rem;
+}
+.profile-summary div + div {
+  border-left: 1px solid #a69b77;
+}
+.profile-summary dt {
+  color: #605c47;
+  font-size: 0.72rem;
+}
+.profile-summary dd {
+  margin: 0.4rem 0 0;
+  font-family: Georgia, serif;
+  font-size: 1.45rem;
+}
+.regional-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.regional-list li {
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto;
+  gap: 0.25rem 1rem;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #a69b77;
+}
+.regional-list small {
+  grid-column: 1 / -1;
+  color: #605c47;
+}
+.empty-report,
+.report-error {
+  margin: 0;
+  padding: 1rem;
+  background: #c8bb93;
+  border: 1px solid #a69b77;
+}
+.report-error p {
+  margin-top: 0;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.report-card table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.report-card th,
+.report-card td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #a69b77;
+  text-align: left;
+  white-space: nowrap;
+}
+.report-card thead th {
+  color: #605c47;
+  font-size: 0.72rem;
+}
+.report-card tbody th {
+  max-width: 16rem;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 .gameplay h2,
 .gameplay h3,
@@ -676,6 +768,7 @@ body {
 }
 .archive-card,
 .gameplay,
+.report-card,
 .confirm-dialog,
 .recovery-panel,
 .action-error,
@@ -688,7 +781,8 @@ body {
   color: var(--ink);
 }
 .archive-card,
-.gameplay {
+.gameplay,
+.report-card {
   position: relative;
   border: 16px solid #263429;
   background:
@@ -709,7 +803,8 @@ body {
   padding: 3.5rem 2rem 1.75rem;
 }
 .archive-card::before,
-.gameplay::before {
+.gameplay::before,
+.report-card::before {
   position: absolute;
   inset: -16px 0 auto;
   height: 14px;
@@ -832,6 +927,15 @@ footer strong,
   }
   .case-counters dt {
     font-size: 0.65rem;
+  }
+  .profile-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .profile-summary div + div {
+    border-left: 0;
+  }
+  .profile-summary div:nth-child(even) {
+    border-left: 1px solid #a69b77;
   }
   .guess-history > li {
     display: grid;

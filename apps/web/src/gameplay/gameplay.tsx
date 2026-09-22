@@ -30,6 +30,8 @@ export interface SuggestionSearch {
 interface GameplayExperienceProps {
   readonly client: ApiClient
   readonly controller: GameController
+  readonly manageControllerLifecycle?: boolean
+  readonly onNewSession?: () => Promise<void>
 }
 
 interface CurrentCaseViewProps {
@@ -725,6 +727,8 @@ export function CurrentCaseView(
 export function GameplayExperience({
   client,
   controller,
+  manageControllerLifecycle = true,
+  onNewSession,
 }: GameplayExperienceProps): React.JSX.Element {
   const state = useSyncExternalStore(
     (listener) => controller.subscribe(listener),
@@ -732,13 +736,14 @@ export function GameplayExperience({
   )
 
   useEffect(() => {
+    if (!manageControllerLifecycle) return
     const detach = controller.attachLifecycle(window, document)
     void controller.initialize()
     return () => {
       detach()
       controller.dispose()
     }
-  }, [controller])
+  }, [controller, manageControllerLifecycle])
 
   const searchSuggestions: SuggestionSearch = async (
     attemptId,
@@ -757,7 +762,7 @@ export function GameplayExperience({
     <CurrentCaseView
       state={state}
       searchSuggestions={searchSuggestions}
-      onNewSession={() => controller.initialize(true)}
+      onNewSession={onNewSession ?? (() => controller.initialize(true))}
       onReconcile={async () => {
         await controller.reconcilePendingOperation()
       }}

@@ -459,6 +459,17 @@ calculation or exposing cursor internals.
 - Test zero-history profile, regional values, exact shared ranks, zero-score
   solved rows, pagination boundaries, retry, and hostile pseudonym text.
 
+Completed 2026-09-22. Reporting now uses isolated, schema-validated reads over
+the shared current projection. Profile statistics and exact regional values are
+presented with the UTC participation rule; the daily ledger preserves API row
+order, competition ranks, zero scores, and opaque cursor paging. Terminal
+projections trigger non-blocking profile/ledger refreshes. Focused unit and
+Chromium coverage proves empty history, regional precision, shared ranks,
+hostile text, pagination boundaries, duplicate suppression, and retry. The
+complete web component suite, shell refresh journey, 277-test non-database
+suite, formatting, lint, workspace typechecks, production build, and diff check
+pass.
+
 Verify: focused reporting tests and schemas, web typecheck/build, and root gates.
 Exit: B02-B06 and B08-B10 are faithfully presented without browser recomputation.
 Rollback: remove reporting views without changing gameplay state.
@@ -582,7 +593,7 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [x] S6.2 Build the contract-driven API client and session bootstrap
 - [x] S6.3 Implement hydration, pending-command recovery, refresh, and rollover
 - [x] S6.4 Deliver the accessible gameplay experience
-- [ ] S6.5 Deliver profile and daily leaderboard views
+- [x] S6.5 Deliver profile and daily leaderboard views
 - [ ] S6.6 Complete responsive design and accessibility
 - [ ] S6.7 Run the real-browser and disclosure acceptance gate
 - [ ] S6.8 Record S6 acceptance and hand off to S7

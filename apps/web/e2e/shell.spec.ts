@@ -17,6 +17,23 @@ test('opens the shell and preserves route state on refresh', async ({
       })
       return
     }
+    if (path === '/api/v1/profile') {
+      await route.fulfill({
+        contentType: 'application/json',
+        status: 200,
+        body: JSON.stringify({
+          data: {
+            currentStreak: 0,
+            longestStreak: 0,
+            solvedCount: 0,
+            failedCount: 0,
+            accuracyPercentage: 0,
+            regionalKnowledge: [],
+          },
+        }),
+      })
+      return
+    }
     await route.fulfill({
       contentType: 'application/json',
       status: 200,
@@ -32,13 +49,14 @@ test('opens the shell and preserves route state on refresh', async ({
   await page.getByRole('link', { name: 'Profile' }).click()
   await expect(page).toHaveURL('/profile')
   await expect(
-    page.getByRole('heading', { name: 'No record opened' }),
+    page.getByRole('heading', { name: 'Your archive record' }),
   ).toBeVisible()
+  await expect(page.getByText('No completed cases yet.')).toBeVisible()
 
   await page.reload()
 
   await expect(
-    page.getByRole('heading', { name: 'No record opened' }),
+    page.getByRole('heading', { name: 'Your archive record' }),
   ).toBeVisible()
   await expect(page.getByRole('link', { name: 'Profile' })).toHaveAttribute(
     'aria-current',

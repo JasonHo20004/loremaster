@@ -1,9 +1,26 @@
-import { useEffect, useState, type MouseEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type MouseEvent,
+} from 'react'
 
 import type { ApiClient } from './api/client.js'
 import { GameplayExperience } from './gameplay/gameplay.js'
+import { LeaderboardView } from './leaderboard/leaderboard.js'
+import { ProfileView } from './profile/profile.js'
+import {
+  ReportingController,
+  type ReportingState,
+} from './reporting/controller.js'
 import { routes, viewFromPath, type AppView } from './route'
-import type { GameController } from './state/controller.js'
+import type {
+  CaseProjection,
+  GameController,
+  GameControllerState,
+} from './state/controller.js'
 
 const viewCopy: Record<
   AppView,
@@ -31,8 +48,43 @@ interface AppProps {
   readonly controller?: GameController
 }
 
+const EMPTY_GAME_STATE: GameControllerState = {
+  status: 'IDLE',
+  mutationStatus: 'IDLE',
+}
+
+const EMPTY_REPORTING_STATE: ReportingState = {
+  profileStatus: 'IDLE',
+  leaderboardEntries: [],
+  leaderboardStatus: 'IDLE',
+}
+
+function slotIdForProjection(
+  projection: CaseProjection | undefined,
+): string | undefined {
+  if (projection === undefined || projection.view === 'NO_CASE')
+    return undefined
+  if (projection.view === 'NOT_STARTED') return projection.slotId
+  const close = Date.parse(projection.closesAt)
+  if (!Number.isFinite(close)) return undefined
+  return new Date(close - 1).toISOString().slice(0, 10)
+}
+
 export function App({ client, controller }: AppProps = {}): React.JSX.Element {
   const [view, setView] = useState(() => viewFromPath(window.location.pathname))
+  const reporting = useMemo(
+    () => (client === undefined ? undefined : new ReportingController(client)),
+    [client],
+  )
+  const gameState = useSyncExternalStore(
+    (listener) => controller?.subscribe(listener) ?? (() => undefined),
+    () => controller?.state ?? EMPTY_GAME_STATE,
+  )
+  const reportingState = useSyncExternalStore(
+    (listener) => reporting?.subscribe(listener) ?? (() => undefined),
+    () => reporting?.state ?? EMPTY_REPORTING_STATE,
+  )
+  const refreshedTerminal = useRef<string | undefined>(undefined)
 
   useEffect(() => {
     const updateView = (): void =>
@@ -40,6 +92,45 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
     window.addEventListener('popstate', updateView)
     return () => window.removeEventListener('popstate', updateView)
   }, [])
+
+  useEffect(() => {
+    if (controller === undefined) return
+    const detach = controller.attachLifecycle(window, document)
+    void controller.initialize()
+    return () => {
+      detach()
+      controller.dispose()
+    }
+  }, [controller])
+
+  useEffect(() => () => reporting?.dispose(), [reporting])
+
+  const slotId = slotIdForProjection(gameState.currentCase)
+  useEffect(() => {
+    if (reporting === undefined || gameState.status !== 'READY') return
+    if (view === 'profile') void reporting.refreshProfile()
+    if (view === 'leaderboard' && slotId !== undefined) {
+      void reporting.selectLeaderboardSlot(slotId)
+    }
+  }, [gameState.status, reporting, slotId, view])
+
+  useEffect(() => {
+    const attempt = gameState.displayedAttempt
+    if (
+      reporting === undefined ||
+      attempt === undefined ||
+      attempt.state === 'ACTIVE'
+    ) {
+      return
+    }
+    const terminalKey = `${attempt.attemptId}:${attempt.version}`
+    if (refreshedTerminal.current === terminalKey) return
+    refreshedTerminal.current = terminalKey
+    const terminalSlotId = slotIdForProjection(attempt)
+    if (terminalSlotId !== undefined) {
+      reporting.refreshAfterTerminal(terminalSlotId)
+    }
+  }, [gameState.displayedAttempt, reporting])
 
   function navigate(event: MouseEvent<HTMLAnchorElement>, href: string): void {
     if (
@@ -113,7 +204,27 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
           </span>
         </div>
         {view === 'case' && client !== undefined && controller !== undefined ? (
-          <GameplayExperience client={client} controller={controller} />
+          <GameplayExperience
+            client={client}
+            controller={controller}
+            manageControllerLifecycle={false}
+            onNewSession={async () => {
+              reporting?.reset()
+              await controller.initialize(true)
+            }}
+          />
+        ) : view === 'profile' && reporting !== undefined ? (
+          <ProfileView
+            state={reportingState}
+            onRetry={() => reporting.refreshProfile(true)}
+          />
+        ) : view === 'leaderboard' && reporting !== undefined ? (
+          <LeaderboardView
+            slotId={slotId}
+            state={reportingState}
+            onLoadMore={() => reporting.loadMoreLeaderboard()}
+            onRetry={() => reporting.refreshLeaderboard()}
+          />
         ) : (
           <section className="archive-card" aria-labelledby="view-title">
             <div className="archive-illustration" aria-hidden="true">
