@@ -6,7 +6,7 @@ Date: 2026-09-11. Scope: least-privilege CI for untrusted pull requests. This re
 
 | Check                           | Evidence                                                                                                                        | Result |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Untrusted changes are verified  | Original 2026-09-11 workflow used bare `pnpm verify`; see the 2026-09-15 correction below                                      | Pending CI |
+| Untrusted changes are verified  | Corrected workflow uses `pnpm run verify`; hosted acceptance and the later PR #6 clean-checkout run passed all required jobs | Pass   |
 | Token permissions are minimal   | Workflow permissions grant read access only to repository contents and pull-request metadata                                   | Pass   |
 | Privileged PR trigger is absent | No workflow uses `pull_request_target`                                                                                          | Pass   |
 | Cloud credentials are absent    | CI contains no AWS identity, deployment step or repository secret reference                                                    | Pass   |
@@ -19,7 +19,10 @@ Hosted acceptance is recorded by [GitHub Actions run 34612211333](https://github
 
 The workflow deliberately has no `pull_request_target` trigger, write permission, cloud identity, deployment secret, cache restore or artifact upload. A pull request may execute arbitrary package lifecycle and test code only inside an ephemeral GitHub-hosted runner with a read-only token. The lockfile audit is used because GitHub Dependency Review was unavailable before the repository became public and did not justify enabling a broader licensed security feature solely for this gate.
 
-Correction (2026-09-15): pnpm 11 resolves bare `pnpm verify` to its own built-in
-command rather than the root package script. CI now uses `pnpm run verify`, with
-a policy regression test that rejects the bare form. The first row remains
-pending until the corrected pull-request workflow passes.
+Correction (2026-09-15, closed 2026-09-21): pnpm 11 resolves bare
+`pnpm verify` to its own built-in command rather than the root package script.
+CI now uses `pnpm run verify`, with a policy regression test that rejects the
+bare form. The corrected hosted workflow passed, and PR #6 later repeated the
+required Quality, Dependency audit, and Secret scan jobs successfully. S3 exit
+is therefore **PASS**; the earlier pending wording is retained here only as the
+reason for the correction.

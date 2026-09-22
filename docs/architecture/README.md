@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Accepted for S1 on 2026-09-11 and implemented through the local [S5 API transport acceptance record](s5-acceptance.md) on 2026-09-15. The [S5 API contract](s5-api-contract.md) is the frozen browser/API boundary; formal S5 completion still requires independent review and clean-checkout CI. The blueprint defines project scope; later stages are not authorization to provision resources before their gates.
+Accepted for S1 on 2026-09-11 and formally completed through the [S5 API transport acceptance record](s5-acceptance.md) on 2026-09-21. The [S5 API contract](s5-api-contract.md) is the frozen browser/API boundary. The [S6 plan](../../plans/s6-web.md) is the canonical current-status source: S6.0 and S6.1 are complete, and S6.2 is next. The blueprint defines project scope; later stages are not authorization to provision resources before their gates.
 
 ## Boundaries and flow
 
@@ -19,7 +19,7 @@ The API authenticates and validates mutations, locks the attempt, applies the [s
 | `infra/` | AWS bootstrap and separately admitted runtime |
 | `ops/`, `tests/`, `docs/` | Operational evidence, verification, accepted decisions |
 
-The API, domain, contracts, database, config and observability boundaries now exist; web, worker, queue and deployment boundaries remain staged targets. Engine rules use entity/region IDs; content packs supply original names, narrative, evidence and explanations. A non-public operator CLI imports validated packs into PostgreSQL.
+The API, domain, contracts, database, config and observability boundaries now exist. The React/Vite web foundation exists, but its API client, session bootstrap, and gameplay behavior remain S6 work. Worker, queue, and deployment boundaries remain staged targets. Engine rules use entity/region IDs; content packs supply original names, narrative, evidence and explanations. A non-public operator CLI imports validated packs into PostgreSQL.
 
 ## Deployment progression
 

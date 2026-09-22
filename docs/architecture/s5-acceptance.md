@@ -1,10 +1,15 @@
 # S5 API transport acceptance record
 
-Recorded 2026-09-15. This record closes only locally executable S5 transport
-claims. `PASS` means the S5-owned behavior has executable local evidence;
-`PARTIAL` names evidence still owned by a later stage; `DEFERRED (owner)` is not
-part of the S5 exit claim. Independent review and clean-checkout CI are still
-pending, so the S5 plan remains formally open.
+Recorded 2026-09-15; formally closed 2026-09-21. `PASS` means the S5-owned
+behavior has executable evidence; `PARTIAL` names evidence still owned by a
+later stage; `DEFERRED (owner)` is not part of the S5 exit claim.
+
+Status correction (2026-09-21): S6.0 independently reviewed the S5 merge tree
+and acceptance evidence. PR #6 merged the identical reviewed head into `main`
+and its clean-checkout Quality, Dependency audit, and Secret scan jobs all
+passed. The previously pending delivery gates are closed, so the formal S5
+exit is **PASS**. Later-stage partial and deferred controls below remain assigned
+to their named owners and do not reopen S5.
 
 ## Gameplay transitions
 
@@ -87,12 +92,15 @@ skip path.
 | Production runtime licenses | MIT, ISC and BSD-3-Clause only; direct runtime dependencies Express 5.2.1, pg 8.16.3 and Zod 4.6.4 are MIT |
 | Lockfile review | No uncommitted `pnpm-lock.yaml` change in the S5.7/S5.8 acceptance diff |
 | Local secret scan | Zero high-confidence AWS/GitHub/Slack/Google token or private-key signatures in the working tree and full Git patch history; only tracked env/key-named file is the placeholder-only environment test |
-| Clean-checkout CI and independent review | PENDING; therefore formal S5 exit is not claimed |
+| Clean-checkout CI and independent review | PASS during the 2026-09-21 S6.0 delivery preflight; PR #6 passed all three required CI jobs and the merge tree received independent acceptance review |
 
-The exact root `pnpm run verify` wrapper remains affected on this Windows host by
-the previously recorded stale global pnpm child-process shim. Its five pinned
-constituent stages all pass directly; clean-checkout CI remains the authoritative
-wrapper proof.
+The exact root `pnpm run verify` wrapper was affected on the original Windows
+host by a stale global pnpm child-process shim. Its five pinned constituent
+stages passed directly at S5 acceptance, and clean-checkout CI supplied the
+authoritative wrapper proof. On 2026-09-22 the host shim was replaced by a
+Corepack pnpm 11.19.0 shim running Node 22.17.0; the current root wrapper then
+passed formatting, lint, all workspace typechecks, 242 non-database tests, and
+all workspace builds.
 
 ## S6 handoff
 

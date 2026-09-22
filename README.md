@@ -4,6 +4,8 @@ A daily deduction game using original fiction, built as a portfolio for reliable
 
 **Status:** S6.1 browser foundation is implemented on the reviewed S5 API base and passes its build, boundary, component, and E2E gates. S6.2 API client/session work is next. The browser shell has no gameplay behavior yet, and there is no cloud deployment.
 
+The [S6 progress checklist](plans/s6-web.md#progress) is the canonical current-status source. Stage acceptance records own completed-stage evidence; this README only summarizes them.
+
 Start with the [architecture](docs/architecture/README.md), [authoritative game rules](docs/architecture/game-rules.md), and [accepted decisions](docs/adr/README.md). The [S1](docs/architecture/s1-acceptance.md), [S2](docs/architecture/s2-acceptance.md), [S3](docs/architecture/s3-acceptance.md), [S4](docs/architecture/s4-acceptance.md), and [S5](docs/architecture/s5-acceptance.md) acceptance records trace stage evidence and explicit deferrals. Local setup is documented in the [development guide](docs/development/README.md). Security requirements live in the [threat model](docs/threat-model/README.md); content requirements in the [content policy](docs/content-policy.md); cloud remains denied under the [cost admission policy](ops/cost/README.md).
 
 The legacy [product description](docs/DailyRuneterraCase_Description.md) is historical inspiration only. It is not an implementation specification or an approved content pack. Where it differs, accepted ADRs and the game rules govern new work.
