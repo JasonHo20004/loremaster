@@ -176,6 +176,8 @@ export function EntityCombobox({
 }: EntityComboboxProps): React.JSX.Element {
   const inputId = useId()
   const listboxId = useId()
+  const hintId = `${inputId}-hint`
+  const errorId = `${inputId}-error`
   const inputRef = useRef<HTMLInputElement>(null)
   const searchGeneration = useRef(0)
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -300,6 +302,8 @@ export function EntityCombobox({
               ? `${listboxId}-option-${activeIndex}`
               : undefined
           }
+          aria-describedby={`${hintId}${selectedWasGuessed || error ? ` ${errorId}` : ''}`}
+          aria-invalid={selectedWasGuessed || error !== ''}
           disabled={disabled}
           maxLength={80}
           value={query}
@@ -328,18 +332,18 @@ export function EntityCombobox({
           </ul>
         ) : null}
       </div>
-      <p className="field-hint">
+      <p id={hintId} className="field-hint">
         {loading
           ? 'Searching…'
           : 'Choose a canonical result. Typed text alone cannot be submitted.'}
       </p>
       {selectedWasGuessed ? (
-        <p className="field-error" role="alert">
+        <p id={errorId} className="field-error" role="alert">
           That entity is already in your guess history. Choose another.
         </p>
       ) : null}
       {error ? (
-        <p className="field-error" role="alert">
+        <p id={errorId} className="field-error" role="alert">
           {error}
         </p>
       ) : null}

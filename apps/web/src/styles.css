@@ -1,27 +1,53 @@
 :root {
-  font-family: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
-  color: #dfdfc9;
-  background: #080f0d;
+  font-family: var(--font-body);
+  color: var(--color-shell-text);
+  background: var(--color-shell-bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --ink: #dfdfc9;
-  --muted: #a4b2a3;
+  --font-body: 'Segoe UI', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  --font-record: ui-monospace, Consolas, monospace;
+  --color-shell-bg: #080f0d;
+  --color-shell-text: #e0e8db;
+  --color-shell-muted: #afc0b1;
+  --color-shell-accent: #b5d7a8;
+  --color-paper: #ded2aa;
+  --color-paper-text: #29281f;
+  --color-paper-muted: #514d3b;
+  --color-paper-accent: #344b2d;
+  --color-line-dark: #52604a;
+  --color-line-paper: #8e835f;
+  --color-status-info-bg: #efe8d5;
+  --color-status-info-border: #8a7442;
+  --color-status-error-bg: #f4e5de;
+  --color-status-error-border: #8e4939;
+  --color-status-error-text: #7b2d22;
+  --focus-ring: #f4d35e;
+  --focus-width: 3px;
+  --target-min: 2.75rem;
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --motion-fast: 150ms;
+  --ink: var(--color-shell-text);
+  --muted: var(--color-shell-muted);
   --paper: #13231c;
-  --accent: #a0c998;
-  --line: #3e5040;
+  --accent: var(--color-shell-accent);
+  --line: var(--color-line-dark);
 }
 
 * {
   box-sizing: border-box;
 }
 html {
-  min-width: 320px;
   min-height: 100%;
 }
 body {
-  min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  line-height: 1.5;
 }
 a {
   color: inherit;
@@ -35,7 +61,7 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 button {
-  min-height: 2.75rem;
+  min-height: var(--target-min);
   padding: 0.7rem 1.1rem;
   color: var(--paper);
   background: var(--ink);
@@ -43,7 +69,7 @@ button {
   border-radius: 2px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 150ms ease;
+  transition: background var(--motion-fast) ease;
 }
 button:hover:not(:disabled) {
   background: #46483e;
@@ -106,7 +132,7 @@ button:disabled {
 }
 .brand-subtitle {
   color: var(--accent);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-record);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -114,7 +140,7 @@ button:disabled {
 }
 .brand-name,
 h1 {
-  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  font-family: var(--font-display);
 }
 .brand-name {
   font-size: clamp(2.7rem, 6vw, 4.2rem);
@@ -154,8 +180,8 @@ h1 {
   font-weight: 600;
   text-decoration: none;
   transition:
-    background 150ms ease,
-    color 150ms ease;
+    background var(--motion-fast) ease,
+    color var(--motion-fast) ease;
 }
 .site-header nav a:hover {
   background: #e9e5da;
@@ -176,7 +202,7 @@ h1 {
 }
 .nav-index,
 .nav-arrow {
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-record);
   font-size: 0.75rem;
   font-weight: 400;
 }
@@ -194,7 +220,7 @@ main {
   gap: 1rem;
   margin-bottom: 2rem;
   color: var(--muted);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-record);
   font-size: 0.65rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -235,7 +261,7 @@ main {
 .eyebrow {
   margin: 0 0 0.65rem;
   color: var(--accent);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-record);
   font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -264,7 +290,7 @@ h1 {
   align-items: center;
   gap: 0.55rem;
   color: var(--muted);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-record);
   font-size: 0.65rem;
 }
 .status-dot {
@@ -384,6 +410,7 @@ footer strong {
 }
 .table-scroll {
   overflow-x: auto;
+  scrollbar-color: var(--color-paper-accent) var(--color-paper);
 }
 .report-card table {
   width: 100%;
@@ -410,7 +437,7 @@ footer strong {
 .gameplay h3,
 .recovery-panel h2 {
   margin-top: 0;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-display);
   font-weight: 400;
 }
 .gameplay h2,
@@ -465,7 +492,7 @@ footer strong {
 .case-counters dd {
   margin: 0.4rem 0 0;
   color: var(--ink);
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 1.4rem;
 }
 .evidence-list,
@@ -482,7 +509,7 @@ footer strong {
 }
 .evidence-list > li > span {
   color: var(--muted);
-  font-family: ui-monospace, Consolas, monospace;
+  font-family: var(--font-record);
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -541,6 +568,7 @@ footer strong {
 }
 .suggestions li {
   display: grid;
+  min-height: var(--target-min);
   gap: 0.2rem;
   padding: 0.65rem 0.75rem;
   cursor: pointer;
@@ -561,7 +589,7 @@ footer strong {
   color: var(--muted);
 }
 .field-error {
-  color: #943d2e;
+  color: var(--color-status-error-text);
   font-weight: 600;
 }
 .case-actions {
@@ -576,13 +604,13 @@ footer strong {
 .action-error {
   margin: 0;
   padding: 1.25rem;
-  background: #efe8d5;
-  border: 1px solid #b6a777;
+  background: var(--color-status-info-bg);
+  border: 1px solid var(--color-status-info-border);
   line-height: 1.6;
 }
 .action-error {
-  background: #f4e5de;
-  border-color: #bc8d7e;
+  background: var(--color-status-error-bg);
+  border-color: var(--color-status-error-border);
 }
 .action-error small {
   display: block;
@@ -639,7 +667,9 @@ footer strong {
   color: var(--muted);
 }
 .reporting-links a {
-  min-height: 2.75rem;
+  display: inline-flex;
+  min-height: var(--target-min);
+  align-items: center;
   padding: 0.7rem 0;
   color: var(--accent);
   font-size: 0.85rem;
@@ -670,8 +700,8 @@ footer strong {
   text-align: center;
 }
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 4px;
+  outline: var(--focus-width) solid var(--focus-ring);
+  outline-offset: 3px;
 }
 ::selection {
   color: var(--ink);
@@ -774,10 +804,11 @@ body {
 .action-error,
 .notice {
   --ink: #302f24;
-  --muted: #605c47;
-  --paper: #d8cca6;
-  --accent: #465b39;
-  --line: #a69b77;
+  --muted: var(--color-paper-muted);
+  --paper: var(--color-paper);
+  --accent: var(--color-paper-accent);
+  --line: var(--color-line-paper);
+  --focus-ring: #174b72;
   color: var(--ink);
 }
 .archive-card,
@@ -846,7 +877,7 @@ body {
   order: 1;
 }
 footer {
-  color: #91a090;
+  color: var(--color-shell-muted);
   border-color: #354538;
 }
 footer strong,
@@ -906,7 +937,7 @@ footer strong,
   }
   .section-heading {
     margin-bottom: 1.5rem;
-    font-size: 0.6rem;
+    font-size: 0.7rem;
   }
   .archive-card {
     min-height: 22rem;
@@ -944,7 +975,62 @@ footer strong,
   footer {
     flex-direction: column;
     gap: 0.3rem;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
+  }
+}
+@media (max-width: 28rem) {
+  .app-shell {
+    width: calc(100% - 1rem);
+    padding-top: 1rem;
+  }
+  .site-header nav ul {
+    grid-template-columns: 1fr;
+  }
+  .site-header nav a {
+    justify-content: flex-start;
+    padding-inline: 0.9rem;
+  }
+  .archive-card,
+  .gameplay,
+  .report-card {
+    border-width: 8px;
+  }
+  .archive-card::before,
+  .gameplay::before,
+  .report-card::before {
+    inset-block-start: -8px;
+    height: 7px;
+  }
+  .case-counters,
+  .profile-summary {
+    grid-template-columns: 1fr;
+  }
+  .case-counters div + div,
+  .profile-summary div:nth-child(even) {
+    padding-left: 0;
+    border-left: 0;
+  }
+  .case-counters div + div {
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--line);
+  }
+  .profile-summary div + div {
+    border-top: 1px solid var(--color-line-paper);
+  }
+  .regional-list li {
+    grid-template-columns: 1fr;
+  }
+  .regional-list small {
+    grid-column: auto;
+  }
+  .button-row,
+  .reporting-links {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .button-row > *,
+  .reporting-links a {
+    width: 100%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -952,6 +1038,80 @@ footer strong,
   *::before,
   *::after {
     scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+@media (forced-colors: active) {
+  :root {
+    --ink: CanvasText;
+    --muted: CanvasText;
+    --paper: Canvas;
+    --accent: LinkText;
+    --line: CanvasText;
+    --color-shell-text: CanvasText;
+    --color-shell-muted: CanvasText;
+    --color-shell-accent: LinkText;
+    --color-paper-text: CanvasText;
+    --color-paper-muted: CanvasText;
+    --color-paper-accent: LinkText;
+  }
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  body,
+  .site-header nav,
+  .site-header nav a,
+  .site-header nav a[aria-current='page'],
+  .archive-card,
+  .gameplay,
+  .report-card,
+  .confirm-dialog,
+  .notice,
+  .recovery-panel,
+  .action-error {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+  }
+  .archive-card::before,
+  .archive-card::after,
+  .gameplay::before,
+  .report-card::before,
+  .site-header nav a::before,
+  .site-header nav a::after {
+    display: none;
+  }
+  .site-header nav a[aria-current='page'] {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+  .status-dot {
+    background: CanvasText;
+    border: 1px solid CanvasText;
+  }
+  .brand-name,
+  .brand-subtitle,
+  .masthead-note,
+  .section-heading,
+  footer,
+  footer strong,
+  .footer-name,
+  .footer-name span {
+    color: CanvasText;
+  }
+  button,
+  .secondary-button,
+  .danger-button {
+    color: ButtonText;
+    background: ButtonFace;
+    border-color: ButtonText;
+  }
+  :focus-visible {
+    outline-color: Highlight;
   }
 }

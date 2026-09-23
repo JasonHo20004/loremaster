@@ -24,22 +24,30 @@ import type {
 
 const viewCopy: Record<
   AppView,
-  { readonly eyebrow: string; readonly title: string; readonly detail: string }
+  {
+    readonly eyebrow: string
+    readonly title: string
+    readonly detail: string
+    readonly documentTitle: string
+  }
 > = {
   case: {
     eyebrow: 'Daily case',
     title: 'The archive is quiet',
     detail: 'Today’s record will appear here when the archive is ready.',
+    documentTitle: 'Current Case | Loremaster',
   },
   profile: {
     eyebrow: 'Investigator profile',
     title: 'No record opened',
     detail: 'Your case history will gather here.',
+    documentTitle: 'Investigator Profile | Loremaster',
   },
   leaderboard: {
     eyebrow: 'Daily ledger',
     title: 'The ledger is sealed',
     detail: 'Today’s investigators will be recorded here.',
+    documentTitle: 'Daily Ledger | Loremaster',
   },
 }
 
@@ -85,6 +93,8 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
     () => reporting?.state ?? EMPTY_REPORTING_STATE,
   )
   const refreshedTerminal = useRef<string | undefined>(undefined)
+  const main = useRef<HTMLElement>(null)
+  const previousView = useRef(view)
 
   useEffect(() => {
     const updateView = (): void =>
@@ -92,6 +102,14 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
     window.addEventListener('popstate', updateView)
     return () => window.removeEventListener('popstate', updateView)
   }, [])
+
+  useEffect(() => {
+    document.title = viewCopy[view].documentTitle
+    if (previousView.current !== view) {
+      main.current?.focus()
+      previousView.current = view
+    }
+  }, [view])
 
   useEffect(() => {
     if (controller === undefined) return
@@ -195,7 +213,7 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
         </nav>
       </header>
 
-      <main id="content" tabIndex={-1}>
+      <main ref={main} id="content" tabIndex={-1}>
         <div className="section-heading" aria-hidden="true">
           <span>{copy.eyebrow}</span>
           <span>

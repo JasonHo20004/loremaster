@@ -214,6 +214,11 @@ describe('accessible gameplay experience', () => {
         ),
       )
       .toBeVisible()
+    await expect.element(input).toHaveAttribute('aria-invalid', 'true')
+    const inputElement = container.querySelector('[role="combobox"]')
+    const errorId = container.querySelector('[role="alert"]')?.id
+    expect(errorId).toBeTruthy()
+    expect(inputElement?.getAttribute('aria-describedby')).toContain(errorId)
     await expect
       .element(page.getByRole('button', { name: 'Submit guess' }))
       .toBeDisabled()

@@ -70,7 +70,12 @@ export function LeaderboardView({
       ) : null}
 
       {entries.length > 0 ? (
-        <div className="table-scroll">
+        <div
+          className="table-scroll"
+          role="region"
+          aria-label={`Scrollable daily leaderboard for ${slotId}`}
+          tabIndex={0}
+        >
           <table>
             <caption className="visually-hidden">
               Daily leaderboard for {slotId}

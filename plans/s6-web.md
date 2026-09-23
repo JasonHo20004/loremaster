@@ -496,6 +496,18 @@ late visual audit.
   axe checks. Manually inspect the critical start, active, uncertain-mutation,
   and terminal views.
 
+Completed 2026-09-22. The composed archive interface now uses shared color,
+type, spacing, focus, motion, target, and status tokens with explicit narrow
+reflow, reduced-motion, and forced-colors behavior. Route changes set descriptive
+titles and move focus to main content; combobox errors are programmatically
+described; scrollable tables and interactive targets remain keyboard reachable.
+Five Playwright journeys pass across 360px mobile, desktop, 200%-zoom-equivalent
+reflow, keyboard-only navigation, reduced motion, forced colors, gameplay, and
+reporting. Axe reports no serious or critical violations in the named states,
+all four critical-state screenshots were manually reviewed, the 11-test
+component suite passes, the dependency audit is clean, and the exact root
+verification gate passes 277/277 non-database tests plus all builds.
+
 Verify: component accessibility suite, Playwright accessibility/responsive
 journeys, screenshots for review, web build, and root gates. Exit: no serious or
 critical automated violations and the named manual journeys pass. Rollback:
@@ -594,11 +606,17 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [x] S6.3 Implement hydration, pending-command recovery, refresh, and rollover
 - [x] S6.4 Deliver the accessible gameplay experience
 - [x] S6.5 Deliver profile and daily leaderboard views
-- [ ] S6.6 Complete responsive design and accessibility
+- [x] S6.6 Complete responsive design and accessibility
 - [ ] S6.7 Run the real-browser and disclosure acceptance gate
 - [ ] S6.8 Record S6 acceptance and hand off to S7
 
 ## Plan mutation log
+
+- 2026-09-22 - Executed S6.6: completed tokenized responsive styling, route
+  title/focus behavior, associated form errors, forced-colors and reduced-motion
+  support, axe-backed accessibility journeys, reviewed test-artifact screenshots,
+  and mobile/desktop/high-zoom verification. Added only the pinned Playwright axe
+  adapter; no server contract or gameplay rule changed.
 
 - 2026-09-22 - Executed S6.4: composed the controller-backed Current Case UI,
   canonical keyboard/pointer entity selection, mutation recovery and focus

@@ -31,6 +31,7 @@ describe('application shell', () => {
     await expect
       .element(page.getByRole('link', { name: 'Current case' }))
       .toHaveAttribute('aria-current', 'page')
+    expect(document.title).toBe('Current Case | Loremaster')
   })
 
   it('moves between views without reloading the document', async () => {
@@ -45,5 +46,7 @@ describe('application shell', () => {
       .element(page.getByRole('link', { name: 'Daily ledger' }))
       .toHaveAttribute('aria-current', 'page')
     expect(window.location.pathname).toBe('/leaderboard')
+    expect(document.title).toBe('Daily Ledger | Loremaster')
+    await expect.element(page.getByRole('main')).toHaveFocus()
   })
 })
