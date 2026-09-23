@@ -104,6 +104,9 @@ describe('reporting views', () => {
     )
 
     await expect.element(page.getByRole('table')).toBeVisible()
+    await expect
+      .element(page.getByRole('status'))
+      .toHaveTextContent('2 total leaderboard entries loaded.')
     expect(container.querySelectorAll('tbody tr')[0]?.textContent).toContain(
       `1${hostile}414300000 ms0`,
     )

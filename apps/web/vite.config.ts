@@ -34,6 +34,7 @@ export function parseProxyTarget(raw: string | undefined): string {
 export default defineConfig({
   plugins: [react()],
   build: {
+    manifest: true,
     outDir: 'dist',
     sourcemap: true,
   },

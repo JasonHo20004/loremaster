@@ -269,6 +269,9 @@ describe('accessible gameplay experience', () => {
     await expect
       .element(page.getByText('<script>explanation 4</script>'))
       .toBeVisible()
+    await expect
+      .element(page.getByRole('heading', { name: 'The record is restored' }))
+      .toHaveFocus()
     expect(container.querySelector('script')).toBeNull()
     expect(container.querySelector('img')).toBeNull()
     expect(container.querySelectorAll('.terminal-evidence > li')).toHaveLength(
@@ -287,6 +290,9 @@ describe('accessible gameplay experience', () => {
     await expect
       .element(page.getByRole('heading', { name: 'Action outcome unknown' }))
       .toBeVisible()
+    await expect
+      .element(page.getByRole('heading', { name: 'Action outcome unknown' }))
+      .toHaveFocus()
     await expect
       .element(page.getByRole('button', { name: 'Submit guess' }))
       .toBeDisabled()
@@ -410,6 +416,9 @@ describe('accessible gameplay experience', () => {
     await expect
       .element(page.getByRole('heading', { name: 'The investigation is open' }))
       .toBeVisible()
+    await expect
+      .element(page.getByRole('heading', { name: 'The investigation is open' }))
+      .toHaveFocus()
 
     await userEvent.click(
       page.getByRole('button', { name: 'Reveal evidence 1' }),

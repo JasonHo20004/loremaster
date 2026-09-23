@@ -70,40 +70,45 @@ export function LeaderboardView({
       ) : null}
 
       {entries.length > 0 ? (
-        <div
-          className="table-scroll"
-          role="region"
-          aria-label={`Scrollable daily leaderboard for ${slotId}`}
-          tabIndex={0}
-        >
-          <table>
-            <caption className="visually-hidden">
-              Daily leaderboard for {slotId}
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Rank</th>
-                <th scope="col">Investigator</th>
-                <th scope="col">Evidence</th>
-                <th scope="col">Wrong guesses</th>
-                <th scope="col">Elapsed</th>
-                <th scope="col">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.attemptId}>
-                  <td>{entry.rank}</td>
-                  <th scope="row">{entry.pseudonym}</th>
-                  <td>{entry.evidenceLevel}</td>
-                  <td>{entry.totalWrongGuesses}</td>
-                  <td>{entry.elapsedMilliseconds} ms</td>
-                  <td>{entry.score}</td>
+        <>
+          <p className="visually-hidden" role="status">
+            {entries.length} total leaderboard entries loaded.
+          </p>
+          <div
+            className="table-scroll"
+            role="region"
+            aria-label={`Scrollable daily leaderboard for ${slotId}`}
+            tabIndex={0}
+          >
+            <table>
+              <caption className="visually-hidden">
+                Daily leaderboard for {slotId}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Investigator</th>
+                  <th scope="col">Evidence</th>
+                  <th scope="col">Wrong guesses</th>
+                  <th scope="col">Elapsed</th>
+                  <th scope="col">Score</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
+                  <tr key={entry.attemptId}>
+                    <td>{entry.rank}</td>
+                    <th scope="row">{entry.pseudonym}</th>
+                    <td>{entry.evidenceLevel}</td>
+                    <td>{entry.totalWrongGuesses}</td>
+                    <td>{entry.elapsedMilliseconds} ms</td>
+                    <td>{entry.score}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       ) : null}
 
       {entries.length > 0 ? (

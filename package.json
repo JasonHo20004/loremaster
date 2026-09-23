@@ -20,10 +20,13 @@
     "test": "vitest run --exclude \"tests/database/**\" --exclude \"tests/api/**/*.database.test.ts\"",
     "test:api:database": "node scripts/database-test.mjs api",
     "test:database": "node scripts/database-test.mjs",
+    "test:web:disclosure": "node node_modules/typescript/bin/tsc -p packages/domain/tsconfig.json && node node_modules/typescript/bin/tsc -p packages/database/tsconfig.json && node node_modules/typescript/bin/tsc -b apps/web/tsconfig.json && node apps/web/node_modules/vite/bin/vite.js build apps/web && node scripts/web-disclosure.mjs",
+    "test:web:e2e": "node scripts/web-e2e.mjs",
     "typecheck": "pnpm --recursive --if-present run typecheck",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@eslint/js": "10.0.1",
     "@types/node": "22.20.2",
     "@types/supertest": "6.0.3",

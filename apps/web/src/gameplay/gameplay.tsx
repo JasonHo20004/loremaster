@@ -95,6 +95,11 @@ function MutationRecovery({
   onReconcile,
   onReplay,
 }: Pick<CurrentCaseViewProps, 'state' | 'onReconcile' | 'onReplay'>) {
+  const recoveryHeading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    if (state.mutationStatus === 'UNCERTAIN') recoveryHeading.current?.focus()
+  }, [state.mutationStatus])
+
   if (state.mutationStatus === 'IDLE') return null
   if (state.mutationStatus === 'IN_FLIGHT') {
     return (
@@ -113,7 +118,9 @@ function MutationRecovery({
   }
   return (
     <section className="recovery-panel" aria-labelledby="recovery-title">
-      <h2 id="recovery-title">Action outcome unknown</h2>
+      <h2 ref={recoveryHeading} id="recovery-title" tabIndex={-1}>
+        Action outcome unknown
+      </h2>
       <p>
         The service may have recorded this action. New actions are paused until
         you retry the exact same request or check the authoritative record.
@@ -395,8 +402,11 @@ function ActiveCase({
   readonly searchSuggestions: SuggestionSearch
 }): React.JSX.Element {
   const [confirmingGiveUp, setConfirmingGiveUp] = useState(false)
+  const activeHeading = useRef<HTMLHeadingElement>(null)
   const giveUpButton = useRef<HTMLButtonElement>(null)
   const cancelButton = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => activeHeading.current?.focus(), [])
 
   useEffect(() => {
     if (confirmingGiveUp) cancelButton.current?.focus()
@@ -412,7 +422,9 @@ function ActiveCase({
       <header className="case-heading">
         <div>
           <p className="eyebrow">Active daily case</p>
-          <h1 id="view-title">The investigation is open</h1>
+          <h1 ref={activeHeading} id="view-title" tabIndex={-1}>
+            The investigation is open
+          </h1>
         </div>
         <p className="utc-time">
           Closes{' '}
@@ -568,12 +580,16 @@ function ActiveCase({
 
 function TerminalCase({ attempt }: { readonly attempt: TerminalAttempt }) {
   const copy = TERMINAL_COPY[attempt.state]
+  const terminalHeading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => terminalHeading.current?.focus(), [])
   return (
     <article className="gameplay terminal-case" aria-labelledby="view-title">
       <header className="case-heading">
         <div>
           <p className="eyebrow">{copy.eyebrow}</p>
-          <h1 id="view-title">{copy.title}</h1>
+          <h1 ref={terminalHeading} id="view-title" tabIndex={-1}>
+            {copy.title}
+          </h1>
           <p>{copy.detail}</p>
         </div>
       </header>

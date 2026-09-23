@@ -607,10 +607,18 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [x] S6.4 Deliver the accessible gameplay experience
 - [x] S6.5 Deliver profile and daily leaderboard views
 - [x] S6.6 Complete responsive design and accessibility
-- [ ] S6.7 Run the real-browser and disclosure acceptance gate
+- [x] S6.7 Run the real-browser and disclosure acceptance gate
 - [ ] S6.8 Record S6 acceptance and hand off to S7
 
 ## Plan mutation log
+
+- 2026-09-23 - Executed S6.7: added a clean disposable PostgreSQL harness,
+  operator-boundary Aster Quay imports, real API plus production-preview
+  Playwright journeys, deterministic rollover/session controls, hostile-text and
+  mutation-loss proofs, and a Vite artifact/build-context disclosure scan. The
+  real-stack (4/4), accessibility (5/5), root verification (277/277), audit,
+  license, and independent TypeScript/accessibility/security reviews passed. No
+  production API contract, migration, or gameplay rule changed.
 
 - 2026-09-22 - Executed S6.6: completed tokenized responsive styling, route
   title/focus behavior, associated form errors, forced-colors and reduced-motion
