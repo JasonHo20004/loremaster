@@ -180,6 +180,30 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
           aria-label="Loremaster home"
           onClick={(event) => navigate(event, '/')}
         >
+          <svg
+            className="brand-seal"
+            viewBox="0 0 64 64"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              className="brand-seal-orbit"
+              d="M25 5 8 16v28l17 15m14-54 17 11v28L39 59M4 24v16m56-16v16"
+            />
+            <path
+              className="brand-seal-shield"
+              d="m32 5 18 15v23L32 58 14 43V20Z"
+            />
+            <path
+              className="brand-seal-book"
+              d="M21.5 25.2c4.1-.5 7.6.8 10.5 3.5 2.9-2.7 6.4-4 10.5-3.5v14.6c-4.1-.5-7.6.8-10.5 3.5-2.9-2.7-6.4-4-10.5-3.5Zm10.5 3.5v14.6"
+            />
+            <path className="brand-seal-spark" d="m32 12 4 6-4 6-4-6Z" />
+            <path
+              className="brand-seal-detail"
+              d="m19 22 13-11 13 11M19 45l13 10 13-10M25 30l4 2m6 0 4-2M25 35l4 2m6 0 4-2"
+            />
+          </svg>
           <span className="brand-type">
             <span className="brand-subtitle">The Daily Archive</span>
             <span className="brand-name">Loremaster</span>
@@ -199,10 +223,13 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
                   aria-current={view === route.view ? 'page' : undefined}
                   onClick={(event) => navigate(event, route.href)}
                 >
+                  <span className="nav-vessel" aria-hidden="true">
+                    <span className="nav-liquid" />
+                  </span>
                   <span className="nav-index" aria-hidden="true">
                     0{index + 1}
                   </span>
-                  {route.label}
+                  <span className="nav-label">{route.label}</span>
                   <span className="nav-arrow" aria-hidden="true">
                     ↗
                   </span>

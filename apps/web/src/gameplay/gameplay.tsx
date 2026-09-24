@@ -667,13 +667,13 @@ export function CurrentCaseView(
         <div className="card-copy">
           <p className="eyebrow">Archive unavailable</p>
           <h1 id="view-title">The record could not be loaded</h1>
-          <p>
-            {state.error?.message ?? 'The service could not be reached.'} This
-            did not change your case. Try the safe read again.
-          </p>
+          <p>{state.error?.message ?? 'The service could not be reached.'}</p>
           <button type="button" onClick={() => safeAction(props.onRefresh)}>
             Retry loading
           </button>
+          <p className="reassurance">
+            Your case is unchanged. You can safely try again.
+          </p>
         </div>
       </section>
     )
