@@ -54,6 +54,28 @@ publishes content, or returns a raw database error. On `SIGINT` or `SIGTERM`, th
 server stops accepting connections, allows in-flight requests up to the drain
 deadline, closes remaining HTTP connections, and then closes the pool.
 
+## Running the API and web client locally
+
+After an operator has migrated the database and published a content pack, keep
+the API environment above in one terminal and start the API:
+
+```bash
+pnpm --filter @loremaster/api dev
+```
+
+In a second terminal, start the Vite client:
+
+```bash
+export LOREMASTER_API_PROXY_TARGET='http://127.0.0.1:3000'
+pnpm --filter @loremaster/web dev
+```
+
+Open `http://localhost:5173`. Vite proxies `/api` to the exact loopback target
+without changing the browser Origin, so the API's configured origin must remain
+`http://localhost:5173`. `LOREMASTER_API_PROXY_TARGET` accepts only an exact
+loopback HTTP origin. This is a source-development workflow, not an S8 container
+or deployment procedure.
+
 ### Exercising the session and gameplay boundary
 
 The following example preserves both cookies in a jar. Values are placeholders;
@@ -119,12 +141,12 @@ Operator-only validation and publication are documented in the
 The command surface remains pinned and deterministic. CI runs both repository
 database tests and composed API database tests with ephemeral credentials.
 
-The local S5 acceptance baseline is 223 non-database tests, 59 repository/
-database tests, and 7 composed HTTP/PostgreSQL tests. See the
-[S5 acceptance record](../architecture/s5-acceptance.md) for focused race,
-timeout, rate-limit and disclosure counts and for the browser/deployment proofs
-that remain assigned to S6 and S8. A missing Docker daemon or PostgreSQL startup
-is a failure, never a skipped acceptance result.
+The S6 acceptance baseline is 277 non-database tests, 59 repository/database
+tests, 7 composed HTTP/PostgreSQL tests, 11 focused Chromium component tests,
+4 real-stack browser journeys, and 5 accessibility/responsive browser journeys.
+See the [S6 acceptance record](../architecture/s6-acceptance.md) for the exact
+claim mapping and the S8 deployed-artifact deferral. A missing Docker daemon,
+browser, or PostgreSQL startup is a failure, never a skipped acceptance result.
 
 ## Pinned prerequisites
 
@@ -159,4 +181,4 @@ If Corepack was previously configured with a broken global pnpm shim, remove tha
 
 ## Workspace boundaries
 
-Apps live under `apps/*`; shared libraries live under `packages/*`. S6 browser code may import browser-safe `@loremaster/contracts` exports and call the frozen `/api/v1` surface. It must not import API/database modules, the operator importer, authored fixtures, answers, explanations, or sources.
+Apps live under `apps/*`; shared libraries live under `packages/*`. Browser code may import browser-safe `@loremaster/contracts` exports and call the frozen `/api/v1` surface. It must not import API/database modules, the operator importer, authored fixtures, answers, explanations, or sources. S7 cache warming may optimize disposable reads but must preserve these browser/API semantics and PostgreSQL-owned gameplay truth.

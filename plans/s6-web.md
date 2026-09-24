@@ -577,6 +577,28 @@ documentation/status only.
 Primary files: `docs/architecture/s6-acceptance.md`, architecture/development/
 threat-model docs, `README.md`, and this plan's progress/mutation records.
 
+### S6.8 acceptance evidence (2026-09-24)
+
+Decision: **PARTIAL** pending the final documentation commit's hosted CI. All
+S6 implementation and local acceptance gates pass, and the exact evidence and
+later-stage ownership are recorded in `docs/architecture/s6-acceptance.md`.
+
+- Frozen install, 11/11 focused Chromium component tests, 4/4 composed
+  real-stack journeys, 5/5 accessibility/responsive journeys, the five-file
+  public artifact scan, 59/59 database tests, 7/7 composed API/database tests,
+  and the 277/277 root gate passed with no prerequisite skips.
+- The moderate dependency audit found no known vulnerabilities. The production
+  inventory contains 84 package/version entries (77 MIT, 6 ISC, and 1
+  BSD-3-Clause), all with declared licenses. Gitleaks 8.30.0 scanned all 42
+  commits and found no leaks.
+- Architecture, development, threat-model, and root status now describe the S6
+  browser implementation, exact local API plus Vite startup, and S7 handoff.
+  S7 may warm disposable reads but may not change gameplay truth, browser/API
+  semantics, or the replica-local limiter fallback.
+- GitHub exposes no workflow run for `web-ui`. The final documentation commit
+  must pass the unchanged clean-checkout Quality, Dependency audit, and Secret
+  scan jobs before this slice and S6 are marked complete.
+
 ## Review and delivery rules
 
 - Prefer one reviewed PR per numbered slice. S6.4 and S6.5 are the only planned
@@ -608,9 +630,15 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 - [x] S6.5 Deliver profile and daily leaderboard views
 - [x] S6.6 Complete responsive design and accessibility
 - [x] S6.7 Run the real-browser and disclosure acceptance gate
-- [ ] S6.8 Record S6 acceptance and hand off to S7
+- [ ] S6.8 Record S6 acceptance and hand off to S7 (hosted CI pending)
 
 ## Plan mutation log
+
+- 2026-09-24 - Executed the local S6.8 acceptance review and recorded the S7
+  handoff. Every local browser, disclosure, database/API, root, audit, license,
+  and full-history secret gate passed. The slice remains open only because no
+  hosted CI run exists for the final documentation commit; no implementation,
+  contract, dependency, migration, or gameplay rule changed.
 
 - 2026-09-23 - Executed S6.7: added a clean disposable PostgreSQL harness,
   operator-boundary Aster Quay imports, real API plus production-preview
