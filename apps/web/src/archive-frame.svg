@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="168" height="168" viewBox="0 0 168 168" fill="none">
+  <defs>
+    <linearGradient id="stone" x2="1" y2="1">
+      <stop stop-color="#647363"/>
+      <stop offset=".22" stop-color="#35493e"/>
+      <stop offset=".65" stop-color="#25372f"/>
+      <stop offset="1" stop-color="#101c19"/>
+    </linearGradient>
+    <linearGradient id="bronze" x2="1" y2="1">
+      <stop stop-color="#baaa79"/>
+      <stop offset=".3" stop-color="#77664a"/>
+      <stop offset=".65" stop-color="#3d382c"/>
+      <stop offset="1" stop-color="#968460"/>
+    </linearGradient>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".42" numOctaves="3" seed="17"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="soft-light"/>
+    </filter>
+    <g id="rail">
+      <path d="M28 1h112v26H28Z" fill="url(#stone)"/>
+      <path d="M28 2h112M28 5h112" stroke="#a0a58a" stroke-opacity=".5"/>
+      <path d="M28 24h112" stroke="#090f0c" stroke-width="5"/>
+      <path d="M28 25h112" stroke="#a99467"/>
+      <path d="m43 2 4 5-3 5 4 4m70-14-4 5 2 5" stroke="#0b1814" stroke-opacity=".8"/>
+      <g stroke="#131d17" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
+        <path id="runes" d="M36 20V9l6 4-6 3m17 4V9l7 11V9m10 11V9l6 5-6 2m16 4V9m-4 4 4-4 4 4m11 7V9l6 5-6 6m16-11 5 5-5 6m5-6h6m-3-5v11"/>
+      </g>
+      <use href="#runes" transform="translate(0 -.8)" stroke="#a8a17a" stroke-opacity=".65" stroke-width=".8"/>
+    </g>
+    <g id="corner">
+      <path d="M2 9 9 2h19v25H2Z" fill="url(#stone)" stroke="#72816a"/>
+      <path d="M5 10 10 5h17v5H11v17H5Z" fill="url(#bronze)" stroke="#a3966c" stroke-width=".7"/>
+      <path d="m14 14 10-2-2 10-8 3Z" fill="url(#bronze)" stroke="#262d23"/>
+      <circle cx="18" cy="18" r="2.3" fill="#222c22" stroke="#ab986c" stroke-width=".7"/>
+      <path d="m2 4 4-2 2 3 5-3 4 2 7-2 3 3-6 2-3-1-4 3-5-2-3 4-4-2Zm0 10 4-3 1 4-3 3 2 5-4 3Z" fill="#4e6940"/>
+      <path d="m3 4 4 1 4-2m-8 13 2-2m10-8 5-2" stroke="#8b995b" stroke-width="1.2"/>
+    </g>
+  </defs>
+  <g filter="url(#grain)">
+    <use href="#rail"/>
+    <use href="#rail" transform="rotate(90 84 84)"/>
+    <use href="#rail" transform="rotate(180 84 84)"/>
+    <use href="#rail" transform="rotate(270 84 84)"/>
+    <use href="#corner"/>
+    <use href="#corner" transform="rotate(90 84 84)"/>
+    <use href="#corner" transform="rotate(180 84 84)"/>
+    <use href="#corner" transform="rotate(270 84 84)"/>
+  </g>
+</svg>

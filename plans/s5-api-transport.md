@@ -515,46 +515,26 @@ records.
 
 ## Progress
 
-- [ ] S5.0 Close the delivery preflight — formal base `fa47243` recorded; frozen
-      install, `pnpm run verify` (152 non-database tests), and 47 database tests
-      pass locally on 2026-09-15; awaiting CI for the corrected command surface
-- [ ] S5.1 Freeze public contracts and the status matrix — implemented and
-      reviewed locally 2026-09-14; 15 focused, 151 non-database, and 47 database
-      tests pass; awaiting S5.0 base/toolchain closure and clean-checkout CI
-- [ ] S5.2 Configuration, identity, and session persistence — implemented and
-      locally verified; awaiting independent review and clean-checkout CI
-- [ ] S5.3a Express kernel and bounded parsing — implemented and locally
-      verified; awaiting independent review and clean-checkout CI
-- [ ] S5.3b Authentication, cookies, CSRF, and CORS — implemented and locally
-      verified; awaiting independent review and clean-checkout CI
-- [ ] S5.3c End-to-end deadlines and cancellable transactions — implemented and
-      locally verified; awaiting independent review and clean-checkout CI
-- [ ] S5.3d Trusted source IP and bounded abuse controls — implemented and
-      locally verified; awaiting independent review and clean-checkout CI
-- [ ] S5.3e Redacted telemetry primitives — implemented and locally verified
-      2026-09-15; awaiting independent TypeScript/security review and
-      clean-checkout CI
-- [ ] S5.4 Protected gameplay routes — implemented and locally typechecked;
-      14 focused route tests, all 218 non-database tests, and all 59 disposable
-      PostgreSQL tests pass; independent review and clean-checkout CI remain
-      pending
-- [ ] S5.5 Suggestions, profile, and paginated leaderboard — implemented and
-      locally typechecked; 4 focused route tests and all 218 non-database tests
-      plus all 59 disposable PostgreSQL tests pass; independent review and
-      clean-checkout CI remain pending
-- [ ] S5.6 API composition and local developer workflow — implemented and
-      locally verified; 221 non-database, 59 repository/database, and 1 composed
-      API/PostgreSQL integration test pass with all direct root verification
-      stages; independent review and clean-checkout CI remain pending
-- [ ] S5.7 Adversarial transport and disclosure gate — implemented and locally
-      verified; 6 composed adversarial journeys plus the S5.6 smoke journey pass
-      against clean PostgreSQL, and all 223 non-database tests/direct root gates
-      pass; independent review and clean-checkout CI remain pending
-- [ ] S5.8 S5 acceptance and handoff to S6 — local acceptance record created
-      with T01–T25, required B-cases, threat controls, suite counts, S6/S8
-      deferrals, dependency/license/lockfile review, and local source/history
-      secret scan; independent acceptance review and clean-checkout CI remain
-      pending
+- [x] S5.0 Close the delivery preflight
+- [x] S5.1 Freeze public contracts and the status matrix
+- [x] S5.2 Configuration, identity, and session persistence
+- [x] S5.3a Express kernel and bounded parsing
+- [x] S5.3b Authentication, cookies, CSRF, and CORS
+- [x] S5.3c End-to-end deadlines and cancellable transactions
+- [x] S5.3d Trusted source IP and bounded abuse controls
+- [x] S5.3e Redacted telemetry primitives
+- [x] S5.4 Protected gameplay routes
+- [x] S5.5 Suggestions, profile, and paginated leaderboard
+- [x] S5.6 API composition and local developer workflow
+- [x] S5.7 Adversarial transport and disclosure gate
+- [x] S5.8 S5 acceptance and handoff to S6
+
+Formal closure (2026-09-21): the S6.0 delivery preflight independently reviewed
+the S5 merge tree and acceptance record. PR #6 passed the required clean-checkout
+Quality, Dependency audit, and Secret scan jobs, closing the review/CI condition
+that kept these completed implementation slices unchecked on 2026-09-15. Exact
+historical test counts and later-stage deferrals remain in the
+[S5 acceptance record](../docs/architecture/s5-acceptance.md) and mutation log.
 
 ## Plan mutation log
 
