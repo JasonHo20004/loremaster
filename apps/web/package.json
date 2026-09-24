@@ -10,6 +10,7 @@
     "preview": "vite preview --host 127.0.0.1 --port 4173",
     "test:component": "vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
+    "pretypecheck": "corepack pnpm --filter @loremaster/contracts build",
     "typecheck": "tsc -b"
   },
   "dependencies": {
