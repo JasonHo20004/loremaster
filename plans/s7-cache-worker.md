@@ -7,14 +7,17 @@ effects out of PostgreSQL.
 
 ## Readiness decision
 
-S6.8 is merged at `1ea44e7fdf2032ab65be05958d0cce43d08135fa` with passing
-hosted CI. The [S7.0 preflight](s7-preflight.md) records the local baseline and
-S7 admission. S7.1 begins only after this reviewed predecessor is accepted.
+S7.0 records the admitted S6 base
+`1ea44e7fdf2032ab65be05958d0cce43d08135fa` and its passing hosted CI in the
+[preflight evidence](s7-preflight.md). The current authorized delivery is
+S7.0 and S7.1 only; [contract evidence](s7-contracts.md) records local results
+and remaining delivery gates. S7.2-S7.9 remain unexecuted.
 
-The existing `apps/worker`, `apps/queue-observer`, and `packages/queue`
-workspaces are compile-only scaffolds. Redis/BullMQ runtime dependencies,
-configuration, job contracts, cache repositories, worker lifecycle, and queue
-telemetry do not exist yet.
+`apps/worker` and `apps/queue-observer` remain compile-only scaffolds. S7.1
+adds pinned Redis/BullMQ dependencies, separate configuration parsers, strict
+cache/job/limiter contracts and read-only database roles. Cache repositories,
+producer/worker lifecycle, shared limiter execution and queue telemetry remain
+later slices.
 
 ## Fixed invariants and scope
 
@@ -425,8 +428,8 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 
 ## Progress
 
-- [ ] S7.0 Close the delivery preflight
-- [ ] S7.1 Freeze queue, cache, and Redis configuration contracts
+- [ ] S7.0 Close the delivery preflight (local evidence PASS; slice PR/hosted CI pending)
+- [ ] S7.1 Freeze queue, cache, and Redis configuration contracts (local evidence PASS; slice PR/hosted CI pending)
 - [ ] S7.2 Implement the suggestion-cache contract and Redis adapter
 - [ ] S7.3 Integrate the cache after suggestion ownership commits
 - [ ] S7.4 Add the deterministic producer and recovery reconciliation
@@ -437,6 +440,19 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 - [ ] S7.9 Record acceptance and hand off to S8
 
 ## Plan mutation protocol
+
+2026-09-29: the user narrowed execution to S7.0/S7.1. This delivery batches
+preflight evidence and foundational contracts on `codex/s7-completion`, based
+on the accepted S6 merge. S7.1 ownership includes its database role migration,
+role tests, root focused command, read-only CI gate, browser boundary regression
+checks and `ops/redis` script/ACL inventory. Runtime suggestion and transaction
+changes, producers, workers, observers, shared-limiter execution and composed
+failure harnesses remain S7.2-S7.8. No dependency edge, public contract,
+gameplay behavior or rollback rule changes. Native Redis ACL cannot restrict
+Lua source hashes; the frozen contract therefore requires role-specific script
+hash guards plus real Redis denials before later runtime admission. Reviewers
+are recorded with the contract evidence. Hosted CI and merge remain delivery
+requirements before starting dependent work.
 
 Append dated changes below. State the evidence that invalidated the current
 plan, affected scenarios/controls, dependency-edge changes, migration or

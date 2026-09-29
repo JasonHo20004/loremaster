@@ -44,6 +44,9 @@ jobs:
       - name: Verify repository
         run: pnpm run verify
 
+      - name: Verify server-only S7 contracts
+        run: pnpm test:s7:contracts
+
       - name: Verify clean PostgreSQL migrations and constraints
         run: pnpm test:database
 

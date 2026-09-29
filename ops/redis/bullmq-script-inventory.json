@@ -1,0 +1,271 @@
+{
+  "version": 1,
+  "bullmqVersion": "5.81.5",
+  "scripts": {
+    "addStandardJob": {
+      "roles": [
+        "producer"
+      ],
+      "numberOfKeys": 9,
+      "sha256": "bf8af225db20b7d8eb5f3d71b607869b2507020f8022668a6976bd01ca78171c",
+      "dynamicPushCommands": [
+        "lpush",
+        "rpush"
+      ],
+      "commands": [
+        "del",
+        "exists",
+        "get",
+        "hget",
+        "hmget",
+        "hmset",
+        "hset",
+        "incr",
+        "llen",
+        "lpush",
+        "lrange",
+        "persist",
+        "rpush",
+        "sadd",
+        "scard",
+        "set",
+        "xadd",
+        "zadd",
+        "zrange",
+        "zrem",
+        "zscore"
+      ]
+    },
+    "getStateV2": {
+      "roles": [
+        "producer"
+      ],
+      "numberOfKeys": 8,
+      "sha256": "7332cc020b73227ba05f6e43873260ad576c8b177492fb9ad32367b52b2aa701",
+      "dynamicPushCommands": [],
+      "commands": [
+        "lpos",
+        "zscore"
+      ]
+    },
+    "removeJob": {
+      "roles": [
+        "producer"
+      ],
+      "numberOfKeys": 2,
+      "sha256": "274144c90f5adaa9260c193a5dfd1b36f6a179dadfdea44d0f10b77ec406f645",
+      "dynamicPushCommands": [
+        "rpush"
+      ],
+      "commands": [
+        "del",
+        "exists",
+        "get",
+        "hget",
+        "hgetall",
+        "hmget",
+        "hset",
+        "llen",
+        "lrem",
+        "rpush",
+        "scard",
+        "smembers",
+        "srem",
+        "xadd",
+        "zadd",
+        "zrange",
+        "zrem",
+        "zscore"
+      ]
+    },
+    "moveToActive": {
+      "roles": [
+        "worker"
+      ],
+      "numberOfKeys": 11,
+      "sha256": "ee4a8eb48cad650aec886580e128418d44582f68b5202a11dcac48bb3dcae117",
+      "dynamicPushCommands": [],
+      "commands": [
+        "del",
+        "get",
+        "hget",
+        "hgetall",
+        "hincrby",
+        "hmget",
+        "hmset",
+        "hset",
+        "incr",
+        "llen",
+        "lpush",
+        "lrem",
+        "pexpire",
+        "pttl",
+        "rpoplpush",
+        "set",
+        "xadd",
+        "zadd",
+        "zpopmin",
+        "zrange",
+        "zrangebyscore",
+        "zrem"
+      ]
+    },
+    "moveToFinished": {
+      "roles": [
+        "worker"
+      ],
+      "numberOfKeys": 14,
+      "sha256": "9d799b4cf5684d0db297ca435613c5dedc89620eb5554d75ed611c64074867d2",
+      "dynamicPushCommands": [
+        "lpush",
+        "rpush"
+      ],
+      "commands": [
+        "del",
+        "exists",
+        "get",
+        "hdel",
+        "hget",
+        "hgetall",
+        "hincrby",
+        "hmget",
+        "hmset",
+        "hset",
+        "incr",
+        "llen",
+        "lpush",
+        "lrem",
+        "ltrim",
+        "pexpire",
+        "pttl",
+        "rpoplpush",
+        "rpush",
+        "sadd",
+        "scard",
+        "set",
+        "srem",
+        "xadd",
+        "xtrim",
+        "zadd",
+        "zcard",
+        "zpopmin",
+        "zrange",
+        "zrangebyscore",
+        "zrem",
+        "zremrangebyrank",
+        "zremrangebyscore",
+        "zrevrange",
+        "zrevrangebyscore",
+        "zscore"
+      ]
+    },
+    "moveStalledJobsToWait": {
+      "roles": [
+        "worker"
+      ],
+      "numberOfKeys": 9,
+      "sha256": "3a55e07ca3f0a0bff611f935c09710f4abdb91342adcf015fcfd414e87e73248",
+      "dynamicPushCommands": [
+        "rpush"
+      ],
+      "commands": [
+        "del",
+        "exists",
+        "hget",
+        "hincrby",
+        "hmget",
+        "hset",
+        "llen",
+        "lrange",
+        "lrem",
+        "rpush",
+        "sadd",
+        "set",
+        "smembers",
+        "xadd",
+        "xtrim",
+        "zadd",
+        "zscore"
+      ]
+    },
+    "moveToDelayed": {
+      "roles": [
+        "worker"
+      ],
+      "numberOfKeys": 12,
+      "sha256": "05b88d96e7d47673b729f38b24a01e4818d0bf98d4d8fe26a217cf5c2a977dfc",
+      "dynamicPushCommands": [],
+      "commands": [
+        "del",
+        "exists",
+        "get",
+        "hget",
+        "hgetall",
+        "hincrby",
+        "hmget",
+        "hmset",
+        "hset",
+        "incr",
+        "llen",
+        "lpush",
+        "lrem",
+        "pexpire",
+        "pttl",
+        "rpoplpush",
+        "set",
+        "srem",
+        "xadd",
+        "zadd",
+        "zpopmin",
+        "zrange",
+        "zrangebyscore",
+        "zrem",
+        "zrevrangebyscore"
+      ]
+    },
+    "retryJob": {
+      "roles": [
+        "worker"
+      ],
+      "numberOfKeys": 11,
+      "sha256": "5c98c7eae068e06d53dd55d468e397fa73e173697519d1ea8857172e8faa4abe",
+      "dynamicPushCommands": [
+        "lpush",
+        "rpush"
+      ],
+      "commands": [
+        "del",
+        "exists",
+        "get",
+        "hget",
+        "hincrby",
+        "hmget",
+        "hmset",
+        "hset",
+        "incr",
+        "llen",
+        "lpush",
+        "lrem",
+        "rpush",
+        "srem",
+        "xadd",
+        "zadd",
+        "zrangebyscore",
+        "zrem"
+      ]
+    },
+    "extendLocks": {
+      "roles": [
+        "worker"
+      ],
+      "numberOfKeys": 1,
+      "sha256": "14bb41f30eff2e7ff033bbcb31078fbc954a0bb16902129da8b68861c16baa5c",
+      "dynamicPushCommands": [],
+      "commands": [
+        "get",
+        "set",
+        "srem"
+      ]
+    }
+  }
+}

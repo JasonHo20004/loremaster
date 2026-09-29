@@ -1,6 +1,6 @@
 # Architecture baseline
 
-Accepted for S1 on 2026-09-11 and locally completed through the [S6 web acceptance record](s6-acceptance.md) on 2026-09-24. The [S5 API contract](s5-api-contract.md) remains the frozen browser/API boundary. S6's final documentation commit still requires clean-checkout CI before merge; the [S6 plan](../../plans/s6-web.md) is the canonical delivery-status source. S7 cache-worker work is next. The blueprint defines project scope; later stages are not authorization to provision resources before their gates.
+Accepted for S1 on 2026-09-11 and completed through the [S6 web acceptance record](s6-acceptance.md). S6 is merged with passing hosted CI, recorded in the [S7 preflight](../../plans/s7-preflight.md). The [S5 API contract](s5-api-contract.md) remains the frozen browser/API boundary. S7.1 establishes the server cache/queue boundary; the [S7 plan](../../plans/s7-cache-worker.md) records slice status. The blueprint defines project scope; later stages require their own admission evidence.
 
 ## Boundaries and flow
 
@@ -11,15 +11,16 @@ The API authenticates and validates mutations, locks the attempt, applies the [s
 | Repository boundary | Responsibility |
 | --- | --- |
 | `apps/web`, `apps/api`, `apps/worker`, `apps/queue-observer` | UI, HTTP, cache processing, queue metrics |
-| `packages/domain`, `packages/contracts` | Pure rules; validated HTTP/job contracts |
-| `packages/database`, `packages/queue` | Migrations/repositories; versioned job configuration |
+| `packages/domain`, `packages/contracts` | Pure rules; browser-safe validated HTTP contracts |
+| `packages/database`, `packages/queue` | Migrations/repositories; server-only versioned job contracts |
+| `packages/cache` | Server-only suggestion envelopes, keys, limiter ports and Redis client policies |
 | `packages/config`, `packages/observability` | Validated environment; redacted logs/metrics/traces |
 | `deploy/` | Images, application Helm chart and desired release state |
 | `platform/` | Local cluster, controllers, CRDs and cluster policies |
 | `infra/` | AWS bootstrap and separately admitted runtime |
 | `ops/`, `tests/`, `docs/` | Operational evidence, verification, accepted decisions |
 
-The API, domain, contracts, database, config, observability, and React/Vite web boundaries now exist. The web client provides validated session bootstrap, refresh-safe gameplay, mutation recovery, profile, leaderboard, responsive presentation, and accessible browser behavior without owning game truth. Worker, queue, and deployment boundaries remain staged targets. Engine rules use entity/region IDs; content packs supply original names, narrative, evidence and explanations. A non-public operator CLI imports validated packs into PostgreSQL.
+The API, domain, contracts, database, config, observability, and React/Vite web boundaries now exist. The web client provides validated session bootstrap, refresh-safe gameplay, mutation recovery, profile, leaderboard, responsive presentation, and accessible browser behavior without owning game truth. S7.1 adds server-only cache/queue contracts and separate Redis configuration parsers under [ADR 0005](../adr/0005-server-cache-boundary.md). Their [frozen inputs and policies](../../ops/redis/README.md) admit later adapters; worker, observer and Redis runtime wiring remain staged targets. Cache depends on no app, database, queue or browser contract. Browser contracts cannot import or re-export cache or queue. Engine rules use entity/region IDs; content packs supply original names, narrative, evidence and explanations. A non-public operator CLI imports validated packs into PostgreSQL.
 
 ## Deployment progression
 

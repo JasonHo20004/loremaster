@@ -153,7 +153,7 @@ describe('S4.3a database toolchain', () => {
     const migration = await db.query<{ count: string }>(
       'SELECT count(*)::text AS count FROM public.loremaster_schema_migrations',
     )
-    expect(migration.rows[0]?.count).toBe('4')
+    expect(migration.rows[0]?.count).toBe('5')
 
     const privileges = await db.query<{
       importer_create: boolean
