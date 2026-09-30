@@ -25,8 +25,9 @@ it('redacts invalid Redis credentials and rejects production plaintext', () => {
 })
 it('freezes private health ports and bounds worker concurrency', () => {
   const env = {
-    LOREMASTER_WORKER_REDIS_URL: 'redis://worker:pass@localhost',
-    LOREMASTER_WORKER_CACHE_REDIS_URL: 'redis://cache:pass@localhost',
+    LOREMASTER_WORKER_REDIS_URL: 'redis://loremaster_worker:pass@localhost',
+    LOREMASTER_WORKER_CACHE_REDIS_URL:
+      'redis://loremaster_worker_cache:pass@localhost',
     LOREMASTER_WORKER_DATABASE_URL: 'postgresql://worker:pass@localhost/db',
   }
   expect(parseWorkerConfiguration(env)).toMatchObject({
@@ -42,15 +43,21 @@ it('freezes private health ports and bounds worker concurrency', () => {
   ).toThrow()
   expect(
     parseObserverConfiguration({
-      LOREMASTER_OBSERVER_REDIS_URL: 'redis://observer:pass@localhost',
+      LOREMASTER_OBSERVER_REDIS_URL:
+        'redis://loremaster_observer:pass@localhost',
     }),
   ).toMatchObject({ healthHost: '127.0.0.1', healthPort: 3002 })
 })
 const validApi = {
   LOREMASTER_REDIS_ENABLED: 'true',
-  LOREMASTER_REDIS_CACHE_URL: 'rediss://cache:password@localhost',
-  LOREMASTER_REDIS_LIMITER_URL: 'rediss://limiter:password@localhost',
-  LOREMASTER_REDIS_PRODUCER_URL: 'rediss://producer:password@localhost',
+  LOREMASTER_REDIS_CACHE_URL:
+    'rediss://loremaster_api_cache:password@localhost',
+  LOREMASTER_REDIS_LIMITER_URL:
+    'rediss://loremaster_api_limiter:password@localhost',
+  LOREMASTER_REDIS_PRODUCER_URL:
+    'rediss://loremaster_producer:password@localhost',
+  LOREMASTER_REDIS_PRODUCER_DATABASE_URL:
+    'postgresql://producer:password@localhost/db',
   LOREMASTER_REDIS_LIMITER_HMAC_KEY: Buffer.alloc(32, 17).toString('base64url'),
   LOREMASTER_REDIS_LIMITER_HMAC_VERSION: 'v1',
 }

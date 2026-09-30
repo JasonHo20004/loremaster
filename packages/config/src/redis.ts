@@ -21,6 +21,7 @@ const api = [
   'LOREMASTER_REDIS_CACHE_URL',
   'LOREMASTER_REDIS_LIMITER_URL',
   'LOREMASTER_REDIS_PRODUCER_URL',
+  'LOREMASTER_REDIS_PRODUCER_DATABASE_URL',
   'LOREMASTER_REDIS_LIMITER_HMAC_KEY',
   'LOREMASTER_REDIS_LIMITER_HMAC_VERSION',
 ]
@@ -87,6 +88,40 @@ function redisUrl(env: Environment, field: string): string {
   }
   return raw
 }
+function roleRedisUrl(
+  env: Environment,
+  field: string,
+  expectedUser: string,
+): string {
+  const url = redisUrl(env, field)
+  if (decodeURIComponent(new URL(url).username) !== expectedUser) invalid(field)
+  return url
+}
+function producerDatabaseUrl(env: Environment): string {
+  const field = 'LOREMASTER_REDIS_PRODUCER_DATABASE_URL'
+  const raw = env[field]
+  if (
+    !raw ||
+    raw.length > 2048 ||
+    raw.trim() !== raw ||
+    containsControl(raw, true)
+  )
+    invalid(field)
+  try {
+    const url = new URL(raw)
+    if (
+      !['postgres:', 'postgresql:'].includes(url.protocol) ||
+      !url.hostname ||
+      !url.username ||
+      !url.password ||
+      url.pathname.length < 2
+    )
+      invalid(field)
+  } catch {
+    invalid(field)
+  }
+  return raw
+}
 export type ApiRedisConfiguration =
   | { readonly enabled: false }
   | {
@@ -94,6 +129,7 @@ export type ApiRedisConfiguration =
       readonly cacheUrl: string
       readonly limiterUrl: string
       readonly producerUrl: string
+      readonly producerDatabaseUrl: string
       readonly limiterHmacKey: Uint8Array
       readonly limiterHmacVersion: string
     }
@@ -109,9 +145,22 @@ export function parseApiRedisConfiguration(
     for (const key of api.slice(1)) if (env[key] !== undefined) invalid(key)
     return { enabled: false }
   }
-  const cacheUrl = redisUrl(env, 'LOREMASTER_REDIS_CACHE_URL'),
-    limiterUrl = redisUrl(env, 'LOREMASTER_REDIS_LIMITER_URL'),
-    producerUrl = redisUrl(env, 'LOREMASTER_REDIS_PRODUCER_URL')
+  const cacheUrl = roleRedisUrl(
+      env,
+      'LOREMASTER_REDIS_CACHE_URL',
+      'loremaster_api_cache',
+    ),
+    limiterUrl = roleRedisUrl(
+      env,
+      'LOREMASTER_REDIS_LIMITER_URL',
+      'loremaster_api_limiter',
+    ),
+    producerUrl = roleRedisUrl(
+      env,
+      'LOREMASTER_REDIS_PRODUCER_URL',
+      'loremaster_producer',
+    )
+  const producerDbUrl = producerDatabaseUrl(env)
   const usernames = [cacheUrl, limiterUrl, producerUrl].map((raw) =>
     decodeURIComponent(new URL(raw).username),
   )
@@ -137,6 +186,7 @@ export function parseApiRedisConfiguration(
     cacheUrl,
     limiterUrl,
     producerUrl,
+    producerDatabaseUrl: producerDbUrl,
     limiterHmacKey: new Uint8Array(key),
     limiterHmacVersion: version,
   }
@@ -154,8 +204,16 @@ export function parseWorkerConfiguration(
 ): WorkerConfiguration {
   validateKeys(env, worker)
   mode(env)
-  const redis = redisUrl(env, 'LOREMASTER_WORKER_REDIS_URL'),
-    cacheRedis = redisUrl(env, 'LOREMASTER_WORKER_CACHE_REDIS_URL')
+  const redis = roleRedisUrl(
+      env,
+      'LOREMASTER_WORKER_REDIS_URL',
+      'loremaster_worker',
+    ),
+    cacheRedis = roleRedisUrl(
+      env,
+      'LOREMASTER_WORKER_CACHE_REDIS_URL',
+      'loremaster_worker_cache',
+    )
   if (
     decodeURIComponent(new URL(redis).username) ===
     decodeURIComponent(new URL(cacheRedis).username)
@@ -204,7 +262,11 @@ export function parseObserverConfiguration(
   validateKeys(env, observer)
   mode(env)
   return {
-    redisUrl: redisUrl(env, 'LOREMASTER_OBSERVER_REDIS_URL'),
+    redisUrl: roleRedisUrl(
+      env,
+      'LOREMASTER_OBSERVER_REDIS_URL',
+      'loremaster_observer',
+    ),
     healthHost: '127.0.0.1',
     healthPort: 3002,
   }

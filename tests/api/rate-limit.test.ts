@@ -5,6 +5,7 @@ import type {
   ServerConfiguration,
   TrustedProxy,
 } from '@loremaster/config'
+import type { SharedLimiter } from '../../packages/cache/src/index.js'
 import type { RequestHandler } from 'express'
 import request from 'supertest'
 import { describe, expect, it } from 'vitest'
@@ -126,6 +127,11 @@ function dependencies(options: {
   readonly config: ServerConfiguration['limiter']
   readonly handlers: KernelHandlers
   readonly trustedProxies?: readonly TrustedProxy[]
+  readonly shared?: {
+    readonly limiter: SharedLimiter
+    readonly hmacKey: Uint8Array
+    readonly onDegraded?: () => void
+  }
 }): KernelDependencies {
   const deadline = createDeadlineControl({
     clock: options.clock,
@@ -154,6 +160,7 @@ function dependencies(options: {
         clock: options.clock,
         config: options.config,
         sourceIp: createSourceIpResolver(options.trustedProxies ?? []),
+        ...(options.shared ? { shared: options.shared } : {}),
       }),
       logger: noOp,
       policy: noOpOperation(),
@@ -366,5 +373,67 @@ describe('S5.3d trusted source IP and bounded abuse controls', () => {
     const limited = await mutate()
     expect(limited.status).toBe(429)
     expect(limited.body.error.code).toBe('RATE_LIMITED')
+  })
+})
+
+describe('S7 shared limiter composition', () => {
+  const handlers: KernelHandlers = {
+    createSession: () => ({
+      status: 201,
+      body: { data: { expiresAt: '2030-01-01T00:00:00.000Z' } },
+    }),
+  }
+  it('keeps local denial final and preserves the public 429 contract', async () => {
+    const clock = new MutableClock()
+    let sharedCalls = 0
+    const app = createApplication(
+      dependencies({
+        clock,
+        config: limiterConfig({ sessionCreationsPerIp: 1 }),
+        handlers,
+        shared: {
+          hmacKey: new Uint8Array(32).fill(3),
+          limiter: {
+            consume: async () => {
+              sharedCalls++
+              return { state: 'denied', retryAfterSeconds: 17 }
+            },
+          },
+        },
+      }),
+    )
+    const first = await bootstrap(app)
+    expect(first.status).toBe(429)
+    expect(first.headers['retry-after']).toBe('17')
+    expect(first.body.error.code).toBe('RATE_LIMITED')
+    const second = await bootstrap(app)
+    expect(second.status).toBe(429)
+    expect(second.headers['retry-after']).toBe('59')
+    expect(sharedCalls).toBe(1)
+  })
+
+  it('uses local admission during Redis loss and emits a bounded degraded signal', async () => {
+    const clock = new MutableClock()
+    let degraded = 0
+    const app = createApplication(
+      dependencies({
+        clock,
+        config: limiterConfig({ sessionCreationsPerIp: 1 }),
+        handlers,
+        shared: {
+          hmacKey: new Uint8Array(32).fill(3),
+          limiter: {
+            consume: async () => ({ state: 'degraded', retryAfterSeconds: 0 }),
+          },
+          onDegraded: () => {
+            degraded++
+          },
+        },
+      }),
+    )
+    expect((await bootstrap(app)).status).toBe(201)
+    expect(degraded).toBe(1)
+    expect((await bootstrap(app)).status).toBe(429)
+    expect(degraded).toBe(1)
   })
 })
