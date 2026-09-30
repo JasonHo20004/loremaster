@@ -9,15 +9,15 @@ effects out of PostgreSQL.
 
 S7.0 records the admitted S6 base
 `1ea44e7fdf2032ab65be05958d0cce43d08135fa` and its passing hosted CI in the
-[preflight evidence](s7-preflight.md). The current authorized delivery is
-S7.0 and S7.1 only; [contract evidence](s7-contracts.md) records local results
-and remaining delivery gates. S7.2-S7.9 remain unexecuted.
+[preflight evidence](s7-preflight.md). S7.0 and S7.1 are merged; [contract
+evidence](s7-contracts.md) records their delivery. S7.2-S7.6 are implemented
+and verified locally on `codex/s7-runtime`; [runtime evidence](s7-runtime.md)
+records their checks and outstanding hosted gates. S7.7-S7.9 remain unexecuted.
 
-`apps/worker` and `apps/queue-observer` remain compile-only scaffolds. S7.1
-adds pinned Redis/BullMQ dependencies, separate configuration parsers, strict
-cache/job/limiter contracts and read-only database roles. Cache repositories,
-producer/worker lifecycle, shared limiter execution and queue telemetry remain
-later slices.
+`apps/worker` now runs the bounded cache-warming consumer. `apps/queue-observer`
+remains a compile-only scaffold for S7.7. S7.1 froze Redis/BullMQ dependencies,
+configuration, contracts and read-only database roles. S7.2-S7.6 implement the
+cache adapter, suggestion fallback, producer, worker and shared limiter.
 
 ## Fixed invariants and scope
 
@@ -439,12 +439,17 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 - [ ] S7.8 Run the composed Redis failure and security gate
 - [ ] S7.9 Record acceptance and hand off to S8
 
+The unchecked S7.2-S7.6 boxes mean hosted CI, review, and merge are still
+pending. Their local implementation and verification are recorded in
+[runtime evidence](s7-runtime.md).
+
 ## Plan mutation protocol
 
 2026-09-30: S7.0 merged as PR #8 at `3484f8d43b2993b0d7a5ce5c8eb56475c5e876ed`;
 S7.1 merged as PR #9 at `8609ee1b3a3b4298083c3749f061787d5230cb7a`.
 Both merge commits passed hosted Quality, Dependency audit, and Secret scan.
-The two slices are complete. S7.2 and later slices remain unexecuted.
+The two slices were complete at that point. The 2026-09-30 entry below records
+the subsequent local S7.2-S7.6 implementation.
 
 2026-09-29: the user narrowed execution to S7.0/S7.1. Preflight evidence and
 foundational contracts were prepared on `codex/s7-completion`, based on the
@@ -465,3 +470,15 @@ plan, affected scenarios/controls, dependency-edge changes, migration or
 rollback impact, and reviewer. Never silently broaden cached data or add a
 durable asynchronous effect. Any durable job requires a superseding ADR with a
 PostgreSQL outbox and processed-event uniqueness design.
+
+2026-09-30: the user requested execution of S7.2-S7.6 together. The local
+implementation and tests are recorded in [runtime evidence](s7-runtime.md).
+This changes the planned one-slice-per-PR sequence for local work, but does not
+waive hosted CI, review, or merge. The S7.1 cache namespace budget was refined
+to 15 revision values plus one admission registry; cache and producer Lua need
+the additional commands in `ops/redis/acl-policy.json`; the producer uses a
+separate least-privilege PostgreSQL login. The queue event stream requests
+approximate trimming at 512 to leave headroom. Public API contracts and
+PostgreSQL authority remain unchanged. Redis can be disabled and the worker
+stopped to select PostgreSQL fallback. Reviewer and hosted acceptance are
+pending.

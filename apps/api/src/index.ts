@@ -1,7 +1,10 @@
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
 
-import { parseServerEnvironment } from '@loremaster/config'
+import {
+  parseApiRedisConfiguration,
+  parseServerEnvironment,
+} from '@loremaster/config'
 
 import {
   createApiRuntime,
@@ -71,6 +74,7 @@ async function runProcess(): Promise<void> {
     const config = parseServerEnvironment(process.env)
     runtime = createApiRuntime({
       config,
+      redis: parseApiRedisConfiguration(process.env),
       database: createRuntimeDatabase(config),
       telemetry: createStdoutTelemetry(),
     })

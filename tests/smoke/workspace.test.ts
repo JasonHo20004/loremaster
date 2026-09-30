@@ -72,7 +72,7 @@ describe('workspace scaffold', () => {
     ) as { scripts?: Record<string, string> }
 
     expect(packageJson.scripts?.test).toBe(
-      'vitest run --exclude "tests/database/**" --exclude "tests/api/**/*.database.test.ts"',
+      'vitest run --exclude "tests/database/**" --exclude "tests/api/**/*.database.test.ts" --exclude "tests/redis/**"',
     )
     expect(packageJson.scripts?.['test:database']).toBe(
       'node scripts/database-test.mjs',

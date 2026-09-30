@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "roles": {
+    "loremaster_api_cache": {
+      "patterns": ["~loremaster:v1:revision:*:suggestions"],
+      "commands": ["get"]
+    },
+    "loremaster_worker_cache": {
+      "patterns": ["~loremaster:v1:revision:*:suggestions", "~loremaster:v1:revision:admission"],
+      "commands": ["eval", "time", "zremrangebyscore", "zscore", "zcard", "zadd", "pexpire", "set"]
+    },
+    "loremaster_api_limiter": {
+      "patterns": ["~loremaster:v1:limit:*"],
+      "commands": ["eval", "time", "get", "zremrangebyscore", "zcard", "incr", "pexpire", "zadd"]
+    },
+    "loremaster_producer": {
+      "patterns": ["~loremaster:v1:queue:loremaster-warm-v1:*"],
+      "commands": ["eval", "evalsha", "info", "hget", "hgetall", "hmset", "llen", "zcard", "time", "zremrangebyscore", "zscore", "zadd", "zrem", "pexpire"],
+      "bullmqRole": "producer"
+    },
+    "loremaster_worker": {
+      "patterns": ["~loremaster:v1:queue:loremaster-warm-v1:*"],
+      "commands": ["eval", "evalsha", "info", "hget", "hgetall", "hmset", "llen", "zcard", "bzpopmin"],
+      "bullmqRole": "worker"
+    },
+    "loremaster_observer": {
+      "patterns": ["~loremaster:v1:queue:loremaster-warm-v1:*"],
+      "commands": ["llen", "zcard", "zrange"]
+    }
+  }
+}

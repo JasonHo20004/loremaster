@@ -1,8 +1,8 @@
-# S7.1 Redis and job contract
+# S7 Redis and job contract
 
-This freezes inputs and policies for S7.2-S7.8. No Redis client, ACL user,
-queue producer, worker, observer, cache adapter or shared limiter is started
-by S7.1. PostgreSQL and the existing local limiter remain the host runtime.
+This records the S7.1 contract and S7.2-S7.6 runtime policy. The API constructs
+separate cache, limiter and producer clients only when explicitly enabled.
+PostgreSQL remains authoritative and the local limiter always runs.
 
 ## Versioned data and queue policy
 
@@ -25,12 +25,12 @@ by S7.1. PostgreSQL and the existing local limiter remain the host runtime.
 | Reconciliation | Startup, Redis-ready/recovery and every 60 seconds; single-flight; 1-second producer deadline; select revision using PostgreSQL time |
 
 Deduplication lasts while the BullMQ record exists. Re-enqueue after record
-removal is allowed. S7.4 must explicitly handle retained terminal IDs so they
+removal is allowed. The producer handles retained terminal IDs so they
 cannot suppress a required repair, and enforce outstanding capacity atomically
 across producers. A cache read must validate both the schema and equality with
 the authorized revision ID; an envelope from another revision is corruption.
 
-Search fields and `sortRank` are private infrastructure fields. S7.3 must
+Search fields and `sortRank` are private infrastructure fields. The API must
 preserve the accepted SQL matching and ordering, authorize the guest/attempt
 in PostgreSQL, commit, and only then consult Redis. Every adapter receives a
 transaction assertion through its port. Public projection never returns a
@@ -77,9 +77,9 @@ debugging, or arbitrary script-loading/execution through a public port.
 | Identity | Key pattern | Commands / allowed operation |
 | --- | --- | --- |
 | API cache | `loremaster:v1:revision:*:suggestions` | `GET`; port accepts only an exact UUID-derived key |
-| Worker cache | Same suggestion pattern | `SET` with mandatory fixed `EX`; no delete port |
-| API limiter | `loremaster:v1:limit:*` | `TIME`, `GET`, `SET`, `INCR`, `EXISTS`, `PEXPIRE`, `PTTL`, `ZADD`, `ZCARD`, `ZREMRANGEBYSCORE`, `EVAL`, `EVALSHA`; one reviewed `limiter-v1` operation only |
-| Producer | `loremaster:v1:queue:loremaster-warm-v1:*` | Direct `INFO`, `HGET`, `HGETALL`, `HMSET`, `LLEN`, `ZCARD`, `EVAL`, `EVALSHA`; plus exact command union of producer scripts in the inventory |
+| Worker cache | Suggestion pattern and `loremaster:v1:revision:admission` | Reviewed atomic cache-set script: `TIME`, `ZREMRANGEBYSCORE`, `ZSCORE`, `ZCARD`, `ZADD`, `PEXPIRE`, `SET`, `EVAL`; no delete port |
+| API limiter | `loremaster:v1:limit:*` | Reviewed limiter script: `TIME`, `GET`, `ZREMRANGEBYSCORE`, `ZCARD`, `INCR`, `PEXPIRE`, `ZADD`, `EVAL` |
+| Producer | `loremaster:v1:queue:loremaster-warm-v1:*` | Reviewed admission script and direct `INFO`, `HGET`, `HGETALL`, `HMSET`, `LLEN`, `ZCARD`, `ZREM`, `EVAL`, `EVALSHA`; plus exact command union of producer scripts in the inventory |
 | Worker queue | Same queue pattern | Direct `INFO`, `HGET`, `HGETALL`, `HMSET`, `BZPOPMIN`, `EVAL`, `EVALSHA`; plus exact command union of worker scripts in the inventory |
 | Observer | Same queue pattern | `LLEN`, `ZCARD`, `ZRANGE` with a maximum one-element range and `WITHSCORES`; no hashes, job bodies, streams, write commands or scripts |
 
@@ -96,13 +96,16 @@ payload and options; parent/child flows, repeat jobs, arbitrary priorities,
 arbitrary script names and arbitrary key prefixes are excluded. Producer
 removal is limited to an exact retained terminal warm job, never active work.
 
+`acl-policy.json` is the deployment grant ledger and is applied to disposable
+Redis by the integration harness. `runtime-script-hashes.json` pins the cache,
+producer-admission and limiter Lua sources; contract tests reject drift.
 Redis ACLs constrain commands and keys; they cannot restrict `EVAL` by source
 hash or distinguish producer/consumer state transitions within one queue.
-Therefore S7.2/S7.4 must enforce the inventory through a role-specific client
+The runtime enforces the inventory through a role-specific client
 guard before ioredis executes or reloads a script. Unlisted names, mismatched
 source hashes and out-of-pattern keys are denied before any Redis command.
-The limiter script is authored and hash-reviewed in S7.6 before that identity
-is provisioned. This document does not claim Redis ACL alone enforces script
+The limiter script is hash-reviewed before that identity is provisioned. This
+document does not claim Redis ACL alone enforces script
 admission. Wrong-role and arbitrary-script denials remain mandatory real-Redis
 tests before any runtime is admitted.
 
@@ -110,15 +113,15 @@ tests before any runtime is admitted.
 
 | Namespace | Admission limit | Memory budget |
 | --- | --- | --- |
-| Suggestions | 16 exact revision keys, 512 KiB maximum value | 16 MiB including overhead |
+| Suggestions | 15 exact revision keys plus one capacity registry, 512 KiB maximum value | 16 MiB including overhead |
 | Queue | 384 jobs total, 128 outstanding; max 1,024 Redis keys and 1,024 events | 32 MiB including metadata |
 | Limiter | 20,000 live keys including capacity registry | 16 MiB |
 | Instance | `noeviction`, 128 MiB maxmemory | At least 64 MiB admission headroom |
 
-Redis maxmemory is instance-wide. S7.2/S7.4/S7.6 must enforce each namespace's
-count/byte admission and test concurrent saturation. A TTL alone is not a
-cardinality bound. S7.8 measures actual overhead against these budgets and
-rejects composition if the 64 MiB headroom is not maintained.
+Redis maxmemory is instance-wide. The cache registry, producer reservation,
+and limiter registry enforce namespace admission atomically. A TTL alone is
+not a cardinality bound. S7.8 measures actual overhead against these budgets
+and rejects composition if the 64 MiB headroom is not maintained.
 
 The shared limiter uses Redis-time fixed 60-second windows. Each counter and
 capacity key expires within 61 seconds. Key vocabulary is
@@ -128,6 +131,10 @@ domain-separated by scope before HMAC. Material is a separate 32-64 byte
 key, never a cursor key. Changing version/key rotates the namespace; old exact
 keys expire without wildcard deletion. The capacity registry is included in
 the 20,000-key bound.
+The capacity registry key is `loremaster:v1:limit:capacity:<HMAC-version>`;
+its sorted-set entries and TTL are pruned by the same atomic operation. The
+producer event stream requests approximate trimming at 512 entries to leave
+headroom under the 1,024-event admission limit.
 
 Ceilings remain session/IP 10; autocomplete/IP 300 and guest 120; mutation/IP
 120 and guest 30. Local denial returns immediately with its current
@@ -135,21 +142,25 @@ Ceilings remain session/IP 10; autocomplete/IP 300 and guest 120; mutation/IP
 IP/guest admission is one atomic operation. Healthy shared denial uses its
 bounded 1-60 second reset; Redis failure uses the local decision and a
 `degraded` signal. During outage, N replicas may permit the sum of their N
-local ceilings. S7.6 owns implementation, rotation and concurrency proof.
+local ceilings. S7.6 implements rotation and concurrency tests.
 
 ## Configuration and database roles
 
 `parseApiRedisConfiguration` defaults disabled. Enabled API configuration
 requires `LOREMASTER_REDIS_ENABLED=true`, separate
 `LOREMASTER_REDIS_CACHE_URL`, `LOREMASTER_REDIS_LIMITER_URL`,
-`LOREMASTER_REDIS_PRODUCER_URL`, `LOREMASTER_REDIS_LIMITER_HMAC_KEY` (canonical
-base64url), and `LOREMASTER_REDIS_LIMITER_HMAC_VERSION`. URL usernames must
-be distinct. No adapter is constructed in S7.1.
+`LOREMASTER_REDIS_PRODUCER_URL`,
+`LOREMASTER_REDIS_PRODUCER_DATABASE_URL`,
+`LOREMASTER_REDIS_LIMITER_HMAC_KEY` (canonical base64url), and
+`LOREMASTER_REDIS_LIMITER_HMAC_VERSION`. Redis URL usernames must match the
+six ACL identities exactly. The producer database login receives only the
+`loremaster_cache_producer` role.
 
 Worker parser requires `LOREMASTER_WORKER_REDIS_URL`,
 `LOREMASTER_WORKER_CACHE_REDIS_URL`, `LOREMASTER_WORKER_DATABASE_URL`; optional
 `LOREMASTER_WORKER_CONCURRENCY` is 1-4, default 2. Queue/cache usernames must
-be distinct. Observer requires `LOREMASTER_OBSERVER_REDIS_URL` and has no
+be distinct and match their ACL identities. Observer requires
+`LOREMASTER_OBSERVER_REDIS_URL` and has no
 database credentials. `LOREMASTER_REDIS_MODE` is local/production and must
 agree with API mode when present. All Redis URLs require explicit username
 and password; production additionally requires `rediss`. Invalid values,

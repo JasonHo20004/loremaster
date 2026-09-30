@@ -98,3 +98,16 @@ export function parseWarmResult(value: unknown): WarmResult {
 export function warmJobId(revisionId: string): string {
   return `warm-v1-${parseWarmPayload({ version: 1, revisionId }).revisionId}`
 }
+export {
+  createWarmProducer,
+  PRODUCER_ADMISSION_V1_LUA,
+  PRODUCER_ADMISSION_V1_SHA256,
+  type WarmProducer,
+  type WarmProducerPorts,
+} from './producer.js'
+export {
+  createWarmWorker,
+  processWarmJob,
+  type WarmWorkerRuntime,
+  type WarmWorkerPorts,
+} from './worker.js'

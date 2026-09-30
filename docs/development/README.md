@@ -111,10 +111,34 @@ payload with the same key is a conflict. Command calls use the same cookie,
 Origin, CSRF, content-type, and idempotency headers, with the returned attempt ID
 in `/api/v1/attempts/<attempt-id>/commands`.
 
-The in-memory limiter is intentionally bounded and replica-local. Multiple API
-replicas therefore permit the sum of their local ceilings. S7 may add a shared
-Redis ceiling, but it must retain this local limiter as the availability and
-memory-safety fallback when Redis is unavailable.
+The in-memory limiter is bounded and replica-local. When S7 Redis is enabled,
+the API also checks a shared ceiling after local admission. Multiple API
+replicas may permit the sum of their local ceilings during a Redis outage.
+
+## Optional S7 Redis cache and worker
+
+Redis is disabled by default. To enable the local S7.2-S7.6 runtime, provision
+the distinct PostgreSQL and Redis logins described in the [Redis contract](../../ops/redis/README.md).
+The API needs `LOREMASTER_REDIS_ENABLED=true`, cache, limiter and producer Redis
+URLs, a separate producer PostgreSQL URL, and the limiter HMAC key and version.
+The worker needs its own worker PostgreSQL URL and separate queue and cache
+Redis URLs. Set `LOREMASTER_REDIS_MODE=local` for local endpoints. The Redis URL
+usernames must match the six fixed ACL identities in the contract; the API
+producer PostgreSQL login receives only `loremaster_cache_producer`, and the
+worker login receives only `loremaster_cache_worker`.
+
+```bash
+pnpm --filter @loremaster/worker build
+pnpm --filter @loremaster/worker start
+pnpm test:s7:redis
+```
+
+The focused test starts a disposable pinned Redis container and exercises ACLs,
+cache fallback, producer/worker retries, and limiter concurrency. The API
+performs suggestion ownership checks in PostgreSQL before consulting Redis.
+When Redis is absent, suggestions use PostgreSQL and the local limiter remains
+active. Stop the worker and set `LOREMASTER_REDIS_ENABLED=false` to roll back
+the optional runtime without deleting wildcard keys.
 
 ## PostgreSQL integration tests
 

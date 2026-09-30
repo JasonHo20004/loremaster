@@ -53,6 +53,9 @@ jobs:
       - name: Verify composed API against PostgreSQL
         run: pnpm test:api:database
 
+      - name: Verify Redis ACLs, queue worker, and shared limiter
+        run: pnpm test:s7:redis
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-24.04
