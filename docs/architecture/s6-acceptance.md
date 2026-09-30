@@ -4,11 +4,10 @@ Recorded 2026-09-24. `PASS` means the S6-owned behavior has executable local
 evidence. `PARTIAL` names evidence split with a later stage. `DEFERRED (owner)`
 is outside the S6 implementation claim.
 
-S6 is locally accepted. The final documentation commit still requires the
-repository's clean-checkout `Quality`, `Dependency audit`, and `Secret scan`
-jobs before merge; no hosted run exists for the `web-ui` branch at the time of
-this record. That delivery gate is a failure if it does not run or pass and is
-not treated as a skip.
+S6 is accepted. The final documentation commit was included in PR #7, merged
+at `1ea44e7fdf2032ab65be05958d0cce43d08135fa`. Its
+[hosted CI run](https://github.com/JasonHo20004/loremaster/actions/runs/35955071257)
+passed clean-checkout `Quality`, `Dependency audit`, and `Secret scan` jobs.
 
 ## Acceptance map
 
@@ -42,7 +41,7 @@ harnesses; the successful results below contain no skipped prerequisite.
 | Production license inventory | 84 package/version entries: 77 MIT, 6 ISC, 1 BSD-3-Clause; none missing a declared license |
 | Full-history secret scan | Gitleaks 8.30.0 scanned 42 commits / about 1.14 MB; no leaks found |
 | Diff hygiene (`git diff --check`) | PASS after documentation formatting |
-| Hosted clean-checkout CI | DEFERRED (delivery): no run exists for `web-ui`; all three required jobs must pass on the final commit before merge |
+| Hosted clean-checkout CI | PASS on the PR #7 merge commit: Quality, Dependency audit, and Secret scan |
 
 The S6.7 implementation received independent TypeScript, accessibility, and
 security review. S6.8 changes documentation and status only; it does not change
