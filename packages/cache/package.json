@@ -1,5 +1,5 @@
 {
-  "name": "@loremaster/queue",
+  "name": "@loremaster/cache",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,13 +11,15 @@
       "default": "./dist/index.js"
     }
   },
-  "dependencies": {
-    "bullmq": "5.81.5",
-    "ioredis": "5.11.1"
-  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "ioredis": "5.11.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.2"
   }
 }

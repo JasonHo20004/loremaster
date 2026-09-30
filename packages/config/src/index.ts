@@ -1,5 +1,7 @@
 import { isIP } from 'node:net'
 
+export * from './redis.js'
+
 export type ServerMode = 'local' | 'production'
 
 export interface TrustedProxy {

@@ -181,4 +181,17 @@ If Corepack was previously configured with a broken global pnpm shim, remove tha
 
 ## Workspace boundaries
 
+S7.0 and S7.1 evidence is recorded in the [S7 preflight](../../plans/s7-preflight.md)
+and [S7.1 contract delivery](../../plans/s7-contracts.md). Run
+`pnpm test:s7:contracts` for strict cache/job/limiter/configuration and package
+boundary tests, and `pnpm test:database` for the worker/producer view roles.
+The [Redis contract](../../ops/redis/README.md) lists future process inputs,
+ACL operations, connection limits, deadlines and budgets. These parsers and
+policies do not activate Redis in the host application.
+
+BullMQ 5.81.5 and ioredis 5.11.1 are pinned in the lockfile. The optional
+`msgpackr-extract` install script is explicitly disabled in
+`pnpm-workspace.yaml`; MessagePack provides its JavaScript implementation.
+Frozen installs must honor that decision without interactive build approval.
+
 Apps live under `apps/*`; shared libraries live under `packages/*`. Browser code may import browser-safe `@loremaster/contracts` exports and call the frozen `/api/v1` surface. It must not import API/database modules, the operator importer, authored fixtures, answers, explanations, or sources. S7 cache warming may optimize disposable reads but must preserve these browser/API semantics and PostgreSQL-owned gameplay truth.
