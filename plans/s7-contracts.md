@@ -50,15 +50,17 @@ The final local checks after review fixes passed:
 | Gitleaks 8.30.0 `dir /repo --no-banner --redact` | PASS; approximately 3.92 MB of current checkout scanned, no leaks             |
 | `git diff --check`                               | PASS                                                                          |
 
-The fresh S7.1 commit and hosted CI are not yet available. The existing
-S6-merge hosted success remains the dependency baseline only.
+The S7.0 preflight merged in [PR #8](https://github.com/JasonHo20004/loremaster/pull/8)
+at `3484f8d43b2993b0d7a5ce5c8eb56475c5e876ed`; the S7.1 contracts merged
+in [PR #9](https://github.com/JasonHo20004/loremaster/pull/9) at
+`8609ee1b3a3b4298083c3749f061787d5230cb7a`. Both merge commits passed
+hosted Quality, Dependency audit, and Secret scan.
 
 ## Delivery boundary
 
-This is a local working-tree delivery on `codex/s7-completion`. Hosted CI and
-merge for these changes remain pending; S6's hosted pass is baseline evidence,
-not a hosted pass for S7. Dependent slice work requires the reviewed committed
-predecessor and passing hosted delivery gate from the plan.
+Both slices have passed their delivery gates and are merged. Dependent work may
+start from the accepted S7.1 merge, but S7.2 and later slices have not been
+executed in this delivery.
 
 Redis ACLs do not restrict Lua by source hash. The contract requires guarded
 role-specific ports, exact script options/arguments and actual wrong-role/

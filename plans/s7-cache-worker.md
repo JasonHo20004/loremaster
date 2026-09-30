@@ -428,8 +428,8 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 
 ## Progress
 
-- [ ] S7.0 Close the delivery preflight (local evidence PASS; slice PR/hosted CI pending)
-- [ ] S7.1 Freeze queue, cache, and Redis configuration contracts (local evidence PASS; slice PR/hosted CI pending)
+- [x] S7.0 Close the delivery preflight (PR #8 merged; hosted checks PASS)
+- [x] S7.1 Freeze queue, cache, and Redis configuration contracts (PR #9 merged; hosted checks PASS)
 - [ ] S7.2 Implement the suggestion-cache contract and Redis adapter
 - [ ] S7.3 Integrate the cache after suggestion ownership commits
 - [ ] S7.4 Add the deterministic producer and recovery reconciliation
@@ -441,13 +441,19 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 
 ## Plan mutation protocol
 
-2026-09-29: the user narrowed execution to S7.0/S7.1. This delivery batches
-preflight evidence and foundational contracts on `codex/s7-completion`, based
-on the accepted S6 merge. S7.1 ownership includes its database role migration,
-role tests, root focused command, read-only CI gate, browser boundary regression
-checks and `ops/redis` script/ACL inventory. Runtime suggestion and transaction
-changes, producers, workers, observers, shared-limiter execution and composed
-failure harnesses remain S7.2-S7.8. No dependency edge, public contract,
+2026-09-30: S7.0 merged as PR #8 at `3484f8d43b2993b0d7a5ce5c8eb56475c5e876ed`;
+S7.1 merged as PR #9 at `8609ee1b3a3b4298083c3749f061787d5230cb7a`.
+Both merge commits passed hosted Quality, Dependency audit, and Secret scan.
+The two slices are complete. S7.2 and later slices remain unexecuted.
+
+2026-09-29: the user narrowed execution to S7.0/S7.1. Preflight evidence and
+foundational contracts were prepared on `codex/s7-completion`, based on the
+accepted S6 merge, then isolated into PRs #8 and #9. S7.1 ownership
+includes its database role migration, role tests, root focused command,
+read-only CI gate, browser boundary regression checks and `ops/redis` script/ACL
+inventory. Runtime suggestion and transaction changes, producers, workers,
+observers, shared-limiter execution and composed failure harnesses remain
+S7.2-S7.8. No dependency edge, public contract,
 gameplay behavior or rollback rule changes. Native Redis ACL cannot restrict
 Lua source hashes; the frozen contract therefore requires role-specific script
 hash guards plus real Redis denials before later runtime admission. Reviewers

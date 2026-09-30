@@ -579,9 +579,10 @@ threat-model docs, `README.md`, and this plan's progress/mutation records.
 
 ### S6.8 acceptance evidence (2026-09-24)
 
-Decision: **PARTIAL** pending the final documentation commit's hosted CI. All
-S6 implementation and local acceptance gates pass, and the exact evidence and
-later-stage ownership are recorded in `docs/architecture/s6-acceptance.md`.
+Decision: **PASS**. All S6 implementation and local acceptance gates passed;
+the exact evidence and later-stage ownership are recorded in
+`docs/architecture/s6-acceptance.md`. PR #7 subsequently merged at
+`1ea44e7fdf2032ab65be05958d0cce43d08135fa` with passing hosted CI.
 
 - Frozen install, 11/11 focused Chromium component tests, 4/4 composed
   real-stack journeys, 5/5 accessibility/responsive journeys, the five-file
@@ -595,9 +596,9 @@ later-stage ownership are recorded in `docs/architecture/s6-acceptance.md`.
   browser implementation, exact local API plus Vite startup, and S7 handoff.
   S7 may warm disposable reads but may not change gameplay truth, browser/API
   semantics, or the replica-local limiter fallback.
-- GitHub exposes no workflow run for `web-ui`. The final documentation commit
-  must pass the unchanged clean-checkout Quality, Dependency audit, and Secret
-  scan jobs before this slice and S6 are marked complete.
+- The final documentation commit was included in merged PR #7. Its
+  [hosted CI run](https://github.com/JasonHo20004/loremaster/actions/runs/35955071257)
+  passed Quality, Dependency audit, and Secret scan on the merge commit.
 
 ## Review and delivery rules
 
@@ -630,9 +631,14 @@ later-stage ownership are recorded in `docs/architecture/s6-acceptance.md`.
 - [x] S6.5 Deliver profile and daily leaderboard views
 - [x] S6.6 Complete responsive design and accessibility
 - [x] S6.7 Run the real-browser and disclosure acceptance gate
-- [ ] S6.8 Record S6 acceptance and hand off to S7 (hosted CI pending)
+- [x] S6.8 Record S6 acceptance and hand off to S7
 
 ## Plan mutation log
+
+- 2026-09-30 - Reconciled S6.8 delivery status after PR #7 merged at
+  `1ea44e7fdf2032ab65be05958d0cce43d08135fa` and all three hosted checks
+  passed. The acceptance evidence and S7 handoff were already recorded; this
+  corrects the stale pending-CI status without changing implementation.
 
 - 2026-09-24 - Executed the local S6.8 acceptance review and recorded the S7
   handoff. Every local browser, disclosure, database/API, root, audit, license,
