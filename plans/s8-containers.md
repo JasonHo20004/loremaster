@@ -11,6 +11,11 @@ S8 is **planned but not admitted**. Implementation begins only after S7 has a
 reviewed acceptance record, clean-checkout hosted CI, and a merge commit on
 `main`. Record that commit as the S8 base.
 
+The [2026-09-29 S8.0 preflight](s8-preflight.md) is **BLOCKED**: this checkout
+has no S7 acceptance record or executable worker/observer runtime. Host
+verification also encountered a broken nested pnpm launcher and an unavailable
+Docker daemon. S8.0 remains incomplete; S8.1 has not begun.
+
 `deploy/`, `platform/`, and `infra/` currently contain no tracked runtime
 implementation. S8 owns `deploy/images`, a local Compose stack, container test
 harnesses, and deployed-artifact evidence. S9 owns kind/Helm/Argo CD and
