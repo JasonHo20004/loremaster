@@ -1,3 +1,6 @@
 export * from './suggestions.js'
 export * from './profiles.js'
 export * from './limiter-contract.js'
+export * from './redis-connection.js'
+export * from './suggestions/redis.js'
+export * from './limiter/redis.js'

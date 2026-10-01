@@ -25,6 +25,7 @@ export const WARM_POLICY = Object.freeze({
   maximumEvents: 1024,
   maximumStoredJobBytes: 16_384,
   maximumStalledCount: 1,
+  stalledIntervalMs: 5_000,
   stackTraceLimit: 0,
   removeOnComplete: Object.freeze({ age: 172_800, count: 128 }),
   removeOnFail: Object.freeze({ age: 172_800, count: 128 }),
@@ -98,3 +99,16 @@ export function parseWarmResult(value: unknown): WarmResult {
 export function warmJobId(revisionId: string): string {
   return `warm-v1-${parseWarmPayload({ version: 1, revisionId }).revisionId}`
 }
+export {
+  createWarmProducer,
+  PRODUCER_ADMISSION_V1_LUA,
+  PRODUCER_ADMISSION_V1_SHA256,
+  type WarmProducer,
+  type WarmProducerPorts,
+} from './producer.js'
+export {
+  createWarmWorker,
+  processWarmJob,
+  type WarmWorkerRuntime,
+  type WarmWorkerPorts,
+} from './worker.js'
