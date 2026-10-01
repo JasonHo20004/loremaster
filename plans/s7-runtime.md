@@ -45,3 +45,8 @@ Accepted main commit: `5308d778e000e03785260d6df6850b1d7037e3c7`.
 [Final branch CI](https://github.com/JasonHo20004/loremaster/actions/runs/36727763370)
 and [merged-main CI](https://github.com/JasonHo20004/loremaster/actions/runs/36728221191)
 passed. S7.7-S7.9 delivery proceeds from this accepted predecessor.
+
+S7.7-S7.9 runtime CI passed at `4f5bd574435393492218155fea7581c5084de2c0`
+in [run 36816763589](https://github.com/JasonHo20004/loremaster/actions/runs/36816763589).
+The acceptance record and final [PR #13 checks](https://github.com/JasonHo20004/loremaster/pull/13/checks)
+close the documentation and S8 handoff gate before merge.

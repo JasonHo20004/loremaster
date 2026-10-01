@@ -1,10 +1,13 @@
 # S7 cache worker acceptance record
 
-Recorded 2026-10-01. S7.2-S7.8 runtime implementation and local failure-gate
-verification are complete. S7.9 records acceptance evidence and the S8 handoff.
-Hosted final-commit CI and merge remain delivery gates; local tests do not
-constitute hosted acceptance. `PASS` means executable local proof, `PARTIAL`
-names an outstanding gate, and `DEFERRED (owner)` names downstream work.
+Recorded 2026-10-01. S7.2-S7.6 are accepted through PR #12. S7.7-S7.9
+complete worker health, queue observation, composed failure verification,
+independent review and the S8 handoff through
+[PR #13](https://github.com/JasonHo20004/loremaster/pull/13).
+The final documentation commit must pass Quality, Dependency audit and Secret
+scan before merge. The [final PR checks](https://github.com/JasonHo20004/loremaster/pull/13/checks)
+and merged PR record are the delivery evidence. `PASS` means executable proof;
+`DEFERRED (owner)` names downstream work.
 
 PostgreSQL remains authoritative. The frozen S5/S6 browser/API contract,
 cookie/CSRF/idempotency rules and synchronous gameplay effects remain intact.
@@ -27,7 +30,7 @@ ACL/source ledgers, connection profiles and namespace budgets.
 | Namespace admission and memory headroom | Real cache/limiter/queue bounds; composed maximum-size/count `MEMORY USAGE` measurement | PASS |
 | Worker/observer health, bounded metrics and disclosure | `pnpm test:s7:health`, `pnpm test:s7:observer`; composed held PG-login denial, Redis outage, stored cache/job/log/metric marker scan | PASS |
 | Terminal retention and event budget | Composed 140 poison jobs retain at most 128 failed records and 1,024 events | PASS |
-| Hosted final-commit verification and merge | CI includes contracts, PostgreSQL, API/PG, isolated Redis and composed gate; final hosted evidence not yet recorded | PARTIAL (delivery) |
+| Hosted verification and delivery | [Runtime CI](https://github.com/JasonHo20004/loremaster/actions/runs/36816763589) passed on `4f5bd574435393492218155fea7581c5084de2c0`; [final PR checks](https://github.com/JasonHo20004/loremaster/pull/13/checks) must pass before merge | PASS (merge gate) |
 | Artifact and AWS cache isolation | S8 scans assembled artifacts; S12 repeats two-guest proof in its separately admitted environment | DEFERRED (S8/S12) |
 | Full telemetry pipeline and retention | S7 exports fixed metrics and retains finite BullMQ job history only | DEFERRED (S10) |
 
@@ -129,8 +132,7 @@ Independent TypeScript, database/acceptance and security reviewers resolved
 raw dependency log disclosure, persisted driver messages, overlapping HMAC
 admission, malformed retry options, pending health-bind shutdown, composed CI
 omission and missing failure proofs. Final reviews report no remaining material
-finding. Independent health/observer tests passed. Final local counts and hosted
-results remain to be recorded on the delivery snapshot.
+finding. Independent health/observer tests passed. Final local counts and hosted evidence are recorded below.
 
 S8 must package the accepted processes, preserve explicit migration/import
 operations, PostgreSQL authority, Redis fallback and public disclosure rules,
@@ -160,3 +162,25 @@ worker and observer, and lets exact keys expire without gameplay/schema rollback
 Reviewers: independent `typescript-reviewer`, `code-reviewer` for database and
 acceptance, and `security-reviewer`. Final follow-up reports no remaining
 material findings; the producer timeout documentation was corrected.
+
+## Hosted delivery evidence
+
+Accepted predecessor: S7.2-S7.6 [PR #12](https://github.com/JasonHo20004/loremaster/pull/12),
+main `5308d778e000e03785260d6df6850b1d7037e3c7`;
+[branch CI](https://github.com/JasonHo20004/loremaster/actions/runs/36727763370)
+and [merged-main CI](https://github.com/JasonHo20004/loremaster/actions/runs/36728221191) passed.
+
+S7.7-S7.9 runtime delivery: `4f5bd574435393492218155fea7581c5084de2c0`;
+[hosted CI](https://github.com/JasonHo20004/loremaster/actions/runs/36816763589)
+passed Quality, Dependency audit and Secret scan. Quality reproduced the frozen
+install, full verify, contracts, PostgreSQL, API/PostgreSQL, isolated Redis and
+all nine composed scenarios on Ubuntu 24.04. Full verify and the composed gate
+also passed locally after the accepted-predecessor update.
+
+Final documentation and S8 admission use the same required jobs in
+[PR #13 checks](https://github.com/JasonHo20004/loremaster/pull/13/checks).
+Merge is allowed only after those jobs pass on its final head. The merged
+[PR #13 record](https://github.com/JasonHo20004/loremaster/pull/13) identifies the
+accepted main commit without a self-referential documentation hash. S8 must
+start from that merged, green predecessor; it may not substitute an unreviewed
+working tree.

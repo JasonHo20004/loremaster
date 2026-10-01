@@ -10,9 +10,12 @@ effects out of PostgreSQL.
 S7.0 records the admitted S6 base
 `1ea44e7fdf2032ab65be05958d0cce43d08135fa` and its passing hosted CI in the
 [preflight evidence](s7-preflight.md). S7.0 and S7.1 are merged; [contract
-evidence](s7-contracts.md) records their delivery. S7.2-S7.6 are implemented
-and verified locally on `codex/s7-runtime`; [runtime evidence](s7-runtime.md)
-records their checks. S7.7-S7.8 are implemented with local failure-gate evidence; [S7 acceptance](../docs/architecture/s7-acceptance.md) records S7.9 and the outstanding hosted delivery gate.
+evidence](s7-contracts.md) records their delivery. S7.2-S7.6 merged in PR #12
+with passing hosted CI; [runtime evidence](s7-runtime.md) records their checks.
+S7.7-S7.9 complete the health/observer, composed gate and S8 handoff through
+[PR #13](https://github.com/JasonHo20004/loremaster/pull/13).
+[S7 acceptance](../docs/architecture/s7-acceptance.md) records executable proof,
+independent review and the final-documentation CI requirement before merge.
 
 `apps/worker` now runs the bounded cache-warming consumer. `apps/queue-observer` now runs bounded read-only health and metrics. S7.1 froze Redis/BullMQ dependencies,
 configuration, contracts and read-only database roles. S7.2-S7.6 implement the
@@ -436,11 +439,14 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 - [x] S7.6 Add the required shared limiter without removing the local fallback
 - [x] S7.7 Implement worker health and the queue observer (local checks and independent review PASS)
 - [x] S7.8 Run the composed Redis failure and security gate (local checks and independent review PASS)
-- [ ] S7.9 Record acceptance and hand off to S8
+- [x] S7.9 Record acceptance and hand off to S8 (PR #13; final hosted checks required before merge)
 
-The unchecked S7.2-S7.6 boxes mean hosted CI, review, and merge are still
-pending. Their local implementation and verification are recorded in
-[runtime evidence](s7-runtime.md).
+S7.2-S7.6 merged in [PR #12](https://github.com/JasonHo20004/loremaster/pull/12)
+at `5308d778e000e03785260d6df6850b1d7037e3c7` with passing hosted CI.
+S7.7-S7.9 runtime CI passed on `4f5bd574435393492218155fea7581c5084de2c0`;
+[final PR #13 checks](https://github.com/JasonHo20004/loremaster/pull/13/checks)
+must pass on the final documentation commit before merge. Accepted S8 input
+is the merged PR #13 commit, identified by its delivery record.
 
 ## Plan mutation protocol
 
@@ -482,7 +488,7 @@ hashes are updated. Retry/retention options are normalized even for poison
 jobs. Worker/producer PG pools have bounded infrastructure connection setup;
 read-only commits retain cancellation. Public API semantics and authoritative
 write-commit behavior remain frozen. Rollback still disables Redis and stops
-workers without broad deletion. S7.9 delivery remains pending hosted evidence.
+workers without broad deletion. Runtime hosted CI passed; the final documentation commit repeats the same required checks before PR #13 merge.
 
 2026-09-30: the user requested execution of S7.2-S7.6 together. The local
 implementation and tests are recorded in [runtime evidence](s7-runtime.md).
