@@ -33,3 +33,20 @@ waits for Redis. Exact cache keys expire after 48 hours; rollback needs no
 wildcard deletion. S7.7 health/observer, S7.8 composed failure and memory
 headroom measurement, S7.9 acceptance, and hosted CI/merge remain separate
 delivery gates.
+
+2026-10-01 follow-up: S7.7-S7.8 now provide executable private probes,
+read-only observer metrics and a composed failure/memory/security gate.
+[S7 acceptance](../docs/architecture/s7-acceptance.md) owns current runtime
+contracts, independent review, local verification and the S8 handoff. The
+earlier paragraph records the historical state of S7.2-S7.6 delivery.
+
+S7.2-S7.6 delivery closed in [PR #12](https://github.com/JasonHo20004/loremaster/pull/12).
+Accepted main commit: `5308d778e000e03785260d6df6850b1d7037e3c7`.
+[Final branch CI](https://github.com/JasonHo20004/loremaster/actions/runs/36727763370)
+and [merged-main CI](https://github.com/JasonHo20004/loremaster/actions/runs/36728221191)
+passed. S7.7-S7.9 delivery proceeds from this accepted predecessor.
+
+S7.7-S7.9 runtime CI passed at `4f5bd574435393492218155fea7581c5084de2c0`
+in [run 36816763589](https://github.com/JasonHo20004/loremaster/actions/runs/36816763589).
+The acceptance record and final [PR #13 checks](https://github.com/JasonHo20004/loremaster/pull/13/checks)
+close the documentation and S8 handoff gate before merge.

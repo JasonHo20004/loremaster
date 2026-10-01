@@ -9,7 +9,7 @@ import { SHARED_LIMIT_POLICY } from '../limiter-contract.js'
 import type { BoundedRedisConnection } from '../redis-connection.js'
 
 /** One reviewed operation. TIME, both identity checks, capacity and increments are atomic. */
-export const LIMITER_V1_LUA = `
+export const LIMITER_V1_LUA = `#!lua
 local now = redis.call('TIME')
 local second = tonumber(now[1])
 local bucket = math.floor(second / 60)
@@ -17,7 +17,7 @@ local prefix = 'loremaster:v1:limit:' .. ARGV[1] .. ':' .. bucket .. ':' .. ARGV
 local ip = prefix .. 'ip:' .. ARGV[3]
 local guest = nil
 if ARGV[4] ~= '' then guest = prefix .. 'guest:' .. ARGV[4] end
-local capacity = 'loremaster:v1:limit:capacity:' .. ARGV[1]
+local capacity = 'loremaster:v1:limit:capacity'
 local nowMs = second * 1000 + math.floor(tonumber(now[2]) / 1000)
 local reset = 60 - (second % 60)
 local currentIp = tonumber(redis.call('GET', ip) or '0')

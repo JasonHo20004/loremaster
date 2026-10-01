@@ -91,7 +91,7 @@ describe('warm job runtime boundaries', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(active.size).toBe(1)
     active.values().next().value!.abort()
-    await expect(run).rejects.toThrow('database cancelled')
+    await expect(run).rejects.toThrow('Warm dependency unavailable')
     expect(active.size).toBe(0)
     expect(wrote).toBe(false)
   })

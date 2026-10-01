@@ -1,6 +1,6 @@
 # Threat model
 
-Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and future AWS. Assets: hidden solutions, attempt integrity, session tokens, secrets and cloud credit. Browser inputs, imported files, queue payloads and untrusted PRs cross trust boundaries. The API/database own identity and truth. Controls through S6 have local executable evidence in the [S6 acceptance record](../architecture/s6-acceptance.md); S7-S12 items below remain requirements, not implemented claims.
+Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and future AWS. Assets: hidden solutions, attempt integrity, session tokens, secrets and cloud credit. Browser inputs, imported files, queue payloads and untrusted PRs cross trust boundaries. The API/database own identity and truth. Controls through S6 have local executable evidence in the [S6 acceptance record](../architecture/s6-acceptance.md); The [S7 acceptance map](../architecture/s7-acceptance.md) records local cache/queue evidence; S8-S12 items below remain staged requirements.
 
 | Threat / attack | Required control | Verification owner / stage |
 | --- | --- | --- |
@@ -13,8 +13,8 @@ Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and fu
 | Malicious import or changed opened answer | Local operator CLI, narrow DB privilege, transactional validation, immutable publication and global exclusion constraint | S4/S5 malformed packs, rollback and concurrent-window tests |
 | SSRF via source/asset URL | MVP never fetches supplied URLs; sources are internal references | S5 verify no URL-fetch path; future fetcher requires allowlist, redirect/DNS/IP revalidation, metadata/private-IP blocks and byte/time bounds |
 | Secrets exfiltrated from PR or config/log | No cloud identity in untrusted CI, minimal permissions, redaction, secret scanning; S11 constrained OIDC | S3 scanner/permissions; S11 untrusted-role denial |
-| Redis outage or poison/replayed cache job | Synchronous PG truth; fail-fast cache path; versioned validated job, bounded retries/retention, persistence/noeviction | S7.1 strict contract tests; S7.2-S7.8 own runtime failure/replay/drain evidence |
-| Cache content or queue privileges crossing process boundaries | Strict server-only envelope and public projection; worker reads published/eligible views; API read-only cache port; separate ACL identities and reviewed script hashes | S7.1 contracts, package boundary and database-role tests; [ACL and budget contract](../../ops/redis/README.md); later real Redis denial tests required |
+| Redis outage or poison/replayed cache job | Synchronous PG truth; fail-fast cache path; versioned validated job, bounded retries/retention, persistence/noeviction | [S7 acceptance](../architecture/s7-acceptance.md): strict contracts, real Redis failure/replay/drain, two-replica limiting and stored-data disclosure checks |
+| Cache content or queue privileges crossing process boundaries | Strict server-only envelope and public projection; worker reads published/eligible views; API read-only cache port; separate ACL identities and reviewed script hashes | S7.1 contracts, package boundary and database-role tests; [ACL and budget contract](../../ops/redis/README.md); real Redis denials and reviewed source hashes verified locally |
 | Cloud origin bypass, runaway cost or failed destroy | Origin restriction; admission and independent qualified cleanup; separate provisioning/cleanup permissions | S11/S12 admission rejection, direct-origin denial and residual inventory |
 
 ## Initial API bounds for S5

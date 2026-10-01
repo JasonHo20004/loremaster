@@ -96,3 +96,5 @@ export const noOpTelemetry: ApiTelemetry = Object.freeze({
   logs: Object.freeze({ write: () => undefined }),
   metrics: Object.freeze({ record: () => undefined }),
 })
+export * from './health.js'
+export * from './queue.js'

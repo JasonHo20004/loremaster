@@ -14,14 +14,16 @@ import {
   readPublishedSuggestionIndex,
   assertOutsideTransaction,
   type DeadlineContext,
+  transaction,
 } from '@loremaster/database'
 import { createWarmWorker } from '@loremaster/queue'
+import { createPrivateHealthServer } from '@loremaster/observability'
 
 export async function runWorker(
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<void> {
   const config = parseWorkerConfiguration(env)
-  const db = database(config.databaseUrl)
+  const db = database(config.databaseUrl, { connectionTimeoutMs: 1000 })
   const cache = new BoundedRedisConnection(config.cacheRedisUrl, 'worker')
   const writer = createSuggestionCacheWriter(cache, {
     assertOutsideTransaction,
@@ -58,13 +60,40 @@ export async function runWorker(
       }
     })(),
   })
+  const health = createPrivateHealthServer({
+    port: config.healthPort,
+    async ready(signal) {
+      if (!worker.ready()) return false
+      await Promise.all([
+        cache.run((client) => client.ping(), signal),
+        transaction(
+          db,
+          async (client) => {
+            await client.query('SELECT 1')
+          },
+          {
+            role: 'loremaster_cache_worker',
+            readOnly: true,
+            deadline: {
+              deadlineAt: Date.now() + 1000,
+              now: () => Date.now(),
+              signal,
+            },
+          },
+        ),
+      ])
+      return worker.ready()
+    },
+  })
   let closing: Promise<void> | undefined
   const stop = () => {
     closing ??= (async () => {
+      health.drain()
       try {
         await worker.stop()
       } finally {
         cache.close()
+        await health.stop()
         await closeDatabase(db)
       }
     })()
@@ -78,6 +107,7 @@ export async function runWorker(
   process.once('SIGTERM', shutdown)
   process.once('SIGINT', shutdown)
   try {
+    await health.start()
     await worker.start()
   } catch (error) {
     await stop()

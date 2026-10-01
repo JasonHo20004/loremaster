@@ -21,7 +21,7 @@ export interface WarmProducer {
 }
 
 /** Redis-time reservation covers concurrent producers until their one-second enqueue deadline. */
-export const PRODUCER_ADMISSION_V1_LUA = `
+export const PRODUCER_ADMISSION_V1_LUA = `#!lua
 local now = redis.call('TIME')
 local nowMs = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
 redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', nowMs)
@@ -82,6 +82,7 @@ export function createWarmProducer(
       if (!stopped) void reconcile()
     })
     redis.on('end', scheduleRecovery)
+    redis.on('error', () => ports.onEvent?.('unavailable'))
     queue = new Queue(WARM_QUEUE_NAME, {
       prefix: WARM_QUEUE_PREFIX,
       connection: redis,
@@ -97,6 +98,7 @@ export function createWarmProducer(
         stackTraceLimit: WARM_POLICY.stackTraceLimit,
       },
     })
+    queue.on('error', () => ports.onEvent?.('unavailable'))
     return queue
   }
   const run = async (): Promise<void> => {

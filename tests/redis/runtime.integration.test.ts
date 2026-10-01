@@ -335,7 +335,7 @@ describe('real Redis role and runtime gate', () => {
   })
 
   it('denies new limiter identities at the registry bound and recovers after capacity returns', async () => {
-    const registry = 'loremaster:v1:limit:capacity:cap'
+    const registry = 'loremaster:v1:limit:capacity'
     const items: (string | number)[] = []
     for (let number = 0; number < 19_998; number++)
       items.push(Date.now() + 60_000, `reserved-${number}`)
@@ -347,6 +347,13 @@ describe('real Redis role and runtime gate', () => {
     const digest = digestLimitIdentity(randomBytes(32), 'ip', '203.0.113.9')
     expect(
       await limiter.consume({ counter: 'session', ipDigest: digest }),
+    ).toMatchObject({ state: 'denied' })
+    const rotated = createRedisSharedLimiter(
+      connection('loremaster_api_limiter', 'api-limiter'),
+      'rotated',
+    )
+    expect(
+      await rotated.consume({ counter: 'session', ipDigest: digest }),
     ).toMatchObject({ state: 'denied' })
     await admin.del(registry)
     expect(

@@ -197,8 +197,12 @@ export async function transaction<T>(
       const result = await runWork(work(client), options.deadline)
 
       if (options.deadline !== undefined) throwIfCancelled(options.deadline)
-      options.deadline?.signal.removeEventListener('abort', cancel)
-      await client.query('COMMIT')
+      if (options.readOnly !== true)
+        options.deadline?.signal.removeEventListener('abort', cancel)
+      await runWork(
+        client.query('COMMIT'),
+        options.readOnly === true ? options.deadline : undefined,
+      )
       transactionStarted = false
       return result
     } catch (caught) {

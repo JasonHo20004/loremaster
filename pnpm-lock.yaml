@@ -73,7 +73,20 @@ importers:
         specifier: 22.20.2
         version: 22.20.2
 
-  apps/queue-observer: {}
+  apps/queue-observer:
+    dependencies:
+      '@loremaster/cache':
+        specifier: workspace:*
+        version: link:../../packages/cache
+      '@loremaster/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@loremaster/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@loremaster/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
 
   apps/web:
     dependencies:
@@ -120,6 +133,9 @@ importers:
       '@loremaster/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@loremaster/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@loremaster/queue':
         specifier: workspace:*
         version: link:../../packages/queue

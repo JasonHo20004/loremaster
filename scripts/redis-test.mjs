@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { createRequire } from 'node:module'
+import { createServer } from 'node:net'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { URL } from 'node:url'
@@ -13,6 +14,11 @@ const image =
   'redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08'
 const name = `loremaster-redis-test-${randomUUID()}`
 let started = false
+// Docker reallocates an automatically published host port after restart.
+const reservation = createServer()
+await new Promise((resolve) => reservation.listen(0, '127.0.0.1', resolve))
+const testPort = reservation.address().port
+await new Promise((resolve) => reservation.close(resolve))
 try {
   execFileSync('docker', ['info'], { stdio: 'pipe' })
   execFileSync(
@@ -24,13 +30,15 @@ try {
       '--name',
       name,
       '--publish',
-      '127.0.0.1::6379',
+      `127.0.0.1:${testPort}:6379`,
       image,
       'redis-server',
       '--save',
       '',
       '--appendonly',
-      'no',
+      'yes',
+      '--appendfsync',
+      'everysec',
       '--maxmemory',
       '128mb',
       '--maxmemory-policy',
@@ -66,13 +74,19 @@ try {
   if (!ready) throw new Error('Redis test instance did not become ready')
   const result = spawnSync(
     process.execPath,
-    [
-      'node_modules/vitest/vitest.mjs',
-      'run',
-      'tests/redis/runtime.integration.test.ts',
-    ],
+    process.argv[2] === 'composed'
+      ? ['scripts/database-test.mjs', 's7']
+      : [
+          'node_modules/vitest/vitest.mjs',
+          'run',
+          'tests/redis/runtime.integration.test.ts',
+        ],
     {
-      env: { ...process.env, LOREMASTER_TEST_REDIS_URL: url },
+      env: {
+        ...process.env,
+        LOREMASTER_TEST_REDIS_URL: url,
+        LOREMASTER_TEST_REDIS_CONTAINER: name,
+      },
       stdio: 'inherit',
     },
   )

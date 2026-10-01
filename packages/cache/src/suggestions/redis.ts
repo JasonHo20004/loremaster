@@ -16,7 +16,7 @@ import { redisFailure, RedisOperationError } from '../redis-connection.js'
 import { REDIS_NAMESPACE_BUDGETS } from '../profiles.js'
 
 /** Registry and exact key replacement are one atomic, reviewed worker operation. */
-export const CACHE_SET_V1_LUA = `
+export const CACHE_SET_V1_LUA = `#!lua
 local now = redis.call('TIME')
 local nowMs = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
 redis.call('ZREMRANGEBYSCORE', KEYS[2], '-inf', nowMs)

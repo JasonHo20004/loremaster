@@ -172,7 +172,25 @@ See the [S6 acceptance record](../architecture/s6-acceptance.md) for the exact
 claim mapping and the S8 deployed-artifact deferral. A missing Docker daemon,
 browser, or PostgreSQL startup is a failure, never a skipped acceptance result.
 
-## Pinned prerequisites
+## Worker and queue observer probes
+
+After building, run `pnpm --filter @loremaster/worker start` and
+`pnpm --filter @loremaster/queue-observer start` with the separate role URLs in
+the [Redis configuration inventory](../../ops/redis/README.md). They bind
+loopback ports 3001 and 3002. Both expose `/health/live` and `/health/ready`;
+the observer additionally exposes fixed Prometheus `/metrics`. Worker readiness
+requires PostgreSQL plus queue/cache Redis; observer readiness requires Redis.
+API readiness remains PostgreSQL-only. SIGINT/SIGTERM marks draining and
+closes owned resources within the documented budgets.
+
+Run `pnpm test:s7:health`, `pnpm test:s7:observer`, `pnpm test:redis` and
+`pnpm test:s7:integration`. The composed gate requires Docker, creates pinned
+disposable PostgreSQL/Redis instances, provisions least-privilege roles, starts
+real worker/API/observer runtimes and fails on missing prerequisites. The
+[S7 acceptance record](../architecture/s7-acceptance.md) owns exact contracts
+and delivery status. This workflow does not start S8 runtime containers.
+
+## Pinned toolchain
 
 - WSL2 with a current Ubuntu distribution
 - Git
@@ -209,7 +227,7 @@ S7.0 and S7.1 evidence is recorded in the [S7 preflight](../../plans/s7-prefligh
 and [S7.1 contract delivery](../../plans/s7-contracts.md). Run
 `pnpm test:s7:contracts` for strict cache/job/limiter/configuration and package
 boundary tests, and `pnpm test:database` for the worker/producer view roles.
-The [Redis contract](../../ops/redis/README.md) lists future process inputs,
+The [Redis contract](../../ops/redis/README.md) lists runtime process inputs,
 ACL operations, connection limits, deadlines and budgets. These parsers and
 policies do not activate Redis in the host application.
 

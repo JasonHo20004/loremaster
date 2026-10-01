@@ -59,6 +59,8 @@ export class BoundedRedisConnection {
         },
       })
     this.client = client
+    // Dependency errors are classified by the caller; never print raw driver text.
+    if (client.listenerCount('error') === 0) client.on('error', () => undefined)
     const bounded = async <Value>(
       operation: Promise<Value>,
       milliseconds: number,

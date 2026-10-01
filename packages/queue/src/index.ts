@@ -25,6 +25,7 @@ export const WARM_POLICY = Object.freeze({
   maximumEvents: 1024,
   maximumStoredJobBytes: 16_384,
   maximumStalledCount: 1,
+  stalledIntervalMs: 5_000,
   stackTraceLimit: 0,
   removeOnComplete: Object.freeze({ age: 172_800, count: 128 }),
   removeOnFail: Object.freeze({ age: 172_800, count: 128 }),

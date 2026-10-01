@@ -251,7 +251,9 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
     ? new BoundedRedisConnection(redisConfig.limiterUrl, 'api-limiter')
     : undefined
   const producerDatabase = redisConfig
-    ? createDatabase(redisConfig.producerDatabaseUrl)
+    ? createDatabase(redisConfig.producerDatabaseUrl, {
+        connectionTimeoutMs: 1000,
+      })
     : undefined
   const producer =
     redisConfig && producerDatabase

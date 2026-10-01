@@ -2,7 +2,7 @@
 
 A daily deduction game using original fiction, built as a portfolio for reliable delivery and operations. The MVP is one `WHO` case, a briefing and four evidence levels, guest play, results, participation streaks, regional knowledge, and a daily leaderboard.
 
-**Status:** S6, S7.0, and S7.1 are merged with passing hosted CI. S7.2-S7.6 are implemented and verified locally on `codex/s7-runtime`; [runtime evidence](plans/s7-runtime.md) records the checks and remaining delivery gates. S7.7 health and queue observation are next. Hosted CI and merge have not yet accepted S7.2-S7.6.
+**Status:** S6 and S7.0-S7.6 are merged with passing hosted CI. [PR #13](https://github.com/JasonHo20004/loremaster/pull/13) completes S7.7-S7.9: private worker/observer probes, composed Redis failure proof and acceptance. Runtime hosted checks passed; final documentation must pass the same checks before merge. The [S7 acceptance record](docs/architecture/s7-acceptance.md) freezes the runtime and S8 handoff.
 
 The [S7 progress checklist](plans/s7-cache-worker.md#progress) is the canonical current-status source. Stage acceptance records own completed-stage evidence; this README only summarizes them.
 

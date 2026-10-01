@@ -20,12 +20,12 @@
     },
     "loremaster_worker": {
       "patterns": ["~loremaster:v1:queue:loremaster-warm-v1:*"],
-      "commands": ["eval", "evalsha", "info", "hget", "hgetall", "hmset", "llen", "zcard", "bzpopmin"],
+      "commands": ["eval", "evalsha", "info", "hget", "hgetall", "hmset", "llen", "zcard", "bzpopmin", "set"],
       "bullmqRole": "worker"
     },
     "loremaster_observer": {
       "patterns": ["~loremaster:v1:queue:loremaster-warm-v1:*"],
-      "commands": ["llen", "zcard", "zrange"]
+      "commands": ["llen", "zcard", "zrange", "get"]
     }
   }
 }

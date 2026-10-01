@@ -19,6 +19,7 @@ export interface WarmWorkerPorts {
 export interface WarmWorkerRuntime {
   start(): Promise<void>
   stop(): Promise<void>
+  ready(): boolean
 }
 
 export async function processWarmJob(
@@ -67,7 +68,9 @@ export async function processWarmJob(
     }
     if (error instanceof UnrecoverableError) ports.onEvent?.('poison')
     else ports.onEvent?.('transient')
-    throw error
+    if (error instanceof UnrecoverableError) throw error
+    // BullMQ persists failedReason; raw driver errors must not cross this boundary.
+    throw new Error('Warm dependency unavailable', { cause: error })
   } finally {
     clearTimeout(deadline)
     active.delete(controller)
@@ -89,9 +92,36 @@ export function createWarmWorker(
   let worker: Worker | undefined
   let stopped = false
   let stopping: Promise<void> | undefined
+  let heartbeat: NodeJS.Timeout | undefined
+  let beating = false
   const active = new Set<AbortController>()
-  const processJob = (job: Job) => processWarmJob(job, ports, active)
+  const processJob = (job: Job) => {
+    const valid =
+      Number.isSafeInteger(job.opts.attempts) &&
+      job.opts.attempts! >= 1 &&
+      job.opts.attempts! <= WARM_POLICY.attempts &&
+      job.attemptsMade < WARM_POLICY.attempts
+    // These options govern BullMQ's terminal transition even for injected jobs.
+    job.opts = {
+      ...job.opts,
+      attempts: WARM_POLICY.attempts,
+      backoff: WARM_POLICY.backoff,
+      removeOnComplete: WARM_POLICY.removeOnComplete,
+      removeOnFail: WARM_POLICY.removeOnFail,
+      stackTraceLimit: 0,
+    }
+    if (!valid) {
+      ports.onEvent?.('poison')
+      throw new UnrecoverableError('Invalid warm options')
+    }
+    return processWarmJob(job, ports, active)
+  }
   return {
+    ready() {
+      return (
+        !stopped && worker?.isRunning() === true && redis?.status === 'ready'
+      )
+    },
     async start() {
       if (stopped || worker)
         throw new Error('Worker already started or stopped')
@@ -115,8 +145,11 @@ export function createWarmWorker(
         concurrency,
         autorun: false,
         maxStalledCount: WARM_POLICY.maximumStalledCount,
+        stalledInterval: WARM_POLICY.stalledIntervalMs,
         lockDuration: 10_000,
       })
+      worker.on('error', () => ports.onEvent?.('transient'))
+      redis.on('error', () => ports.onEvent?.('transient'))
       let startupTimer: NodeJS.Timeout | undefined
       try {
         await Promise.race([
@@ -140,10 +173,35 @@ export function createWarmWorker(
       void worker.run().catch(() => {
         ports.onEvent?.('transient')
       })
+      const beat = () => {
+        if (
+          beating ||
+          stopped ||
+          redis?.status !== 'ready' ||
+          !worker?.isRunning()
+        )
+          return
+        beating = true
+        void redis
+          .set(
+            `${WARM_QUEUE_PREFIX}:${WARM_QUEUE_NAME}:health`,
+            '1',
+            'PX',
+            3000,
+          )
+          .catch(() => ports.onEvent?.('transient'))
+          .finally(() => {
+            beating = false
+          })
+      }
+      beat()
+      heartbeat = setInterval(beat, 1000)
+      heartbeat.unref()
     },
     stop() {
       stopping ??= (async () => {
         stopped = true
+        if (heartbeat) clearInterval(heartbeat)
         ports.onEvent?.('draining')
         if (!worker) return
         let timer: NodeJS.Timeout | undefined
