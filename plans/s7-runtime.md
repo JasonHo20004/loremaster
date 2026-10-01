@@ -39,3 +39,9 @@ read-only observer metrics and a composed failure/memory/security gate.
 [S7 acceptance](../docs/architecture/s7-acceptance.md) owns current runtime
 contracts, independent review, local verification and the S8 handoff. The
 earlier paragraph records the historical state of S7.2-S7.6 delivery.
+
+S7.2-S7.6 delivery closed in [PR #12](https://github.com/JasonHo20004/loremaster/pull/12).
+Accepted main commit: `5308d778e000e03785260d6df6850b1d7037e3c7`.
+[Final branch CI](https://github.com/JasonHo20004/loremaster/actions/runs/36727763370)
+and [merged-main CI](https://github.com/JasonHo20004/loremaster/actions/runs/36728221191)
+passed. S7.7-S7.9 delivery proceeds from this accepted predecessor.

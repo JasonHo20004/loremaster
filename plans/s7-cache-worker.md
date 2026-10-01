@@ -429,11 +429,11 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 
 - [x] S7.0 Close the delivery preflight (PR #8 merged; hosted checks PASS)
 - [x] S7.1 Freeze queue, cache, and Redis configuration contracts (PR #9 merged; hosted checks PASS)
-- [ ] S7.2 Implement the suggestion-cache contract and Redis adapter
-- [ ] S7.3 Integrate the cache after suggestion ownership commits
-- [ ] S7.4 Add the deterministic producer and recovery reconciliation
-- [ ] S7.5 Build the cache-warming worker runtime
-- [ ] S7.6 Add the required shared limiter without removing the local fallback
+- [x] S7.2 Implement the suggestion-cache contract and Redis adapter
+- [x] S7.3 Integrate the cache after suggestion ownership commits
+- [x] S7.4 Add the deterministic producer and recovery reconciliation
+- [x] S7.5 Build the cache-warming worker runtime
+- [x] S7.6 Add the required shared limiter without removing the local fallback
 - [x] S7.7 Implement worker health and the queue observer (local checks and independent review PASS)
 - [x] S7.8 Run the composed Redis failure and security gate (local checks and independent review PASS)
 - [ ] S7.9 Record acceptance and hand off to S8
