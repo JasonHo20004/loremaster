@@ -4,6 +4,7 @@ import {
   ConfigurationError,
   parseServerEnvironment,
 } from '../../packages/config/src/index.js'
+import { secretFiles } from '../s8/secret-fixtures.js'
 
 const activeKey = Buffer.alloc(32, 0x11).toString('base64url')
 
@@ -71,43 +72,50 @@ describe('server environment configuration', () => {
   })
 
   it('requires the exact secure production cookie and HTTPS origin policy', () => {
-    const config = parseServerEnvironment(
-      validEnvironment({
+    const secrets = secretFiles({
+      DATABASE_URL: 'postgresql://runtime:secret@127.0.0.1/loremaster',
+      LOREMASTER_API_CURSOR_ACTIVE_KEY: activeKey,
+    })
+    try {
+      const production = validEnvironment({
         LOREMASTER_API_MODE: 'production',
         LOREMASTER_API_ORIGIN: 'https://loremaster.example',
-      }),
-    )
-    expect(config.cookies).toEqual({
-      session: {
-        name: '__Host-loremaster_session',
-        secure: true,
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-      },
-      csrf: {
-        name: '__Host-loremaster_csrf',
-        secure: true,
-        httpOnly: false,
-        sameSite: 'lax',
-        path: '/',
-      },
-    })
+        ...secrets.environment,
+      })
+      const config = parseServerEnvironment(production)
+      expect(config.cookies).toEqual({
+        session: {
+          name: '__Host-loremaster_session',
+          secure: true,
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+        },
+        csrf: {
+          name: '__Host-loremaster_csrf',
+          secure: true,
+          httpOnly: false,
+          sameSite: 'lax',
+          path: '/',
+        },
+      })
 
-    for (const overrides of [
-      { LOREMASTER_API_ORIGIN: 'http://loremaster.example' },
-      { LOREMASTER_API_SESSION_COOKIE_NAME: 'loremaster_local_session' },
-      { LOREMASTER_API_CSRF_COOKIE_NAME: 'loremaster_local_csrf' },
-    ]) {
-      expect(() =>
-        parseServerEnvironment(
-          validEnvironment({
-            LOREMASTER_API_MODE: 'production',
-            LOREMASTER_API_ORIGIN: 'https://loremaster.example',
-            ...overrides,
-          }),
-        ),
-      ).toThrow(ConfigurationError)
+      for (const overrides of [
+        { LOREMASTER_API_ORIGIN: 'http://loremaster.example' },
+        { LOREMASTER_API_SESSION_COOKIE_NAME: 'loremaster_local_session' },
+        { LOREMASTER_API_CSRF_COOKIE_NAME: 'loremaster_local_csrf' },
+      ]) {
+        expect(() =>
+          parseServerEnvironment(
+            validEnvironment({
+              ...production,
+              ...overrides,
+            }),
+          ),
+        ).toThrow(ConfigurationError)
+      }
+    } finally {
+      secrets.cleanup()
     }
   })
 

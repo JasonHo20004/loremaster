@@ -50,9 +50,11 @@ describe('S4.4 server-only content boundary', () => {
       .map((line) => line.trim())
       .filter((line) => line.length > 0 && !line.startsWith('#'))
 
-    expect(allowlist).toContain('apps/web')
-    expect(allowlist).toContain('packages/contracts')
+    expect(allowlist).toContain('apps/web/src/main.tsx')
+    expect(allowlist).toContain('packages/contracts/src/index.ts')
     expect(allowlist).not.toContain('.')
+    expect(allowlist).not.toContain('apps/web')
+    expect(allowlist).not.toContain('packages/contracts')
     expect(allowlist.every((entry) => !entry.startsWith('docs'))).toBe(true)
     expect(
       allowlist.every((entry) => !entry.startsWith('packages/database')),

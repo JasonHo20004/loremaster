@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "targetPlatform": "linux/amd64",
+  "sourceDateEpoch": "git-commit-time",
+  "labels": [
+    "org.opencontainers.image.created",
+    "org.opencontainers.image.revision",
+    "org.opencontainers.image.source",
+    "org.opencontainers.image.title",
+    "org.opencontainers.image.version"
+  ],
+  "candidateBases": {
+    "nodeBuilder": "node:22.17.0-bookworm@sha256:2fa6c977460b56d4d8278947ab56faeb312bc4cc6c4cf78920c6de27812f51c5",
+    "nodeRuntime": "node:22.17.0-bookworm-slim@sha256:b04ce4ae4e95b522112c2e5c52f781471a5cbc3b594527bcddedee9bc48c03a0",
+    "webGateway": "nginxinc/nginx-unprivileged:1.29.5-alpine@sha256:42a7d7f2ee23e9f5a1dcdf3647ba5c585bbd18f79e79cd817e70e8cd61c55779"
+  },
+  "candidateAdmission": "blocked-by-vulnerability-scan",
+  "images": {
+    "web-public": {
+      "name": "loremaster/web",
+      "uid": 10001,
+      "gid": 10001,
+      "port": 8080,
+      "workdir": "/srv/web",
+      "writablePaths": ["/tmp"]
+    },
+    "api": {
+      "name": "loremaster/api",
+      "uid": 10002,
+      "gid": 10002,
+      "port": 3000,
+      "workdir": "/app",
+      "writablePaths": ["/tmp"]
+    },
+    "worker": {
+      "name": "loremaster/worker",
+      "uid": 10003,
+      "gid": 10003,
+      "port": 3001,
+      "workdir": "/app",
+      "writablePaths": ["/tmp"]
+    },
+    "observer": {
+      "name": "loremaster/observer",
+      "uid": 10004,
+      "gid": 10004,
+      "port": 3002,
+      "workdir": "/app",
+      "writablePaths": ["/tmp"]
+    },
+    "migration": {
+      "name": "loremaster/migration",
+      "uid": 10005,
+      "gid": 10005,
+      "port": null,
+      "workdir": "/app",
+      "writablePaths": ["/tmp"]
+    },
+    "importer": {
+      "name": "loremaster/importer",
+      "uid": 10006,
+      "gid": 10006,
+      "port": null,
+      "workdir": "/app",
+      "writablePaths": ["/tmp"]
+    }
+  }
+}

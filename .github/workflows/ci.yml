@@ -47,6 +47,14 @@ jobs:
       - name: Verify server-only S7 contracts
         run: pnpm test:s7:contracts
 
+      - name: Verify S8 image and build-context policy
+        run: pnpm test:s8:image-policy
+
+      - name: Verify S8 file secrets and local edge contract
+        run: |
+          pnpm test:s8:secrets
+          pnpm test:s8:proxy-contract
+
       - name: Verify clean PostgreSQL migrations and constraints
         run: pnpm test:database
 
