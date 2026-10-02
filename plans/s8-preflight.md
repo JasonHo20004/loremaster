@@ -77,9 +77,11 @@ and policy review when images are assembled.
 Scanner candidate: Trivy 0.74.0,
 `sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`.
 Its database is mutable, so results are time-stamped and rescanned at each
-image slice. The 2026-10-02 scan found 68 HIGH Debian plus 37 HIGH Node.js
-findings in Node 22.17.0 slim; Node 22.23.3 slim had 53 HIGH/4 CRITICAL Debian
-plus 10 HIGH Node.js findings; NGINX 1.29.5 Alpine had 46 HIGH findings. The
+image slice. The 2026-10-02 scan found 2,175 HIGH/CRITICAL Debian plus 40
+HIGH/CRITICAL Node.js findings in the Node 22.17.0 full Bookworm builder;
+Node 22.17.0 slim had 68 HIGH Debian plus 37 HIGH Node.js findings;
+Node 22.23.3 slim had 53 HIGH/4 CRITICAL Debian plus 10 HIGH Node.js
+findings; NGINX 1.29.5 Alpine had 46 HIGH findings. The
 license scan enumerated 589 OS package and 197 Node.js package license records
 in the newer Node candidate. These counts are inventory evidence, not approval.
 The existing PostgreSQL 17.6 and Redis 7.4.5 digests are test dependencies;
