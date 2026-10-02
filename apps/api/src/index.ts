@@ -74,7 +74,12 @@ async function runProcess(): Promise<void> {
     const config = parseServerEnvironment(process.env)
     runtime = createApiRuntime({
       config,
-      redis: parseApiRedisConfiguration(process.env),
+      redis: parseApiRedisConfiguration(process.env, [
+        config.cursor.active.key,
+        ...(config.cursor.previous === undefined
+          ? []
+          : [config.cursor.previous.key]),
+      ]),
       database: createRuntimeDatabase(config),
       telemetry: createStdoutTelemetry(),
     })

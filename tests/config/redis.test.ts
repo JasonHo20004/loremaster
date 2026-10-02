@@ -4,6 +4,7 @@ import {
   parseWorkerConfiguration,
   parseObserverConfiguration,
 } from '../../packages/config/src/redis.js'
+import { secretFiles } from '../s8/secret-fixtures.js'
 it('defaults API to disabled and requires explicit role credentials when enabled', () => {
   expect(parseApiRedisConfiguration({})).toEqual({ enabled: false })
   expect(() =>
@@ -62,16 +63,30 @@ const validApi = {
   LOREMASTER_REDIS_LIMITER_HMAC_VERSION: 'v1',
 }
 it('accepts explicitly separated API profiles and key material', () => {
-  expect(
-    parseApiRedisConfiguration({
-      ...validApi,
-      LOREMASTER_REDIS_MODE: 'production',
-    }),
-  ).toMatchObject({
-    enabled: true,
-    limiterHmacVersion: 'v1',
-    limiterHmacKey: new Uint8Array(Buffer.alloc(32, 17)),
+  const secrets = secretFiles({
+    LOREMASTER_REDIS_CACHE_URL: validApi.LOREMASTER_REDIS_CACHE_URL,
+    LOREMASTER_REDIS_LIMITER_URL: validApi.LOREMASTER_REDIS_LIMITER_URL,
+    LOREMASTER_REDIS_PRODUCER_URL: validApi.LOREMASTER_REDIS_PRODUCER_URL,
+    LOREMASTER_REDIS_PRODUCER_DATABASE_URL:
+      validApi.LOREMASTER_REDIS_PRODUCER_DATABASE_URL,
+    LOREMASTER_REDIS_LIMITER_HMAC_KEY:
+      validApi.LOREMASTER_REDIS_LIMITER_HMAC_KEY,
   })
+  try {
+    expect(
+      parseApiRedisConfiguration({
+        ...validApi,
+        LOREMASTER_REDIS_MODE: 'production',
+        ...secrets.environment,
+      }),
+    ).toMatchObject({
+      enabled: true,
+      limiterHmacVersion: 'v1',
+      limiterHmacKey: new Uint8Array(Buffer.alloc(32, 17)),
+    })
+  } finally {
+    secrets.cleanup()
+  }
 })
 it.each([
   { LOREMASTER_REDIS_UNKNOWN: 'value' },

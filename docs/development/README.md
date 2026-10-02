@@ -1,5 +1,10 @@
 # Local development
 
+The [S8 container environment contract](s8-container-contract.md) records the
+new file-backed secret inputs and future Compose edge. The runnable workflow
+below remains the host-development path until S8 images and Compose are
+accepted.
+
 ## Running the API locally
 
 The API requires a PostgreSQL login that is a member of the

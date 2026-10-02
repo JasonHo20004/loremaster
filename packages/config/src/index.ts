@@ -1,4 +1,11 @@
 import { isIP } from 'node:net'
+import { inspect } from 'node:util'
+
+import {
+  requireFilesInProduction,
+  resolveFileSecrets,
+  SecretFileError,
+} from './secret-file.js'
 
 export * from './redis.js'
 
@@ -60,6 +67,7 @@ export interface ServerConfiguration {
 const ENVIRONMENT_KEYS = [
   'LOREMASTER_API_MODE',
   'DATABASE_URL',
+  'DATABASE_URL_FILE',
   'LOREMASTER_API_ORIGIN',
   'LOREMASTER_API_TRUSTED_PROXIES',
   'PORT',
@@ -70,8 +78,10 @@ const ENVIRONMENT_KEYS = [
   'LOREMASTER_API_STATEMENT_TIMEOUT_MS',
   'LOREMASTER_API_CURSOR_ACTIVE_VERSION',
   'LOREMASTER_API_CURSOR_ACTIVE_KEY',
+  'LOREMASTER_API_CURSOR_ACTIVE_KEY_FILE',
   'LOREMASTER_API_CURSOR_PREVIOUS_VERSION',
   'LOREMASTER_API_CURSOR_PREVIOUS_KEY',
+  'LOREMASTER_API_CURSOR_PREVIOUS_KEY_FILE',
   'LOREMASTER_API_CURSOR_PREVIOUS_GRACE_SECONDS',
   'LOREMASTER_API_LIMITER_GUEST_CAPACITY',
   'LOREMASTER_API_LIMITER_IP_CAPACITY',
@@ -83,6 +93,11 @@ type Environment = Readonly<Record<string, string | undefined>>
 const allowedKeys = new Set<string>(ENVIRONMENT_KEYS)
 const cursorVersionPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,15}$/u
 const cookieNamePattern = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/u
+const SECRET_KEYS = [
+  'DATABASE_URL',
+  'LOREMASTER_API_CURSOR_ACTIVE_KEY',
+  'LOREMASTER_API_CURSOR_PREVIOUS_KEY',
+] as const
 
 export class ConfigurationError extends Error {
   readonly code = 'INVALID_CONFIGURATION'
@@ -268,9 +283,20 @@ function cookie(
 export function parseServerEnvironment(
   environment: Environment,
 ): ServerConfiguration {
+  const original = environment
+  try {
+    environment = resolveFileSecrets(environment, SECRET_KEYS)
+  } catch (error) {
+    if (error instanceof SecretFileError)
+      throw new ConfigurationError([error.field])
+    throw error
+  }
   const errors: string[] = []
   for (const key of Object.keys(environment)) {
-    if (key.startsWith('LOREMASTER_API_') && !allowedKeys.has(key))
+    if (
+      (key.startsWith('LOREMASTER_API_') || key.startsWith('DATABASE_')) &&
+      !allowedKeys.has(key)
+    )
       errors.push(key)
   }
 
@@ -278,6 +304,12 @@ export function parseServerEnvironment(
   const mode: ServerMode = modeRaw === 'production' ? 'production' : 'local'
   if (modeRaw !== 'local' && modeRaw !== 'production')
     errors.push('LOREMASTER_API_MODE')
+  try {
+    requireFilesInProduction(original, mode, SECRET_KEYS)
+  } catch (error) {
+    if (error instanceof SecretFileError) errors.push(error.field)
+    else throw error
+  }
 
   const databaseUrl = validateDatabaseUrl(
     required(environment, 'DATABASE_URL', errors),
@@ -398,7 +430,7 @@ export function parseServerEnvironment(
   if (errors.length > 0 || active === undefined)
     throw new ConfigurationError(errors)
 
-  return {
+  const configuration: ServerConfiguration = {
     mode,
     databaseUrl,
     origin,
@@ -430,4 +462,26 @@ export function parseServerEnvironment(
     },
     sessionAbsoluteTtlDays: 30,
   }
+  const redacted = () => ({
+    ...configuration,
+    databaseUrl: '[REDACTED]',
+    cursor: {
+      active: {
+        version: configuration.cursor.active.version,
+        key: '[REDACTED]',
+      },
+      ...(configuration.cursor.previous === undefined
+        ? {}
+        : {
+            previous: {
+              version: configuration.cursor.previous.version,
+              key: '[REDACTED]',
+            },
+          }),
+      previousGraceSeconds: configuration.cursor.previousGraceSeconds,
+    },
+  })
+  Object.defineProperty(configuration, 'toJSON', { value: redacted })
+  Object.defineProperty(configuration, inspect.custom, { value: redacted })
+  return configuration
 }
