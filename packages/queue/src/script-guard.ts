@@ -13,7 +13,7 @@ interface Inventory {
 }
 const inventory = JSON.parse(
   readFileSync(
-    new URL('../../../ops/redis/bullmq-script-inventory.json', import.meta.url),
+    new URL('../policy/bullmq-script-inventory.json', import.meta.url),
     'utf8',
   ),
 ) as Inventory

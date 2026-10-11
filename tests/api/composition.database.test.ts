@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { createApiRuntime, type ApiRuntime } from '../../apps/api/src/server.js'
 import { parseServerEnvironment } from '../../packages/config/src/index.js'
+import { asterQuayContentPack } from '../../packages/database/src/content/fixtures/aster-quay.js'
+import { importContentPack } from '../../packages/database/src/content/index.js'
 import { database } from '../../packages/database/src/migrate.js'
 
 const connectionString = process.env.LOREMASTER_TEST_RUNTIME_DATABASE_URL
@@ -17,6 +19,19 @@ let runtime: ApiRuntime
 let api: ReturnType<typeof request.agent>
 
 beforeAll(async () => {
+  const ownerUrl = process.env.LOREMASTER_TEST_DATABASE_URL
+  if (ownerUrl === undefined) throw new Error('Owner database URL is required')
+  const ownerDatabase = database(ownerUrl)
+  try {
+    const publication = await importContentPack(
+      ownerDatabase,
+      asterQuayContentPack,
+      'PUBLISH',
+    )
+    if (!publication.ok) throw new Error('Profile fixture publication failed')
+  } finally {
+    await ownerDatabase.end()
+  }
   const config = parseServerEnvironment({
     LOREMASTER_API_MODE: 'local',
     DATABASE_URL: connectionString,

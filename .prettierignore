@@ -11,3 +11,6 @@ docs/architecture/**
 !docs/architecture/s2-acceptance.md
 !docs/development/
 !docs/development/**
+
+# Generated mirror of the reviewed S7 queue policy.
+packages/queue/policy/bullmq-script-inventory.json

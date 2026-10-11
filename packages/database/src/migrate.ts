@@ -2,37 +2,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import pg from 'pg'
-
-const { Pool } = pg
-
-export type Database = pg.Pool
-
-export function database(
-  connectionString: string,
-  options: { connectionTimeoutMs?: number } = {},
-): Database {
-  const pool = new Pool({
-    connectionString,
-    max: 10,
-    ...(options.connectionTimeoutMs === undefined
-      ? {}
-      : { connectionTimeoutMillis: options.connectionTimeoutMs }),
-  })
-  let lastFailure = 0
-  pool.on('error', () => {
-    const now = Date.now()
-    if (now - lastFailure >= 60000) {
-      lastFailure = now
-      process.stderr.write('Loremaster database: unavailable\n')
-    }
-  })
-  return pool
-}
-
-export async function closeDatabase(db: Database): Promise<void> {
-  await db.end()
-}
+import type { Database } from './pool.js'
+export { database, closeDatabase, type Database } from './pool.js'
 
 export async function migrateToLatest(
   db: Database,

@@ -11,6 +11,7 @@ export const PRIVATE_HEALTH_POLICY = Object.freeze({
 /** Process-only liveness; dependency probes are single-flight and cancellable. */
 export function createPrivateHealthServer(options: {
   port: number
+  host?: '127.0.0.1' | '0.0.0.0'
   ready(signal: AbortSignal): Promise<boolean>
   metrics?(signal: AbortSignal): Promise<string>
 }) {
@@ -91,13 +92,17 @@ export function createPrivateHealthServer(options: {
         throw new Error('Health already started or stopped')
       starting = new Promise((resolve, reject) => {
         server.once('error', reject)
-        server.listen(options.port, PRIVATE_HEALTH_POLICY.host, () => {
-          server.off('error', reject)
-          const address = server.address()
-          if (!address || typeof address === 'string')
-            return reject(new Error('Health bind failed'))
-          resolve(address.port)
-        })
+        server.listen(
+          options.port,
+          options.host ?? PRIVATE_HEALTH_POLICY.host,
+          () => {
+            server.off('error', reject)
+            const address = server.address()
+            if (!address || typeof address === 'string')
+              return reject(new Error('Health bind failed'))
+            resolve(address.port)
+          },
+        )
       })
       return starting
     },

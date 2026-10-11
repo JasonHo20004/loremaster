@@ -1,7 +1,7 @@
 import type { Request, RequestHandler, Response } from 'express'
 
 import type { ApiOperationId } from '@loremaster/contracts'
-import type { DeadlineContext } from '@loremaster/database'
+import type { DeadlineContext } from '@loremaster/database/runtime'
 
 export interface Clock {
   now(): number

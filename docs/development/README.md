@@ -1,5 +1,9 @@
 # Local development
 
+The [S8 container environment contract](s8-container-contract.md) records the
+new file-backed secret inputs and future Compose edge. The runnable workflow
+below remains the host-development path until S8 Compose is accepted.
+
 ## Running the API locally
 
 The API requires a PostgreSQL login that is a member of the
@@ -194,7 +198,7 @@ and delivery status. This workflow does not start S8 runtime containers.
 
 - WSL2 with a current Ubuntu distribution
 - Git
-- Node.js `22.17.0` (also recorded in `.nvmrc` and `.node-version`)
+- Node.js `22.23.3` (also recorded in `.nvmrc` and `.node-version`)
 - Corepack, included with the pinned Node release
 - pnpm `11.19.0`, selected by the root `packageManager` field
 

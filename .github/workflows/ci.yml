@@ -47,6 +47,14 @@ jobs:
       - name: Verify server-only S7 contracts
         run: pnpm test:s7:contracts
 
+      - name: Verify S8 image and build-context policy
+        run: pnpm test:s8:image-policy
+
+      - name: Verify S8 file secrets and local edge contract
+        run: |
+          pnpm test:s8:secrets
+          pnpm test:s8:proxy-contract
+
       - name: Verify clean PostgreSQL migrations and constraints
         run: pnpm test:database
 
@@ -58,6 +66,46 @@ jobs:
 
       - name: Verify composed S7 failure and security gate
         run: pnpm test:s7:integration
+
+  image-validation:
+    name: S8 image validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium for gateway journey
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Configure pinned BuildKit builder
+        run: |
+          docker buildx create \
+            --name loremaster-s8-ci \
+            --driver docker-container \
+            --driver-opt image=moby/buildkit:v0.25.1@sha256:79cc6476ab1a3371c9afd8b44e7c55610057c43e18d9b39b68e2b0c2475cc1b6 \
+            --use
+          docker buildx inspect --bootstrap
+
+      - name: Build and verify S8 images
+        run: pnpm test:images
 
   dependency-audit:
     name: Dependency audit

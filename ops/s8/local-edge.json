@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "origin": "http://localhost:8080",
+  "apiMode": "local",
+  "hostBinding": "127.0.0.1:8080",
+  "edgeSubnet": "172.30.80.0/28",
+  "gatewayIp": "172.30.80.2",
+  "apiIp": "172.30.80.3",
+  "trustedProxy": "172.30.80.2/32",
+  "edgeMembers": ["web", "api"],
+  "privatePorts": { "api": 3000, "worker": 3001, "observer": 3002 },
+  "cookies": {
+    "session": "loremaster_local_session",
+    "csrf": "loremaster_local_csrf"
+  },
+  "proxyHeaders": {
+    "strategy": "drop-all-then-allowlist",
+    "preserveOriginBytes": true,
+    "forward": ["Host", "Origin", "Cookie", "Content-Type", "Accept", "User-Agent", "Idempotency-Key", "X-CSRF-Token"],
+    "reconstruct": { "X-Forwarded-For": "direct-client-address" },
+    "drop": ["Forwarded", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Real-IP", "all-other-X-Forwarded-*"],
+    "apiPrefix": "/api/"
+  }
+}
