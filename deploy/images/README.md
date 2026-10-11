@@ -12,6 +12,7 @@ Buildx, and Chromium available:
 
 ```bash
 pnpm test:s8:image-policy
+pnpm build
 pnpm build:images
 pnpm test:s8:node-images
 pnpm test:s8:operator-images

@@ -42,7 +42,7 @@
     "test:s8:node-images": "node scripts/s8-images-test.mjs node",
     "test:s8:operator-images": "node scripts/s8-images-test.mjs operator",
     "test:s8:web-image": "node scripts/s8-images-test.mjs web",
-    "test:images": "pnpm build:images && node scripts/s8-images-test.mjs all && node scripts/s8-artifacts.mjs",
+    "test:images": "pnpm build && pnpm build:images && node scripts/s8-images-test.mjs all && node scripts/s8-artifacts.mjs",
     "test:web:deployed-disclosure": "node scripts/s8-artifacts.mjs web"
   },
   "devDependencies": {
