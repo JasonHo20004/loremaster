@@ -95,6 +95,15 @@ jobs:
       - name: Install Chromium for gateway journey
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Configure pinned BuildKit builder
+        run: |
+          docker buildx create \
+            --name loremaster-s8-ci \
+            --driver docker-container \
+            --driver-opt image=moby/buildkit:v0.25.1@sha256:79cc6476ab1a3371c9afd8b44e7c55610057c43e18d9b39b68e2b0c2475cc1b6 \
+            --use
+          docker buildx inspect --bootstrap
+
       - name: Build and verify S8 images
         run: pnpm test:images
 
