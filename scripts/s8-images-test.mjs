@@ -212,8 +212,17 @@ try {
   ])
   await eventually(
     () =>
-      check(['exec', pg, 'pg_isready', '-U', 'migration', '-d', dbName])
-        .status === 0,
+      check([
+        'exec',
+        pg,
+        'pg_isready',
+        '-h',
+        '127.0.0.1',
+        '-U',
+        'migration',
+        '-d',
+        dbName,
+      ]).status === 0,
   )
   function sql(statement) {
     return docker(
