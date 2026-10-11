@@ -2,7 +2,7 @@ import type { CookieConfiguration } from '@loremaster/config'
 import type { Request } from 'express'
 
 import { API_OPERATIONS } from '@loremaster/contracts'
-import type { DeadlineContext } from '@loremaster/database'
+import type { DeadlineContext } from '@loremaster/database/runtime'
 
 import type {
   AuthenticatedIdentity,

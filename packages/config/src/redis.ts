@@ -38,8 +38,12 @@ const worker = [
   'LOREMASTER_WORKER_CACHE_REDIS_URL',
   'LOREMASTER_WORKER_DATABASE_URL',
   'LOREMASTER_WORKER_CONCURRENCY',
+  'LOREMASTER_WORKER_LISTEN_HOST',
 ]
-const observer = ['LOREMASTER_OBSERVER_REDIS_URL']
+const observer = [
+  'LOREMASTER_OBSERVER_REDIS_URL',
+  'LOREMASTER_OBSERVER_LISTEN_HOST',
+]
 const apiSecrets = [
   'LOREMASTER_REDIS_CACHE_URL',
   'LOREMASTER_REDIS_LIMITER_URL',
@@ -270,7 +274,7 @@ export interface WorkerConfiguration {
   readonly redisUrl: string
   readonly cacheRedisUrl: string
   readonly databaseUrl: string
-  readonly healthHost: '127.0.0.1'
+  readonly healthHost: '127.0.0.1' | '0.0.0.0'
   readonly healthPort: 3001
   readonly concurrency: number
 }
@@ -323,7 +327,7 @@ export function parseWorkerConfiguration(
       redisUrl: redis,
       cacheRedisUrl: cacheRedis,
       databaseUrl,
-      healthHost: '127.0.0.1',
+      healthHost: listenHost(env, 'LOREMASTER_WORKER_LISTEN_HOST'),
       healthPort: 3001,
       concurrency: Number(raw),
     },
@@ -332,7 +336,7 @@ export function parseWorkerConfiguration(
 }
 export interface ObserverConfiguration {
   readonly redisUrl: string
-  readonly healthHost: '127.0.0.1'
+  readonly healthHost: '127.0.0.1' | '0.0.0.0'
   readonly healthPort: 3002
 }
 export function parseObserverConfiguration(
@@ -348,9 +352,15 @@ export function parseObserverConfiguration(
         'LOREMASTER_OBSERVER_REDIS_URL',
         'loremaster_observer',
       ),
-      healthHost: '127.0.0.1',
+      healthHost: listenHost(env, 'LOREMASTER_OBSERVER_LISTEN_HOST'),
       healthPort: 3002,
     },
     ['redisUrl'],
   )
+}
+
+function listenHost(env: Environment, field: string): '127.0.0.1' | '0.0.0.0' {
+  const value = env[field] ?? '127.0.0.1'
+  if (value !== '127.0.0.1' && value !== '0.0.0.0') return invalid(field)
+  return value
 }

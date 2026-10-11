@@ -22,7 +22,7 @@ import {
   transaction,
   verifySessionCsrfToken,
   type Database,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 import {
   noOpTelemetry,
   type ApiTelemetry,
@@ -222,11 +222,11 @@ export function createComposedApplication(
   })
 }
 
-function listen(server: Server, port: number): Promise<number> {
+function listen(server: Server, port: number, host: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const onError = (error: Error) => reject(error)
     server.once('error', onError)
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, host, () => {
       server.off('error', onError)
       const address = server.address()
       if (address === null || typeof address === 'string') {
@@ -309,7 +309,11 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
     server,
     async start() {
       if (started) throw new Error('API runtime is already started')
-      const port = await listen(server, listenPort)
+      const port = await listen(
+        server,
+        listenPort,
+        options.config.listenHost ?? '127.0.0.1',
+      )
       started = true
       producer?.start()
       return port

@@ -32,7 +32,7 @@ export function lintDockerfile(source) {
       stageCount += 1
       hasNumericUser = false
       const base = pieces[0] ?? ''
-      if (!digest.test(base) && !aliases.has(base)) {
+      if (base !== 'scratch' && !digest.test(base) && !aliases.has(base)) {
         errors.push('FROM must use a digest-pinned image or an earlier stage')
       }
       if (/:latest(?:@|$)/iu.test(base)) errors.push('latest tag is forbidden')
@@ -55,7 +55,8 @@ export function lintDockerfile(source) {
     }
     if (upper === 'USER') {
       hasNumericUser = /^[1-9][0-9]*:[1-9][0-9]*$/u.test(argument)
-      if (!hasNumericUser) errors.push('USER must be numeric non-root UID:GID')
+      if (stageCount === totalStages && !hasNumericUser)
+        errors.push('USER must be numeric non-root UID:GID')
     }
     if (
       (upper === 'CMD' || upper === 'ENTRYPOINT') &&

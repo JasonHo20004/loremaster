@@ -90,7 +90,9 @@ async function runProcess(): Promise<void> {
       },
     })
     const port = await runtime.start()
-    process.stdout.write(`Loremaster API listening on 127.0.0.1:${port}\n`)
+    process.stdout.write(
+      `Loremaster API listening on ${config.listenHost}:${port}\n`,
+    )
   } catch {
     process.stderr.write('Loremaster API failed to start\n')
     process.exitCode = 1

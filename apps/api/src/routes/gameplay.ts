@@ -9,13 +9,13 @@ import type {
   GameplayCommandResult,
   StartAttemptRequest,
   StartAttemptResult,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 import {
   executeGameplayCommand,
   readCurrentCase,
   readOwnedAttempt,
   startCurrentAttempt,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 
 import type {
   AuthenticatedIdentity,

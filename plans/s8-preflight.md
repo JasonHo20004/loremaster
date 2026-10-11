@@ -1,5 +1,9 @@
 # S8.0 delivery preflight
 
+S8.3 follow-up (2026-10-11): the repository Node pin advances from the S8.0
+baseline 22.17.0 to 22.23.3 for the reviewed Alpine image build. The S8.0
+measurements below remain historical evidence from the accepted S7 base.
+
 Recorded 2026-10-02 from a clean worktree based on accepted S7 `main`
 `e41cab1c7170c6b9320fe3ee7cef28ea5e1f86a9` (merged PR #13). The
 [S7 acceptance record](../docs/architecture/s7-acceptance.md) and
