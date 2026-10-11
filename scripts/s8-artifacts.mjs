@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import {
   mkdtempSync,
   mkdirSync,
+  chmodSync,
   writeFileSync,
   readFileSync,
   rmSync,
@@ -29,6 +30,7 @@ if (
 )
   throw Error('Unknown image')
 const temporary = mkdtempSync(join(tmpdir(), 'loremaster-s8-scan-'))
+chmodSync(temporary, 0o755)
 const cache = 'loremaster-s8-scanner-' + randomUUID()
 const evidence = join('.cache', 's8-evidence')
 const pinnedNodeVersion = JSON.parse(readFileSync('package.json', 'utf8'))
@@ -66,6 +68,7 @@ try {
     }
     const archive = join(temporary, name + '.tar')
     docker(['image', 'save', '--output', archive, inspection.Id])
+    chmodSync(archive, 0o644)
     const base = [
       'run',
       '--rm',
