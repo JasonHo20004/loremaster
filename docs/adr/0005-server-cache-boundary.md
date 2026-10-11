@@ -27,8 +27,9 @@ HTTP-only and may not import or re-export cache or queue. No public web build
 input is added for either package.
 
 Use BullMQ `5.81.5` and its exact Redis client dependency ioredis `5.11.1`.
-Both declare MIT and Node >=12.22.0; the project stays on Node 22.17.0 and
-pnpm 11.19.0. The lockfile must resolve one ioredis version. Upgrades require
+Both declare MIT and Node >=12.22.0; S7 was accepted on Node 22.17.0 and
+pnpm 11.19.0. S8.3 updates the Node pin to 22.23.3 for image construction.
+The lockfile must resolve one ioredis version. Upgrades require
 audit, license review, contract tests, and the later composed Redis gate.
 
 S7.1 adds contracts, parsers, least-privilege database roles and tests only.

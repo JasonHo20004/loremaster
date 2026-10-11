@@ -36,6 +36,7 @@ export interface ServerConfiguration {
   readonly databaseUrl: string
   readonly origin: string
   readonly port: number
+  readonly listenHost: '127.0.0.1' | '0.0.0.0'
   readonly trustedProxies: readonly TrustedProxy[]
   readonly cookies: {
     readonly session: CookieConfiguration
@@ -66,6 +67,7 @@ export interface ServerConfiguration {
 
 const ENVIRONMENT_KEYS = [
   'LOREMASTER_API_MODE',
+  'LOREMASTER_API_LISTEN_HOST',
   'DATABASE_URL',
   'DATABASE_URL_FILE',
   'LOREMASTER_API_ORIGIN',
@@ -320,6 +322,9 @@ export function parseServerEnvironment(
     mode,
     errors,
   )
+  const listenHost = environment.LOREMASTER_API_LISTEN_HOST ?? '127.0.0.1'
+  if (listenHost !== '127.0.0.1' && listenHost !== '0.0.0.0')
+    errors.push('LOREMASTER_API_LISTEN_HOST')
   const port = exactInteger(environment, 'PORT', 3000, 1, 65_535, errors)
   const trustedProxies = parseTrustedProxies(
     environment.LOREMASTER_API_TRUSTED_PROXIES,
@@ -435,6 +440,7 @@ export function parseServerEnvironment(
     databaseUrl,
     origin,
     port,
+    listenHost: listenHost as '127.0.0.1' | '0.0.0.0',
     trustedProxies,
     cookies: {
       session: cookie(sessionName, mode === 'production', true),

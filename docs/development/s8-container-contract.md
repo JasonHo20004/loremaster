@@ -1,7 +1,8 @@
 # S8 container environment contract
 
-This freezes inputs for the future local Compose stack. S8.3-S8.7 will build
-and wire the images and gateway. It does not start a container stack.
+This freezes inputs for the future local Compose stack. S8.3-S8.5 build the
+service, operator, and gateway images. S8.6-S8.7 will wire data services and
+Compose. This contract does not start a container stack.
 
 ## File-backed runtime secrets
 

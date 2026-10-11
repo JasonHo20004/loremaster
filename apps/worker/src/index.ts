@@ -15,7 +15,7 @@ import {
   assertOutsideTransaction,
   type DeadlineContext,
   transaction,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 import { createWarmWorker } from '@loremaster/queue'
 import { createPrivateHealthServer } from '@loremaster/observability'
 
@@ -62,6 +62,7 @@ export async function runWorker(
   })
   const health = createPrivateHealthServer({
     port: config.healthPort,
+    host: config.healthHost,
     async ready(signal) {
       if (!worker.ready()) return false
       await Promise.all([

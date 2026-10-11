@@ -18,7 +18,7 @@ Runtime images must copy named build output and production dependencies from
 their own context, never the repository root.
 
 `pnpm test:s8:image-policy` validates the lists and generates each profile in
-an isolated temporary directory. A future image build must use the generated
+an isolated temporary directory. Each image build uses the generated
 context, not the checkout. The context manifest is build evidence and must not
 be copied into a final image unless a reviewed image contract explicitly needs
 it.

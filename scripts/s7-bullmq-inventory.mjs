@@ -66,10 +66,20 @@ for (const [role, allowedNames] of Object.entries(names)) {
     }
   }
 }
+const packagedPath = new URL(
+  '../packages/queue/policy/bullmq-script-inventory.json',
+  import.meta.url,
+)
 if (process.argv[2] === '--check') {
+  if (
+    JSON.stringify(JSON.parse(await readFile(packagedPath, 'utf8'))) !==
+    JSON.stringify(inventory)
+  )
+    throw new Error('Packaged queue inventory differs from reviewed contract')
   if (JSON.stringify(reviewedInventory) !== JSON.stringify(inventory))
     throw new Error('BullMQ inventory differs from reviewed contract')
 } else if (process.argv.length === 2) {
+  await writeFile(packagedPath, JSON.stringify(inventory, null, 2) + '\n')
   await writeFile(inventoryPath, `${JSON.stringify(inventory, null, 2)}\n`)
 } else {
   throw new Error('Unexpected inventory command argument')

@@ -491,9 +491,9 @@ review before merge. Do not begin a dependent slice from an unreviewed tree.
 - [x] S8.0 Close the delivery preflight (S7 host gates PASS; candidate image admission blocked)
 - [x] S8.1 Freeze image, build-context, and supply-chain contracts (focused local gate PASS; hosted review pending)
 - [x] S8.2 Add file-backed secrets and freeze the local edge contract (focused local gates PASS; hosted review pending)
-- [ ] S8.3 Build hardened API, worker, and observer images
-- [ ] S8.4 Build migration and content-import operator images
-- [ ] S8.5 Build the public web gateway image
+- [x] S8.3 Build hardened API, worker, and observer images (local gates PASS; hosted review pending)
+- [x] S8.4 Build migration and content-import operator images (local gates PASS; hosted review pending)
+- [x] S8.5 Build the public web gateway image (local gates PASS; hosted review pending)
 - [ ] S8.6 Add PostgreSQL and Redis data-service operations
 - [ ] S8.7 Compose the isolated local stack
 - [ ] S8.8 Prove probes, shutdown, restart, and dependency recovery
@@ -521,3 +521,15 @@ fields are ineffective for file sources, so S8.6 must verify actual mounted
 file ownership and permissions. No image, data volume, cluster, registry, or
 cloud resource was published by these slices. Rollback removes contracts and
 file-secret support while retaining the accepted S7 host runtime.
+
+2026-10-11: the user requested S8.3-S8.5 together on `codex/s8-images`, using
+the S8.0-S8.2 contract branch as predecessor. The shared build harness and
+container tests make these three image slices one reviewable delivery. The
+[image evidence](s8-images-evidence.md) records local behavior, repeated-build,
+SBOM, vulnerability, and disclosure results. The assembled images avoid the
+vulnerable candidate runtime roots by copying only the required executables,
+libraries, package records, and compiled application files into `scratch` final
+stages. The new `proxy-addr` and `source-map-js` advisories required patched
+lockfile overrides; no exception was granted. S8.6 still owns durable data
+services and secret mount operations; S8.7 owns Compose. Rollback retains the
+accepted host commands and removes only the S8 image build path.

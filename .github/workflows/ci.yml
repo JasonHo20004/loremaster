@@ -67,6 +67,37 @@ jobs:
       - name: Verify composed S7 failure and security gate
         run: pnpm test:s7:integration
 
+  image-validation:
+    name: S8 image validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack install
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium for gateway journey
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build and verify S8 images
+        run: pnpm test:images
+
   dependency-audit:
     name: Dependency audit
     runs-on: ubuntu-24.04

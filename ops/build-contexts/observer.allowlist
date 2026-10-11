@@ -32,3 +32,7 @@ packages/queue/tsconfig.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
 tsconfig.base.json
+scripts/s8-stage.mjs
+deploy/images/observer.dockerfile
+scripts/s8-rootfs.sh
+packages/queue/policy/bullmq-script-inventory.json

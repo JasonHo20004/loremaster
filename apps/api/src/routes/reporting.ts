@@ -11,12 +11,12 @@ import type {
   LeaderboardPosition,
   ProfileProjection,
   PublishedSuggestionCache,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 import {
   readAttemptSuggestions,
   readDailyLeaderboardPage,
   readProfile,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 
 import type {
   AuthenticatedIdentity,

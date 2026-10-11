@@ -107,11 +107,13 @@ export function createQueueObservation(connection: BoundedRedisConnection) {
 export function createObserverRuntime(options: {
   redisUrl: string
   port?: number
+  host?: '127.0.0.1' | '0.0.0.0'
 }) {
   const connection = new BoundedRedisConnection(options.redisUrl, 'observer')
   const observation = createQueueObservation(connection)
   const health = createPrivateHealthServer({
     port: options.port ?? 3002,
+    host: options.host ?? '127.0.0.1',
     async ready(signal) {
       await connection.run((client) => client.ping(), signal)
       await observation.inspect(signal)
@@ -140,6 +142,7 @@ export async function runObserver(
   const runtime = createObserverRuntime({
     redisUrl: config.redisUrl,
     port: config.healthPort,
+    host: config.healthHost,
   })
   const shutdown = () => {
     void runtime.stop().catch(() => {

@@ -2,8 +2,28 @@
 
 `contracts.json` freezes six separate image names, numeric users, ports,
 workdirs, writable paths, required OCI labels, one target platform, and digest
-references for candidate bases. These are **candidates, not approved runtime
-images**. No Dockerfile or runtime image is admitted by S8.1.
+references for builder candidates. S8.3-S8.5 build six purpose-specific final
+images from generated allowlisted contexts. Their local acceptance evidence is
+in [`plans/s8-images-evidence.md`](../../plans/s8-images-evidence.md). The images
+are not a Compose stack or a published release.
+
+Run the image gates from a checkout with pinned Node, pnpm, Docker Engine,
+Buildx, and Chromium available:
+
+```bash
+pnpm test:s8:image-policy
+pnpm build:images
+pnpm test:s8:node-images
+pnpm test:s8:operator-images
+pnpm test:s8:web-image
+node scripts/s8-artifacts.mjs
+```
+
+`pnpm test:images` runs the build, combined behavior journey, and artifact scan.
+The behavior journey creates uniquely named disposable PostgreSQL, Redis,
+networks, and volumes, then removes only those named resources. Operator images
+require file-backed database URLs. The importer accepts exactly one read-only
+`/run/content/pack.json` mount; neither operator is part of API startup.
 
 Builds must use Corepack with pnpm 11.19.0, `pnpm install --frozen-lockfile`,
 multi-stage builds, and the profile-specific generated context. A final stage
@@ -38,7 +58,9 @@ composition. Gitleaks and public artifact disclosure remain separate gates.
 
 The 2026-10-02 preflight found 53 HIGH and 4 CRITICAL Debian findings plus 10
 HIGH Node.js findings in the newer Node 22.23.3 slim candidate; the NGINX
-1.29.5 Alpine candidate had 46 HIGH findings. The accepted Node 22.17.0
-runtime pin is older and also has many HIGH findings. None has an exception or
-image admission. S8.3-S8.5 must select updated reviewed bases or resolve the
-findings before using them as final stages.
+1.29.5 Alpine candidate had 46 HIGH findings. Those candidate roots are not
+copied into the final images. The S8 final stages start from `scratch` and copy
+only the required executable, shared libraries, package records, and compiled
+application output. The 2026-10-11 scans found no HIGH/CRITICAL finding in the
+six assembled images. Rescan them from the reviewed commit before composition;
+scanner database results can change without source changes.

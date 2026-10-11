@@ -34,3 +34,14 @@ packages/domain/tsconfig.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
 tsconfig.base.json
+packages/database/src/pool.ts
+packages/database/src/runtime.ts
+scripts/s8-stage.mjs
+deploy/images/importer.dockerfile
+deploy/images/operator.mjs
+packages/config/package.json
+packages/config/tsconfig.json
+packages/config/src/index.ts
+packages/config/src/redis.ts
+packages/config/src/secret-file.ts
+scripts/s8-rootfs.sh

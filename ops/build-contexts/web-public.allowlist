@@ -48,3 +48,6 @@ packages/contracts/tsconfig.json
 pnpm-lock.yaml
 pnpm-workspace.yaml
 tsconfig.base.json
+deploy/images/web-public.dockerfile
+deploy/images/nginx.conf
+scripts/s8-rootfs.sh
