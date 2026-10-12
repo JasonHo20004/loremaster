@@ -26,6 +26,10 @@ The API, domain, contracts, database, config, observability, and React/Vite web 
 
 Local containers precede a pinned kind cluster (one control plane, three workers), Helm and Argo CD. Redis persists with `noeviction`; caches remain reconstructible. Containers run non-root with resources, probes and graceful shutdown. Image releases use verified immutable digests. Schema rollback uses compatible application images and forward corrections.
 
+The [S8 local acceptance map](s8-acceptance.md) links packaged browser,
+lifecycle, T25 and final image gates to reproducible commands. Compose remains
+a local development stack; S9 owns Kubernetes and GitOps deployment.
+
 The optional bounded AWS profile uses CloudFront with private S3 web assets and an ALB forwarding API traffic to EKS, RDS and ElastiCache. No NAT or paid domain is planned. Public-subnet node egress is a cost compromise. The lab-only CloudFront-to-ALB HTTP hop requires origin restrictions and a secret origin header; browser traffic uses HTTPS. S12 must test direct-origin denial and session isolation before claiming the path works.
 
 One small Spot node is a target subject to measured capacity admission, including a four-worker ceiling and 30% headroom. Admission failure means no lab, not automatic larger capacity. Minimal AWS telemetry differs from the fuller local stack. Independent cleanup runs outside EKS and survives provisioning denial.

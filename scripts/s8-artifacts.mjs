@@ -11,8 +11,10 @@ import {
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
+import { createHash } from 'node:crypto'
 import process from 'node:process'
 import { evaluateVulnerabilities } from './s8-scan-image.mjs'
+import { buildContext } from './s8-context.mjs'
 
 const scanner =
   'aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969'
@@ -35,6 +37,12 @@ const cache = 'loremaster-s8-scanner-' + randomUUID()
 const evidence = join('.cache', 's8-evidence')
 const pinnedNodeVersion = JSON.parse(readFileSync('package.json', 'utf8'))
   .engines.node
+const contracts = JSON.parse(
+  readFileSync('deploy/images/contracts.json', 'utf8'),
+)
+const revision = execFileSync('git', ['rev-parse', 'HEAD'], {
+  encoding: 'utf8',
+}).trim()
 mkdirSync(evidence, { recursive: true })
 const docker = (args, options = {}) =>
   execFileSync('docker', args, {
@@ -50,6 +58,38 @@ try {
   for (const name of images) {
     const image = 'loremaster/' + name + ':s8'
     const inspection = JSON.parse(docker(['image', 'inspect', image]))[0]
+    const expected = contracts.images[name === 'web' ? 'web-public' : name]
+    const context = join(temporary, name + '-context')
+    const manifest = buildContext(name === 'web' ? 'web-public' : name, context)
+    const contextSha256 = createHash('sha256')
+      .update(JSON.stringify(manifest))
+      .digest('hex')
+    assert.equal(inspection.Config.User, `${expected.uid}:${expected.gid}`)
+    assert.equal(inspection.Config.WorkingDir, expected.workdir)
+    assert.deepEqual(
+      Object.keys(inspection.Config.ExposedPorts ?? {}).sort(),
+      expected.port === null ? [] : [`${expected.port}/tcp`],
+    )
+    for (const label of contracts.labels)
+      assert(inspection.Config.Labels[label], `Missing ${label} on ${name}`)
+    assert.equal(
+      inspection.Config.Labels['org.loremaster.context.sha256'],
+      contextSha256,
+      `${name} was not built from the current allowlisted context`,
+    )
+    assert.equal(
+      inspection.Config.Labels['org.opencontainers.image.revision'],
+      revision,
+      `${name} revision label does not match HEAD`,
+    )
+    assert.equal(inspection.Os, 'linux')
+    assert.equal(inspection.Architecture, 'amd64')
+    assert(inspection.Config.Entrypoint?.length > 0)
+    assert(
+      !JSON.stringify(inspection.Config).match(
+        /(?:LD_PRELOAD|FAKETIME_|DATABASE_URL=|REDIS_URL=|-----BEGIN .*PRIVATE KEY-----)/u,
+      ),
+    )
     const runtimeVersion =
       name === 'web'
         ? null
@@ -69,6 +109,55 @@ try {
     const archive = join(temporary, name + '.tar')
     docker(['image', 'save', '--output', archive, inspection.Id])
     chmodSync(archive, 0o644)
+    const saved = join(temporary, name + '-saved')
+    mkdirSync(saved)
+    execFileSync('tar', ['-xf', archive, '-C', saved], { timeout: 120000 })
+    const imageManifest = JSON.parse(
+      readFileSync(join(saved, 'manifest.json'), 'utf8'),
+    )[0]
+    assert(imageManifest?.Layers?.length > 0, 'Saved image has no layers')
+    for (const layer of imageManifest.Layers) {
+      const layerArchive = join(saved, layer)
+      const paths = execFileSync('tar', ['-tf', layerArchive], {
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024,
+      })
+        .split(/\r?\n/u)
+        .filter(Boolean)
+      for (const rawPath of paths) {
+        const path = rawPath.replace(/^\.\//u, '')
+        assert(
+          !/(^|\/)(?:\.git|\.env(?:\.[^/]*)?|fixtures|__tests__|\.pnpm-store)(\/|$)/u.test(
+            path,
+          ),
+          `Forbidden image layer path in ${name}: ${path}`,
+        )
+        assert(
+          !/(?:^|\/)\.wh\./u.test(path),
+          `Deleted file retained in ${name} layer: ${path}`,
+        )
+        if (name === 'web')
+          assert(
+            !/^(?:app|build|src|packages|root|home)\//u.test(path),
+            `Private path in public layer: ${path}`,
+          )
+      }
+      if (
+        name === 'web' &&
+        paths.some((path) => /(?:^|\/)srv\/web\/index\.html$/u.test(path))
+      ) {
+        const layerRoot = join(saved, 'public-layer')
+        mkdirSync(layerRoot, { recursive: true })
+        execFileSync('tar', ['-xf', layerArchive, '-C', layerRoot], {
+          timeout: 120000,
+        })
+        execFileSync(
+          process.execPath,
+          ['scripts/web-disclosure.mjs', join(layerRoot, 'srv', 'web')],
+          { stdio: 'inherit' },
+        )
+      }
+    }
     const base = [
       'run',
       '--rm',
@@ -94,7 +183,7 @@ try {
       ...base,
       ...(first ? [] : ['--skip-db-update']),
       '--scanners',
-      'vuln,license',
+      'vuln,license,secret',
       '--license-full',
       '--list-all-pkgs',
       '--format',
@@ -102,6 +191,10 @@ try {
     ])
     first = false
     const report = JSON.parse(raw)
+    const secretFindings = report.Results.flatMap(
+      (entry) => entry.Secrets ?? [],
+    )
+    assert.equal(secretFindings.length, 0, `Secret findings in ${name} image`)
     assert.equal(
       report.Metadata?.OS?.Family,
       'alpine',
@@ -198,8 +291,14 @@ try {
     results.push({
       image,
       id: inspection.Id,
+      configSha256: createHash('sha256')
+        .update(readFileSync(join(saved, imageManifest.Config)))
+        .digest('hex'),
+      sbomSha256: createHash('sha256').update(sbom).digest('hex'),
+      layerCount: imageManifest.Layers.length,
       runtimeVersion,
       findings: policy.findings,
+      secretFindings: secretFindings.length,
       violations: policy.violations,
       scannedAt: new Date().toISOString(),
     })

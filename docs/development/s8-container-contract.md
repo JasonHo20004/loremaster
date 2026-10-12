@@ -1,8 +1,8 @@
 # S8 container environment contract
 
-This freezes inputs for the future local Compose stack. S8.3-S8.5 build the
-service, operator, and gateway images. S8.6-S8.7 will wire data services and
-Compose. This contract does not start a container stack.
+This freezes inputs for the local Compose stack. S8.3-S8.5 build the service,
+operator, and gateway images. S8.6-S8.7 wire data services and Compose through
+the [local Compose guide](s8-compose.md).
 
 ## File-backed runtime secrets
 
@@ -33,9 +33,15 @@ Dockerfile, build argument, label, resolved Compose environment, or process
 argument.
 
 Docker Compose currently ignores `uid`, `gid`, and `mode` for secrets sourced
-from files because it bind-mounts them. S8.6 must inspect effective permissions
-in the running Linux containers; it cannot rely on long-syntax fields alone.
+from files because it bind-mounts them. The S8.6 gate inspects effective
+permissions in the running Linux containers rather than relying on long-syntax
+fields alone.
 See the [Compose service secrets reference](https://docs.docker.com/reference/compose-file/services/#secrets).
+
+On this Windows Docker Desktop host, file-backed Compose secrets mounted as
+`0555`. The explicit preparation job reads them and writes service-specific
+`0400` files to named credential volumes. Runtime services mount only their
+own prepared volume read-only; the test gate inspects actual UID and mode.
 
 ## Local edge
 

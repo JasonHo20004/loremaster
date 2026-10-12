@@ -1,0 +1,392 @@
+name: loremaster-s8
+
+x-app-security: &app-security
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 128
+  ulimits:
+    nofile: { soft: 1024, hard: 1024 }
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=32m
+  logging:
+    driver: json-file
+    options: { max-size: 10m, max-file: '3' }
+
+services:
+  credentials:
+    image: loremaster/api:s8
+    profiles: [bootstrap]
+    user: '0:0'
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    cpus: 0.5
+    mem_limit: 64m
+    restart: 'no'
+    secrets:
+      - postgres_password
+      - redis_acl
+      - migration_database_url
+      - importer_database_url
+      - api_database_url
+      - producer_database_url
+      - worker_database_url
+      - cursor_key
+      - limiter_hmac_key
+      - redis_api_cache_url
+      - redis_api_limiter_url
+      - redis_producer_url
+      - redis_worker_url
+      - redis_worker_cache_url
+      - redis_observer_url
+    volumes:
+      - postgres_credentials:/run/output/postgres
+      - redis_credentials:/run/output/redis
+      - migration_credentials:/run/output/migration
+      - importer_credentials:/run/output/importer
+      - api_credentials:/run/output/api
+      - worker_credentials:/run/output/worker
+      - observer_credentials:/run/output/observer
+    entrypoint:
+      - /usr/local/bin/node
+      - -e
+      - >-
+        const fs=require('fs');
+        const groups=[
+        ['postgres',70,['postgres_password']],
+        ['redis',999,['redis_acl']],
+        ['migration',10005,['migration_database_url']],
+        ['importer',10006,['importer_database_url']],
+        ['api',10002,['api_database_url','producer_database_url','cursor_key','limiter_hmac_key','redis_api_cache_url','redis_api_limiter_url','redis_producer_url']],
+        ['worker',10003,['worker_database_url','redis_worker_url','redis_worker_cache_url']],
+        ['observer',10004,['redis_observer_url']]];
+        for(const [group,uid,names] of groups) for(const name of names){
+        const bytes=fs.readFileSync('/run/secrets/'+name);
+        if(!bytes.length||bytes.includes(0))throw Error(name);
+        const path='/run/output/'+group+'/'+name;const next=path+'.next';
+        if(fs.existsSync(next))fs.unlinkSync(next);fs.writeFileSync(next,bytes);
+        fs.chownSync(next,uid,uid);fs.chmodSync(next,0o400);fs.renameSync(next,path);
+        }
+
+  content:
+    image: loremaster/api:s8
+    profiles: [operator]
+    user: '0:0'
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    cpus: 0.5
+    mem_limit: 64m
+    restart: 'no'
+    volumes:
+      - type: bind
+        source: ${LOREMASTER_S8_CONTENT_FILE:-./local-content/pack.json}
+        target: /run/input/pack.json
+        read_only: true
+      - import_content:/run/content
+    entrypoint:
+      - /usr/local/bin/node
+      - -e
+      - >-
+        const fs=require('fs');const input='/run/input/pack.json';
+        const source=fs.readFileSync(input);
+        if(!source.length||source.length>262144||source.includes(0))throw Error('content');
+        const output='/run/content/pack.json',next=output+'.next';
+        if(fs.existsSync(next))fs.unlinkSync(next);fs.writeFileSync(next,source);
+        fs.chownSync(next,10006,10006);fs.chmodSync(next,0o400);
+        fs.renameSync(next,output);
+
+  postgres:
+    image: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    environment:
+      POSTGRES_DB: loremaster
+      POSTGRES_USER: migration
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_credentials:/run/secrets:ro
+    networks: [backend]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+      - /var/run/postgresql:rw,nosuid,size=8m
+    cpus: 1.0
+    mem_limit: 512m
+    pids_limit: 128
+    ulimits:
+      nofile: { soft: 1024, hard: 1024 }
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
+    healthcheck:
+      test: [CMD, pg_isready, -U, migration, -d, loremaster]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+      start_period: 20s
+
+  redis:
+    image: redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08
+    user: '999:999'
+    command:
+      [
+        redis-server,
+        --appendonly,
+        'yes',
+        --appendfsync,
+        everysec,
+        --save,
+        '',
+        --maxmemory,
+        128mb,
+        --maxmemory-policy,
+        noeviction,
+        --maxclients,
+        '128',
+        --protected-mode,
+        'yes',
+        --bind,
+        0.0.0.0,
+        --aclfile,
+        /run/secrets/redis_acl,
+      ]
+    volumes:
+      - redis_data:/data
+      - redis_credentials:/run/secrets:ro
+    networks: [backend]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: ['/tmp:rw,noexec,nosuid,size=16m']
+    cpus: 1.0
+    mem_limit: 192m
+    pids_limit: 64
+    ulimits:
+      nofile: { soft: 1024, hard: 1024 }
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
+    healthcheck:
+      test: [CMD, redis-cli, --user, loremaster_health, --pass, '', ping]
+      interval: 3s
+      timeout: 2s
+      retries: 15
+      start_period: 10s
+
+  api:
+    <<: *app-security
+    image: loremaster/api:s8
+    environment:
+      LOREMASTER_API_MODE: local
+      LOREMASTER_API_ORIGIN: http://localhost:8080
+      LOREMASTER_API_TRUSTED_PROXIES: 172.30.80.2/32
+      LOREMASTER_API_CURSOR_ACTIVE_VERSION: s8
+      LOREMASTER_REDIS_MODE: local
+      LOREMASTER_REDIS_ENABLED: 'true'
+      LOREMASTER_REDIS_LIMITER_HMAC_VERSION: v1
+      DATABASE_URL_FILE: /run/secrets/api_database_url
+      LOREMASTER_API_CURSOR_ACTIVE_KEY_FILE: /run/secrets/cursor_key
+      LOREMASTER_REDIS_CACHE_URL_FILE: /run/secrets/redis_api_cache_url
+      LOREMASTER_REDIS_LIMITER_URL_FILE: /run/secrets/redis_api_limiter_url
+      LOREMASTER_REDIS_PRODUCER_URL_FILE: /run/secrets/redis_producer_url
+      LOREMASTER_REDIS_PRODUCER_DATABASE_URL_FILE: /run/secrets/producer_database_url
+      LOREMASTER_REDIS_LIMITER_HMAC_KEY_FILE: /run/secrets/limiter_hmac_key
+    volumes: [api_credentials:/run/secrets:ro]
+    networks:
+      edge: { ipv4_address: 172.30.80.3 }
+      backend: {}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 256m
+    healthcheck:
+      test:
+        [
+          CMD,
+          /usr/local/bin/node,
+          -e,
+          "fetch('http://127.0.0.1:3000/health/ready',{signal:AbortSignal.timeout(1500)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 2s
+      retries: 6
+      start_period: 10s
+
+  worker:
+    <<: *app-security
+    image: loremaster/worker:s8
+    environment:
+      LOREMASTER_REDIS_MODE: local
+      LOREMASTER_WORKER_DATABASE_URL_FILE: /run/secrets/worker_database_url
+      LOREMASTER_WORKER_REDIS_URL_FILE: /run/secrets/redis_worker_url
+      LOREMASTER_WORKER_CACHE_REDIS_URL_FILE: /run/secrets/redis_worker_cache_url
+    volumes: [worker_credentials:/run/secrets:ro]
+    networks: [backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 256m
+    healthcheck:
+      test:
+        [
+          CMD,
+          /usr/local/bin/node,
+          -e,
+          "fetch('http://127.0.0.1:3001/health/ready',{signal:AbortSignal.timeout(1500)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 2s
+      retries: 6
+      start_period: 10s
+
+  observer:
+    <<: *app-security
+    image: loremaster/observer:s8
+    environment:
+      LOREMASTER_REDIS_MODE: local
+      LOREMASTER_OBSERVER_REDIS_URL_FILE: /run/secrets/redis_observer_url
+    volumes: [observer_credentials:/run/secrets:ro]
+    networks: [backend]
+    depends_on:
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 128m
+    healthcheck:
+      test:
+        [
+          CMD,
+          /usr/local/bin/node,
+          -e,
+          "fetch('http://127.0.0.1:3002/health/ready',{signal:AbortSignal.timeout(1500)}).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 2s
+      retries: 6
+      start_period: 10s
+
+  web:
+    <<: *app-security
+    image: loremaster/web:s8
+    ports: ['127.0.0.1:8080:8080']
+    networks:
+      edge: { ipv4_address: 172.30.80.2 }
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+    cpus: 0.5
+    mem_limit: 128m
+    healthcheck:
+      test: [CMD, /usr/sbin/nginx, -t]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+
+  migration:
+    <<: *app-security
+    image: loremaster/migration:s8
+    profiles: [operator]
+    environment:
+      LOREMASTER_MIGRATION_DATABASE_URL_FILE: /run/secrets/migration_database_url
+    volumes: [migration_credentials:/run/secrets:ro]
+    networks: [backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    cpus: 1.0
+    mem_limit: 256m
+
+  importer:
+    <<: *app-security
+    image: loremaster/importer:s8
+    profiles: [operator]
+    environment:
+      LOREMASTER_IMPORT_DATABASE_URL_FILE: /run/secrets/importer_database_url
+    volumes:
+      - importer_credentials:/run/secrets:ro
+      - import_content:/run/content:ro
+    networks: [backend]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+    cpus: 1.0
+    mem_limit: 256m
+
+networks:
+  edge:
+    driver: bridge
+    ipam:
+      config: [{ subnet: 172.30.80.0/28 }]
+  backend:
+    driver: bridge
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  postgres_credentials:
+  redis_credentials:
+  migration_credentials:
+  importer_credentials:
+  api_credentials:
+  worker_credentials:
+  observer_credentials:
+  import_content:
+
+secrets:
+  postgres_password:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/postgres_password' }
+  redis_acl: { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_acl' }
+  migration_database_url:
+    {
+      file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/migration_database_url',
+    }
+  importer_database_url:
+    {
+      file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/importer_database_url',
+    }
+  api_database_url:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/api_database_url' }
+  producer_database_url:
+    {
+      file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/producer_database_url',
+    }
+  worker_database_url:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/worker_database_url' }
+  cursor_key:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/cursor_key' }
+  limiter_hmac_key:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/limiter_hmac_key' }
+  redis_api_cache_url:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_api_cache_url' }
+  redis_api_limiter_url:
+    {
+      file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_api_limiter_url',
+    }
+  redis_producer_url:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_producer_url' }
+  redis_worker_url:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_worker_url' }
+  redis_worker_cache_url:
+    {
+      file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_worker_cache_url',
+    }
+  redis_observer_url:
+    { file: '${LOREMASTER_S8_SECRET_DIR:-./local-secrets}/redis_observer_url' }

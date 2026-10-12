@@ -42,8 +42,14 @@
     "test:s8:node-images": "node scripts/s8-images-test.mjs node",
     "test:s8:operator-images": "node scripts/s8-images-test.mjs operator",
     "test:s8:web-image": "node scripts/s8-images-test.mjs web",
-    "test:images": "pnpm build && pnpm build:images && node scripts/s8-images-test.mjs all && node scripts/s8-artifacts.mjs",
-    "test:web:deployed-disclosure": "node scripts/s8-artifacts.mjs web"
+    "test:s8:data-services": "node scripts/s8-compose-test.mjs data",
+    "test:s8:compose": "node scripts/s8-compose-test.mjs compose",
+    "test:s8:lifecycle": "node scripts/s8-lifecycle.mjs && node scripts/s8-worker-drain.mjs",
+    "test:s8:t25": "node scripts/s8-t25.mjs",
+    "test:s8:e2e": "pnpm build && pnpm build:images && node scripts/container-e2e.mjs && node scripts/s8-t25.mjs",
+    "test:images": "pnpm build && pnpm build:images && node scripts/s8-reproducible.mjs && node scripts/s8-images-test.mjs all && node scripts/s8-artifacts.mjs",
+    "test:web:deployed-disclosure": "node scripts/s8-artifacts.mjs web",
+    "test:s8:reproducible": "node scripts/s8-reproducible.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
