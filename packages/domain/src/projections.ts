@@ -190,7 +190,7 @@ export function projectAttempt(
   return {
     ...base,
     state: record.attempt.state,
-    answer: copySuggestion(answer),
+    answer: projectPublicSuggestion(answer),
     evidence: caseFile.evidence.map((item) => ({
       ...projectPublicEvidence(item),
       explanation: item.explanation,
@@ -214,7 +214,7 @@ function projectAttemptBase(
     wrongGuessesAtLevel: record.attempt.wrongGuessesAtLevel,
     totalWrongGuesses: record.attempt.totalWrongGuesses,
     briefing: caseFile.briefing,
-    suggestions: caseFile.suggestions.map(copySuggestion),
+    suggestions: caseFile.suggestions.map(projectPublicSuggestion),
     guessHistory: record.guesses.map((guess) => ({
       entityId: guess.entityId,
       guessedAt: guess.guessedAt,
@@ -222,7 +222,7 @@ function projectAttemptBase(
   }
 }
 
-function copySuggestion(
+export function projectPublicSuggestion(
   suggestion: PublicEntitySuggestion,
 ): PublicEntitySuggestion {
   return {

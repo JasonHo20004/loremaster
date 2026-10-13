@@ -12,7 +12,7 @@ const password = randomUUID()
 const target = process.argv[2] ?? 'database'
 let started = false
 
-if (target !== 'database' && target !== 'api') {
+if (target !== 'database' && target !== 'api' && target !== 's7') {
   throw new Error('Database test target must be `database` or `api`')
 }
 
@@ -57,13 +57,17 @@ try {
   }
 
   const projects =
-    target === 'api'
+    target !== 'database'
       ? [
           'packages/domain/tsconfig.json',
           'packages/database/tsconfig.json',
           'packages/config/tsconfig.json',
           'packages/contracts/tsconfig.json',
           'packages/observability/tsconfig.json',
+          'packages/cache/tsconfig.json',
+          'packages/queue/tsconfig.json',
+          'apps/worker/tsconfig.json',
+          'apps/queue-observer/tsconfig.json',
           'apps/api/tsconfig.json',
         ]
       : ['packages/domain/tsconfig.json', 'packages/database/tsconfig.json']
@@ -142,7 +146,9 @@ try {
   const testFiles =
     target === 'database'
       ? ['tests/database']
-      : globSync('tests/api/**/*.database.test.ts').sort()
+      : target === 's7'
+        ? ['tests/redis/composed.integration.test.ts']
+        : globSync('tests/api/**/*.database.test.ts').sort()
   if (testFiles.length === 0)
     throw new Error(`No ${target} database tests were found`)
   const result = spawnSync(

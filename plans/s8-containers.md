@@ -7,14 +7,12 @@ Kubernetes, registry, or cloud claims.
 
 ## Readiness decision
 
-S8 is **planned but not admitted**. Implementation begins only after S7 has a
-reviewed acceptance record, clean-checkout hosted CI, and a merge commit on
-`main`. Record that commit as the S8 base.
-
-The [2026-09-29 S8.0 preflight](s8-preflight.md) is **BLOCKED**: this checkout
-has no S7 acceptance record or executable worker/observer runtime. Host
-verification also encountered a broken nested pnpm launcher and an unavailable
-Docker daemon. S8.0 remains incomplete; S8.1 has not begun.
+The accepted S8 base is S7 merge `e41cab1c7170c6b9320fe3ee7cef28ea5e1f86a9`
+on `main`. The [2026-10-02 delivery preflight](s8-preflight.md) completed host
+and S7 gates. S8.1 build/supply-chain contracts and S8.2 file-secret/local-edge
+contracts are implemented for review. Their focused local gates pass; hosted CI
+and review remain delivery gates. Candidate bases are blocked by unapproved
+HIGH/CRITICAL scanner findings, so no runtime image is admitted.
 
 `deploy/`, `platform/`, and `infra/` currently contain no tracked runtime
 implementation. S8 owns `deploy/images`, a local Compose stack, container test
@@ -490,12 +488,12 @@ review before merge. Do not begin a dependent slice from an unreviewed tree.
 
 ## Progress
 
-- [ ] S8.0 Close the delivery preflight
-- [ ] S8.1 Freeze image, build-context, and supply-chain contracts
-- [ ] S8.2 Add file-backed secrets and freeze the local edge contract
-- [ ] S8.3 Build hardened API, worker, and observer images
-- [ ] S8.4 Build migration and content-import operator images
-- [ ] S8.5 Build the public web gateway image
+- [x] S8.0 Close the delivery preflight (S7 host gates PASS; candidate image admission blocked)
+- [x] S8.1 Freeze image, build-context, and supply-chain contracts (focused local gate PASS; hosted review pending)
+- [x] S8.2 Add file-backed secrets and freeze the local edge contract (focused local gates PASS; hosted review pending)
+- [x] S8.3 Build hardened API, worker, and observer images (local gates PASS; hosted review pending)
+- [x] S8.4 Build migration and content-import operator images (local gates PASS; hosted review pending)
+- [x] S8.5 Build the public web gateway image (local gates PASS; hosted review pending)
 - [ ] S8.6 Add PostgreSQL and Redis data-service operations
 - [ ] S8.7 Compose the isolated local stack
 - [ ] S8.8 Prove probes, shutdown, restart, and dependency recovery
@@ -511,3 +509,27 @@ reviewer. Never silently broaden build contexts, publish images, weaken
 container isolation, auto-run migrations/imports, or introduce Kubernetes/cloud
 resources. Those changes require explicit acceptance ownership and, where they
 change architecture, a superseding ADR.
+
+2026-10-02: the user requested S8.0-S8.2 together. Their reviewable changes
+share one delivery branch with separate contract and test files; hosted checks
+and final review still gate merge. The preflight supersedes the blocked 2026-09-29
+inspection because S7 was subsequently accepted on `main`. Trivy found
+unapproved HIGH/CRITICAL findings in pinned candidate bases; the image
+admission policy now rejects them until an updated base or independently
+reviewed, expiring exception clears the gate. Compose file-secret UID/GID/mode
+fields are ineffective for file sources, so S8.6 must verify actual mounted
+file ownership and permissions. No image, data volume, cluster, registry, or
+cloud resource was published by these slices. Rollback removes contracts and
+file-secret support while retaining the accepted S7 host runtime.
+
+2026-10-11: the user requested S8.3-S8.5 together on `codex/s8-images`, using
+the S8.0-S8.2 contract branch as predecessor. The shared build harness and
+container tests make these three image slices one reviewable delivery. The
+[image evidence](s8-images-evidence.md) records local behavior, repeated-build,
+SBOM, vulnerability, and disclosure results. The assembled images avoid the
+vulnerable candidate runtime roots by copying only the required executables,
+libraries, package records, and compiled application files into `scratch` final
+stages. The new `proxy-addr` and `source-map-js` advisories required patched
+lockfile overrides; no exception was granted. S8.6 still owns durable data
+services and secret mount operations; S8.7 owns Compose. Rollback retains the
+accepted host commands and removes only the S8 image build path.

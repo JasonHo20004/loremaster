@@ -2,5 +2,13 @@ packages:
   - apps/*
   - packages/*
 
+allowBuilds:
+  msgpackr-extract: false
+
+overrides:
+  brace-expansion: 5.0.12
+  proxy-addr: 2.0.8
+  source-map-js: 1.2.2
+
 catalog:
   typescript: 6.0.3

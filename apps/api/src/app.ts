@@ -13,7 +13,7 @@ import {
   PUBLIC_ERROR_FIELD_PATHS,
   type ApiOperationId,
 } from '@loremaster/contracts'
-import { isDatabaseTimeoutError } from '@loremaster/database'
+import { isDatabaseTimeoutError } from '@loremaster/database/runtime'
 
 import type {
   KernelDependencies,

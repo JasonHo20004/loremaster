@@ -7,14 +7,19 @@ effects out of PostgreSQL.
 
 ## Readiness decision
 
-S7 is **planned but not admitted**. Implementation begins only after S6.8 has a
-clean-checkout CI pass and the reviewed `web-ui` branch is merged to `main`.
-Record that merge commit as the S7 base before changing dependencies.
+S7.0 records the admitted S6 base
+`1ea44e7fdf2032ab65be05958d0cce43d08135fa` and its passing hosted CI in the
+[preflight evidence](s7-preflight.md). S7.0 and S7.1 are merged; [contract
+evidence](s7-contracts.md) records their delivery. S7.2-S7.6 merged in PR #12
+with passing hosted CI; [runtime evidence](s7-runtime.md) records their checks.
+S7.7-S7.9 complete the health/observer, composed gate and S8 handoff through
+[PR #13](https://github.com/JasonHo20004/loremaster/pull/13).
+[S7 acceptance](../docs/architecture/s7-acceptance.md) records executable proof,
+independent review and the final-documentation CI requirement before merge.
 
-The existing `apps/worker`, `apps/queue-observer`, and `packages/queue`
-workspaces are compile-only scaffolds. Redis/BullMQ runtime dependencies,
-configuration, job contracts, cache repositories, worker lifecycle, and queue
-telemetry do not exist yet.
+`apps/worker` now runs the bounded cache-warming consumer. `apps/queue-observer` now runs bounded read-only health and metrics. S7.1 froze Redis/BullMQ dependencies,
+configuration, contracts and read-only database roles. S7.2-S7.6 implement the
+cache adapter, suggestion fallback, producer, worker and shared limiter.
 
 ## Fixed invariants and scope
 
@@ -425,21 +430,74 @@ evidence before merge. Do not begin a dependent slice from an unreviewed tree.
 
 ## Progress
 
-- [ ] S7.0 Close the delivery preflight
-- [ ] S7.1 Freeze queue, cache, and Redis configuration contracts
-- [ ] S7.2 Implement the suggestion-cache contract and Redis adapter
-- [ ] S7.3 Integrate the cache after suggestion ownership commits
-- [ ] S7.4 Add the deterministic producer and recovery reconciliation
-- [ ] S7.5 Build the cache-warming worker runtime
-- [ ] S7.6 Add the required shared limiter without removing the local fallback
-- [ ] S7.7 Implement worker health and the queue observer
-- [ ] S7.8 Run the composed Redis failure and security gate
-- [ ] S7.9 Record acceptance and hand off to S8
+- [x] S7.0 Close the delivery preflight (PR #8 merged; hosted checks PASS)
+- [x] S7.1 Freeze queue, cache, and Redis configuration contracts (PR #9 merged; hosted checks PASS)
+- [x] S7.2 Implement the suggestion-cache contract and Redis adapter
+- [x] S7.3 Integrate the cache after suggestion ownership commits
+- [x] S7.4 Add the deterministic producer and recovery reconciliation
+- [x] S7.5 Build the cache-warming worker runtime
+- [x] S7.6 Add the required shared limiter without removing the local fallback
+- [x] S7.7 Implement worker health and the queue observer (local checks and independent review PASS)
+- [x] S7.8 Run the composed Redis failure and security gate (local checks and independent review PASS)
+- [x] S7.9 Record acceptance and hand off to S8 (PR #13; final hosted checks required before merge)
+
+S7.2-S7.6 merged in [PR #12](https://github.com/JasonHo20004/loremaster/pull/12)
+at `5308d778e000e03785260d6df6850b1d7037e3c7` with passing hosted CI.
+S7.7-S7.9 runtime CI passed on `4f5bd574435393492218155fea7581c5084de2c0`;
+[final PR #13 checks](https://github.com/JasonHo20004/loremaster/pull/13/checks)
+must pass on the final documentation commit before merge. Accepted S8 input
+is the merged PR #13 commit, identified by its delivery record.
 
 ## Plan mutation protocol
+
+2026-09-30: S7.0 merged as PR #8 at `3484f8d43b2993b0d7a5ce5c8eb56475c5e876ed`;
+S7.1 merged as PR #9 at `8609ee1b3a3b4298083c3749f061787d5230cb7a`.
+Both merge commits passed hosted Quality, Dependency audit, and Secret scan.
+The two slices were complete at that point. The 2026-09-30 entry below records
+the subsequent local S7.2-S7.6 implementation.
+
+2026-09-29: the user narrowed execution to S7.0/S7.1. Preflight evidence and
+foundational contracts were prepared on `codex/s7-completion`, based on the
+accepted S6 merge, then isolated into PRs #8 and #9. S7.1 ownership
+includes its database role migration, role tests, root focused command,
+read-only CI gate, browser boundary regression checks and `ops/redis` script/ACL
+inventory. Runtime suggestion and transaction changes, producers, workers,
+observers, shared-limiter execution and composed failure harnesses remain
+S7.2-S7.8. No dependency edge, public contract,
+gameplay behavior or rollback rule changes. Native Redis ACL cannot restrict
+Lua source hashes; the frozen contract therefore requires role-specific script
+hash guards plus real Redis denials before later runtime admission. Reviewers
+are recorded with the contract evidence. Hosted CI and merge remain delivery
+requirements before starting dependent work.
 
 Append dated changes below. State the evidence that invalidated the current
 plan, affected scenarios/controls, dependency-edge changes, migration or
 rollback impact, and reviewer. Never silently broaden cached data or add a
 durable asynchronous effect. Any durable job requires a superseding ADR with a
 PostgreSQL outbox and processed-event uniqueness design.
+
+2026-10-01: the user requested S7.7-S7.9 together on top of the existing
+S7.2-S7.6 workspace. Independent TypeScript, database/acceptance and security
+review covered the combined runtime. Worker health and observer metrics,
+composed failures and S8 handoff are recorded in
+[S7 acceptance](../docs/architecture/s7-acceptance.md). This combines local
+slice work without waiving hosted final-commit CI or merge. One exact queue
+heartbeat adds a three-second TTL and observer GET; the global limiter registry
+spans HMAC versions. Application Lua uses explicit default OOM rejection;
+hashes are updated. Retry/retention options are normalized even for poison
+jobs. Worker/producer PG pools have bounded infrastructure connection setup;
+read-only commits retain cancellation. Public API semantics and authoritative
+write-commit behavior remain frozen. Rollback still disables Redis and stops
+workers without broad deletion. Runtime hosted CI passed; the final documentation commit repeats the same required checks before PR #13 merge.
+
+2026-09-30: the user requested execution of S7.2-S7.6 together. The local
+implementation and tests are recorded in [runtime evidence](s7-runtime.md).
+This changes the planned one-slice-per-PR sequence for local work, but does not
+waive hosted CI, review, or merge. The S7.1 cache namespace budget was refined
+to 15 revision values plus one admission registry; cache and producer Lua need
+the additional commands in `ops/redis/acl-policy.json`; the producer uses a
+separate least-privilege PostgreSQL login. The queue event stream requests
+approximate trimming at 512 to leave headroom. Public API contracts and
+PostgreSQL authority remain unchanged. Redis can be disabled and the worker
+stopped to select PostgreSQL fallback. Reviewer and hosted acceptance are
+pending.

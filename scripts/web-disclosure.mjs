@@ -1,9 +1,12 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { extname, join, relative, resolve } from 'node:path'
 import process from 'node:process'
+import { readAllowlist } from './s8-context.mjs'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
-const distributionRoot = resolve(repositoryRoot, 'apps/web/dist')
+const distributionRoot = resolve(
+  process.argv[2] ?? resolve(repositoryRoot, 'apps/web/dist'),
+)
 const scannedExtensions = new Set(['.css', '.html', '.js', '.json', '.map'])
 const { asterQuayContentPack } =
   await import('../packages/database/dist/content/fixtures/aster-quay.js')
@@ -42,6 +45,11 @@ const forbiddenMarkers = [
   '@loremaster/database',
   '@loremaster/domain',
   '@loremaster/config',
+  '@loremaster/cache',
+  '@loremaster/queue',
+  'loremaster_redis_',
+  'redis://',
+  'rediss://',
   'answerentityid',
   'sourceids',
   'database_url',
@@ -58,16 +66,16 @@ const secretPatterns = [
   /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/u,
   /postgres(?:ql)?:\/\/[^\s"']+:[^\s"']+@/iu,
 ]
-const expectedBuildContext = [
-  'apps/web',
-  'packages/config',
-  'packages/contracts',
-  'packages/domain',
+const allowedContextFiles = new Set([
+  '.npmrc',
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
   'tsconfig.base.json',
-]
+  'deploy/images/web-public.dockerfile',
+  'deploy/images/nginx.conf',
+  'scripts/s8-rootfs.sh',
+])
 
 async function files(directory) {
   const entries = await readdir(directory, { withFileTypes: true })
@@ -92,16 +100,15 @@ if (!artifacts.some((path) => path.endsWith('manifest.json'))) {
   throw new Error('Public build did not include a manifest')
 }
 
-const buildContext = (
-  await readFile(
-    resolve(repositoryRoot, 'ops/build-contexts/web-public.allowlist'),
-    'utf8',
+const buildContext = readAllowlist('web-public')
+if (
+  buildContext.some(
+    (entry) =>
+      !entry.startsWith('apps/web/') &&
+      !entry.startsWith('packages/contracts/') &&
+      !allowedContextFiles.has(entry),
   )
-)
-  .split(/\r?\n/u)
-  .map((line) => line.trim())
-  .filter((line) => line.length > 0 && !line.startsWith('#'))
-if (JSON.stringify(buildContext) !== JSON.stringify(expectedBuildContext)) {
+) {
   throw new Error('Public build context does not match the reviewed allowlist')
 }
 

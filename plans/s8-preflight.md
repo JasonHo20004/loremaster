@@ -1,86 +1,103 @@
-# S8.0 delivery preflight evidence
+# S8.0 delivery preflight
 
-Date: 2026-09-29. Result: **BLOCKED**. S8.0 is not complete and S8.1 is
-not admitted. This record documents inspection, not runtime acceptance.
+S8.3 follow-up (2026-10-11): the repository Node pin advances from the S8.0
+baseline 22.17.0 to 22.23.3 for the reviewed Alpine image build. The S8.0
+measurements below remain historical evidence from the accepted S7 base.
 
-## Source baseline
+Recorded 2026-10-02 from a clean worktree based on accepted S7 `main`
+`e41cab1c7170c6b9320fe3ee7cef28ea5e1f86a9` (merged PR #13). The
+[S7 acceptance record](../docs/architecture/s7-acceptance.md) and
+[S7 progress checklist](s7-cache-worker.md#progress) are complete. This
+preflight replaces the blocked 2026-09-29 inspection of the older
+`cache-worker` branch. The accepted S7 commit, not that branch, is the S8
+source baseline.
 
-- Inspected branch: `cache-worker`.
-- Inspected HEAD: `1bc9660f2221e3bd0f737cf55018893b91ff769a`.
-- Local `main`: `06ee5d8a919bccd1bc345b34ad781f43ca843669`.
-- The working tree was clean before this preflight.
-- `docs/architecture/s7-acceptance.md` does not exist. All S7 progress items
-  remain unchecked in `plans/s7-cache-worker.md`.
-- `git log --all --oneline --grep='S7'` returned no matching commits. This
-  checks local references only; remote merge and hosted CI were not verified.
-- No reviewed S7 merge commit can be named from this checkout. The inspected
-  HEAD must not be treated as the accepted S8 base.
+## Process and ownership inventory
 
-## Process inventory
+| Process          | Executable host surface                                         | Binding, health, and lifecycle                                                                              | Owner of data                                          |
+| ---------------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Web              | `pnpm --filter @loremaster/web build` and `preview`             | Vite preview 127.0.0.1:4173; browser assets have no durable state; S8.5 owns gateway lifecycle              | Browser state only                                     |
+| API              | `pnpm --filter @loremaster/api start`                           | 127.0.0.1:3000 default; `/health/live` process-only, `/health/ready` PostgreSQL-only; ten-second HTTP drain | PostgreSQL authoritative; Redis optional               |
+| Worker           | `pnpm --filter @loremaster/worker start`                        | 127.0.0.1:3001; private live/ready; ten-second work drain and cancellation                                  | PostgreSQL read, disposable Redis warm cache/job state |
+| Observer         | `pnpm --filter @loremaster/queue-observer start`                | 127.0.0.1:3002; private live/ready and fixed `/metrics`; one-second close budget                            | Redis aggregate reads only                             |
+| Content importer | `pnpm content:import`                                           | Explicit finite operator command; no listener                                                               | PostgreSQL published content, importer role            |
+| Migration        | `migrateToLatest(db)` export, exercised by `pnpm test:database` | Explicit finite operator action; standalone image entrypoint belongs to S8.4                                | PostgreSQL schema owner                                |
+| PostgreSQL       | Pinned disposable S7 harness                                    | Required for gameplay/readiness; no API startup migration                                                   | Authoritative gameplay and content                     |
+| Redis            | Pinned disposable S7 harness                                    | Optional cache, queue and limiter; outage degrades without changing gameplay truth                          | Disposable cache/queue/limit state                     |
 
-| Process          | Existing host surface                                       | Lifecycle and ownership evidence                                                                                                                                                                                                                                                                                                                       |
-| ---------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Web              | `pnpm --filter @loremaster/web dev`, `build`, `preview`     | Vite development uses localhost:5173; preview uses 127.0.0.1:4173. Browser assets own no durable gameplay state. Gateway lifecycle remains S8 work.                                                                                                                                                                                                    |
-| API              | `pnpm --filter @loremaster/api start`                       | Compiled `dist/index.js`; prestart builds dependencies. Binds 127.0.0.1, default port 3000. Configuration schema is `packages/config/src/index.ts`. Liveness is independent of PostgreSQL; readiness performs a bounded read-only transaction. Default HTTP drain is 10,000 ms, followed by pool closure; this is not a measured total shutdown bound. |
-| Worker           | No executable runtime command                               | `apps/worker/src/index.ts` only exports `applicationName`. No queue consumer, environment schema, probes, or shutdown contract exists.                                                                                                                                                                                                                 |
-| Queue observer   | No executable runtime command                               | `apps/queue-observer/src/index.ts` only exports `applicationName`. No listener, environment schema, probes, or shutdown contract exists.                                                                                                                                                                                                               |
-| Queue library    | No implemented queue contract                               | `packages/queue/src/index.ts` only exports `packageName`. Redis ownership, ACLs, retries, and retention cannot be frozen from this scaffold.                                                                                                                                                                                                           |
-| Migration        | Existing migration library and `pnpm test:database` harness | Operator ownership is documented in `docs/development/README.md`. The database package exposes no standalone migration CLI script; the test harness is not a runtime operator entrypoint.                                                                                                                                                              |
-| Content importer | `pnpm content:import`                                       | Builds the database package and invokes `dist/content/cli.js`; input and role contracts are documented in `docs/development/content-import.md`.                                                                                                                                                                                                        |
-| PostgreSQL       | Disposable Docker-backed database/API harnesses             | Authoritative gameplay storage; schema owner, importer, and runtime roles are distinct. Harnesses require a running daemon.                                                                                                                                                                                                                            |
-| Redis            | No accepted host runtime or composed S7 gate                | Disposable cache/queue ownership is planned, not implemented or accepted.                                                                                                                                                                                                                                                                              |
+The exact S7 environment variable and Redis ACL inventory is in
+[`ops/redis/README.md`](../ops/redis/README.md); the HTTP/cookie inputs are in
+[`packages/config/src/index.ts`](../packages/config/src/index.ts). The
+[S7 runtime contract](../docs/architecture/s7-acceptance.md#runtime-contract-for-s8)
+freezes probes, queue limits, timeouts, shutdown and source disclosure. S8.2
+adds file inputs without changing those runtime decisions. S8.4 must create a
+standalone migration operator command before packaging it as an image.
 
-The API source and development guide are existing behavior evidence only; no
-process was accepted by execution in this preflight.
+## Host and S7 gates
 
-## Host checks
+Node 22.17.0 and pnpm 11.19.0 are the repository pins. The default Windows
+shell selected Node 22.12.0 and a broken global pnpm shim. The preflight used
+the installed Node 22.17.0 and a Corepack shim in a named temporary directory;
+the pinned command surface and nested pnpm scripts then passed. Frozen install
+passed. Docker Engine 28.5.1 (Linux/amd64), Compose 2.40.0, Buildx 0.29.1,
+and BuildKit 0.25.1 were inspected. A scratch BuildKit cache-only smoke build
+passed. These exact versions are the tested local minimum for S8 until a
+separate lower-version test qualifies a broader range.
 
-| Check                                      | Observed result                                                                             |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `node --version`                           | `v22.17.0`, matches repository pin                                                          |
-| `pnpm --version` in sandbox                | `11.19.0`, matches repository pin                                                           |
-| `pnpm run verify` in sandbox               | Failed at Prettier startup with filesystem `EPERM`                                          |
-| `pnpm run verify` outside sandbox          | Failed: global shim references missing `AppData/Roaming/npm/node_modules/pnpm/bin/pnpm.cjs` |
-| `corepack pnpm run verify` outside sandbox | Pinned launcher starts, but nested `pnpm` commands hit the same broken global shim          |
-| Docker client                              | `29.1.2`, Windows/amd64; this is not an Engine version                                      |
-| Docker Compose client                      | `v2.40.3-desktop.1`                                                                         |
-| Docker Buildx client                       | `v0.30.1-desktop.1`, commit `792b8327a475a5d8c9d5f4ea6ce866e7da39ae8b`                      |
-| `docker version` outside sandbox           | Linux daemon unavailable: `dockerDesktopLinuxEngine` named pipe does not exist              |
-| `docker buildx inspect` outside sandbox    | Reports a daemon connection error; BuildKit behavior unverified                             |
+| Gate                                      | Result                                                                                                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm run verify` before S8 edits         | PASS; format, lint, typecheck, 369 tests, all workspace builds                                                                                                |
+| `pnpm test:s7:contracts`                  | PASS; 88 tests                                                                                                                                                |
+| `pnpm test:database`                      | PASS; 93 PostgreSQL tests                                                                                                                                     |
+| `pnpm test:api:database`                  | PASS; 7 tests after making the profile test publish its own fixture                                                                                           |
+| `pnpm test:redis`                         | PASS; 8 real Redis scenarios                                                                                                                                  |
+| `pnpm test:s7:integration`                | PASS; 9 composed scenarios, no skips                                                                                                                          |
+| Web component and real-stack E2E          | PASS; 11 component, 4 real-stack and 5 shell/accessibility tests. First E2E attempt timed out after reveal under concurrent scanning; the clean rerun passed. |
+| `pnpm test:web:disclosure`                | PASS; five artifacts, no private markers                                                                                                                      |
+| `pnpm audit --audit-level moderate`       | PASS; no known dependency vulnerabilities                                                                                                                     |
+| Production license inventory              | 101 package/version entries: 89 MIT, 3 Apache-2.0, 7 ISC, 1 BSD-3-Clause, 1 0BSD                                                                              |
+| Pinned Gitleaks 8.30.0 on accepted `main` | PASS; 53 commits, about 1.62 MB, no leaks                                                                                                                     |
 
-No database, Redis, browser, dependency-audit, or secret-scan pass is claimed.
-The S7 composed Redis gate and S8 image-policy command do not exist in the
-root package scripts. Supported Engine/Compose minimums cannot be accepted
-from client version output alone.
+The API/PostgreSQL test had relied on another test file to import a region;
+its isolated fixture setup was corrected in this branch before rerunning the
+gate. That is test determinism work, not a changed gameplay contract.
 
-## Supply-chain status
+## Candidate supply chain and admission
 
-The existing database test harness references
-`postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94`.
-This is an existing test dependency, not an S8-approved base. Its platform,
-provenance, license inventory, and current vulnerabilities were not verified
-in this attempt. Node builder/runtime, gateway, Redis, and scanner digests
-remain unselected; no supply-chain acceptance is claimed.
+Registry manifests were inspected on 2026-10-02 for `linux/amd64` and frozen
+by digest in [`deploy/images/contracts.json`](../deploy/images/contracts.json).
+The official Node 22.17.0 Bookworm and slim images match the accepted runtime
+pin; their source annotation points to `nodejs/docker-node` revision
+`d78e8df65f94f391ba1adf67f7ef1e2596ac92f1`. The Node project uses MIT;
+Debian components require per-image license inventory. The newer official
+Node 22.23.3 slim candidate has digest
+`sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c`
+and source revision `81f419144a1251854c6d9afb09eaa39928e724e8`.
+The NGINX unprivileged 1.29.5 Alpine candidate has digest
+`sha256:42a7d7f2ee23e9f5a1dcdf3647ba5c585bbd18f79e79cd817e70e8cd61c55779`;
+its Dockerfile repository is Apache-2.0. All component licenses need an SBOM
+and policy review when images are assembled.
 
-`ops/build-contexts/web-public.allowlist` already exists, but contains directory
-entries and is not proof of a generated, validated S8 context. No additional
-contexts, Dockerfiles, or image contracts were introduced before admission.
+Scanner candidate: Trivy 0.74.0,
+`sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969`.
+Its database is mutable, so results are time-stamped and rescanned at each
+image slice. The 2026-10-02 scan found 2,175 HIGH/CRITICAL Debian plus 40
+HIGH/CRITICAL Node.js findings in the Node 22.17.0 full Bookworm builder;
+Node 22.17.0 slim had 68 HIGH Debian plus 37 HIGH Node.js findings;
+Node 22.23.3 slim had 53 HIGH/4 CRITICAL Debian plus 10 HIGH Node.js
+findings; NGINX 1.29.5 Alpine had 46 HIGH findings. The
+license scan enumerated 589 OS package and 197 Node.js package license records
+in the newer Node candidate. These counts are inventory evidence, not approval.
+The existing PostgreSQL 17.6 and Redis 7.4.5 digests are test dependencies;
+S8.6 owns their runtime image scans and operations.
 
-## Resume requirements
+**Decision:** S8.0 delivery preflight is complete: the reviewed S7 base,
+processes, gates and developer toolchain are named. S8.1 may freeze contracts.
+No candidate base or assembled image is admitted for runtime use while
+HIGH/CRITICAL findings lack an approved exception or a patched replacement.
+The exception ledger is empty, and S8.3-S8.5 must clear this gate before image
+construction can be accepted. Digest pins do not waive vulnerability findings.
 
-1. Complete S7 through S7.9, including executable worker/observer runtimes,
-   composed Redis evidence, independent review, acceptance record, hosted CI,
-   and merge to `main`. Record the exact accepted commit.
-2. Restore a working pinned pnpm command surface, including nested invocations,
-   and a running Linux Docker daemon. Re-run repository verification and all
-   accepted S7 database/Redis gates against disposable resources.
-3. Verify Engine/Compose/BuildKit behavior and freeze supported minimums.
-   Inventory candidate bases/scanners with digest, architecture, provenance,
-   license, vulnerability, and update-policy evidence.
-4. Review and close S8.0 on its slice branch before beginning S8.1. Then add
-   context generation/validation, runtime and reproducibility contracts,
-   static policy tests, scanner policy, audit/secret evidence, and CI.
-
-The S8 dependency edges and exit criteria remain unchanged. Both progress
-checkboxes remain open. Rollback consists only of removing this evidence and
-its plan link; no runtime, image, dependency, or persistent data was changed.
+Rollback of this preflight removes only the documentation and test-fixture
+correction; it has not changed application data, published images, or cloud
+resources.

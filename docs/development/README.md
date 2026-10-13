@@ -1,5 +1,11 @@
 # Local development
 
+For a Vietnamese overview of the product, architecture, local setup, and remaining work, read the [onboarding and team handoff guide](onboarding-vi.md).
+
+The [S8 container environment contract](s8-container-contract.md) records the
+new file-backed secret inputs and future Compose edge. The runnable workflow
+below remains the host-development path until S8 Compose is accepted.
+
 ## Running the API locally
 
 The API requires a PostgreSQL login that is a member of the
@@ -111,10 +117,34 @@ payload with the same key is a conflict. Command calls use the same cookie,
 Origin, CSRF, content-type, and idempotency headers, with the returned attempt ID
 in `/api/v1/attempts/<attempt-id>/commands`.
 
-The in-memory limiter is intentionally bounded and replica-local. Multiple API
-replicas therefore permit the sum of their local ceilings. S7 may add a shared
-Redis ceiling, but it must retain this local limiter as the availability and
-memory-safety fallback when Redis is unavailable.
+The in-memory limiter is bounded and replica-local. When S7 Redis is enabled,
+the API also checks a shared ceiling after local admission. Multiple API
+replicas may permit the sum of their local ceilings during a Redis outage.
+
+## Optional S7 Redis cache and worker
+
+Redis is disabled by default. To enable the local S7.2-S7.6 runtime, provision
+the distinct PostgreSQL and Redis logins described in the [Redis contract](../../ops/redis/README.md).
+The API needs `LOREMASTER_REDIS_ENABLED=true`, cache, limiter and producer Redis
+URLs, a separate producer PostgreSQL URL, and the limiter HMAC key and version.
+The worker needs its own worker PostgreSQL URL and separate queue and cache
+Redis URLs. Set `LOREMASTER_REDIS_MODE=local` for local endpoints. The Redis URL
+usernames must match the six fixed ACL identities in the contract; the API
+producer PostgreSQL login receives only `loremaster_cache_producer`, and the
+worker login receives only `loremaster_cache_worker`.
+
+```bash
+pnpm --filter @loremaster/worker build
+pnpm --filter @loremaster/worker start
+pnpm test:s7:redis
+```
+
+The focused test starts a disposable pinned Redis container and exercises ACLs,
+cache fallback, producer/worker retries, and limiter concurrency. The API
+performs suggestion ownership checks in PostgreSQL before consulting Redis.
+When Redis is absent, suggestions use PostgreSQL and the local limiter remains
+active. Stop the worker and set `LOREMASTER_REDIS_ENABLED=false` to roll back
+the optional runtime without deleting wildcard keys.
 
 ## PostgreSQL integration tests
 
@@ -148,11 +178,29 @@ See the [S6 acceptance record](../architecture/s6-acceptance.md) for the exact
 claim mapping and the S8 deployed-artifact deferral. A missing Docker daemon,
 browser, or PostgreSQL startup is a failure, never a skipped acceptance result.
 
-## Pinned prerequisites
+## Worker and queue observer probes
+
+After building, run `pnpm --filter @loremaster/worker start` and
+`pnpm --filter @loremaster/queue-observer start` with the separate role URLs in
+the [Redis configuration inventory](../../ops/redis/README.md). They bind
+loopback ports 3001 and 3002. Both expose `/health/live` and `/health/ready`;
+the observer additionally exposes fixed Prometheus `/metrics`. Worker readiness
+requires PostgreSQL plus queue/cache Redis; observer readiness requires Redis.
+API readiness remains PostgreSQL-only. SIGINT/SIGTERM marks draining and
+closes owned resources within the documented budgets.
+
+Run `pnpm test:s7:health`, `pnpm test:s7:observer`, `pnpm test:redis` and
+`pnpm test:s7:integration`. The composed gate requires Docker, creates pinned
+disposable PostgreSQL/Redis instances, provisions least-privilege roles, starts
+real worker/API/observer runtimes and fails on missing prerequisites. The
+[S7 acceptance record](../architecture/s7-acceptance.md) owns exact contracts
+and delivery status. This workflow does not start S8 runtime containers.
+
+## Pinned toolchain
 
 - WSL2 with a current Ubuntu distribution
 - Git
-- Node.js `22.17.0` (also recorded in `.nvmrc` and `.node-version`)
+- Node.js `22.23.3` (also recorded in `.nvmrc` and `.node-version`)
 - Corepack, included with the pinned Node release
 - pnpm `11.19.0`, selected by the root `packageManager` field
 
@@ -180,5 +228,18 @@ The `CI` GitHub Actions workflow runs `pnpm install --frozen-lockfile` and `pnpm
 If Corepack was previously configured with a broken global pnpm shim, remove that shim using the installation method that created it, then rerun `corepack enable` and `corepack install`. Do not install an unpinned pnpm version to work around the mismatch.
 
 ## Workspace boundaries
+
+S7.0 and S7.1 evidence is recorded in the [S7 preflight](../../plans/s7-preflight.md)
+and [S7.1 contract delivery](../../plans/s7-contracts.md). Run
+`pnpm test:s7:contracts` for strict cache/job/limiter/configuration and package
+boundary tests, and `pnpm test:database` for the worker/producer view roles.
+The [Redis contract](../../ops/redis/README.md) lists runtime process inputs,
+ACL operations, connection limits, deadlines and budgets. These parsers and
+policies do not activate Redis in the host application.
+
+BullMQ 5.81.5 and ioredis 5.11.1 are pinned in the lockfile. The optional
+`msgpackr-extract` install script is explicitly disabled in
+`pnpm-workspace.yaml`; MessagePack provides its JavaScript implementation.
+Frozen installs must honor that decision without interactive build approval.
 
 Apps live under `apps/*`; shared libraries live under `packages/*`. Browser code may import browser-safe `@loremaster/contracts` exports and call the frozen `/api/v1` surface. It must not import API/database modules, the operator importer, authored fixtures, answers, explanations, or sources. S7 cache warming may optimize disposable reads but must preserve these browser/API semantics and PostgreSQL-owned gameplay truth.

@@ -1,4 +1,5 @@
 import type { ServerConfiguration } from '@loremaster/config'
+import { digestLimitIdentity, type SharedLimiter } from '@loremaster/cache'
 
 import { API_OPERATIONS, type ApiOperationId } from '@loremaster/contracts'
 
@@ -44,14 +45,19 @@ function category(operationId: ApiOperationId): Counter | undefined {
 }
 
 /**
- * This bounded fallback is intentionally replica-local. A shared limiter may
- * add an aggregate ceiling later, but must retain this local safety boundary.
+ * This bounded fallback is intentionally replica-local. The optional shared
+ * limiter runs after it; a local denial is always final.
  */
 export function createRateLimitControl(options: {
   readonly auth: AuthenticationControl
   readonly clock: Clock
   readonly config: ServerConfiguration['limiter']
   readonly sourceIp: SourceIpResolver
+  readonly shared?: {
+    readonly limiter: SharedLimiter
+    readonly hmacKey: Uint8Array
+    readonly onDegraded?: () => void
+  }
 }): OperationMiddleware {
   const ipStore: WindowStore = {
     bucket: -1,
@@ -71,7 +77,7 @@ export function createRateLimitControl(options: {
         return (_request, _response, next) => next()
       }
 
-      return (request, response, next) => {
+      return async (request, response, next) => {
         try {
           const now = options.clock.now()
           const bucket = Math.floor(now / options.config.windowMs)
@@ -135,6 +141,38 @@ export function createRateLimitControl(options: {
             const entry = store.entries.get(identity) ?? emptyEntry()
             entry[key] += 1
             store.entries.set(identity, entry)
+          }
+          if (options.shared !== undefined) {
+            let decision
+            try {
+              decision = await options.shared.limiter.consume({
+                counter,
+                ipDigest: digestLimitIdentity(options.shared.hmacKey, 'ip', ip),
+                ...(checks.length === 2
+                  ? {
+                      guestDigest: digestLimitIdentity(
+                        options.shared.hmacKey,
+                        'guest',
+                        checks[1]!.identity,
+                      ),
+                    }
+                  : {}),
+              })
+            } catch {
+              decision = {
+                state: 'degraded' as const,
+                retryAfterSeconds: 0 as const,
+              }
+            }
+            if (decision.state === 'degraded') options.shared.onDegraded?.()
+            if (decision.state === 'denied') {
+              response.setHeader(
+                'Retry-After',
+                String(decision.retryAfterSeconds),
+              )
+              next(new PublicHttpError('RATE_LIMITED'))
+              return
+            }
           }
           next()
         } catch (error) {

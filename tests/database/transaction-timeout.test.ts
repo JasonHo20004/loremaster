@@ -201,4 +201,35 @@ describe('S5.3c cancellable database transactions', () => {
       }),
     ).rejects.toBeInstanceOf(DatabaseRollbackError)
   })
+  it('cancels a stalled read-only commit before pool shutdown', async () => {
+    const controller = new AbortController()
+    const client = new EventEmitter() as EventEmitter & {
+      query(sql: string): Promise<object>
+      release(error?: Error): void
+    }
+    client.query = async (sql) => {
+      if (sql === 'COMMIT') {
+        queueMicrotask(() => controller.abort('DEADLINE'))
+        return new Promise(() => undefined)
+      }
+      return {}
+    }
+    let released = false
+    client.release = () => {
+      released = true
+      queueMicrotask(() => client.emit('end'))
+    }
+    const fake = { connect: async () => client } as unknown as Database
+    await expect(
+      transaction(fake, async () => undefined, {
+        readOnly: true,
+        deadline: {
+          deadlineAt: Date.now() + 1000,
+          now: Date.now,
+          signal: controller.signal,
+        },
+      }),
+    ).rejects.toBeInstanceOf(DatabaseTimeoutError)
+    expect(released).toBe(true)
+  })
 })

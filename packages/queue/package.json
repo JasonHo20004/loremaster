@@ -11,6 +11,10 @@
       "default": "./dist/index.js"
     }
   },
+  "dependencies": {
+    "bullmq": "5.81.5",
+    "ioredis": "5.11.1"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "node ../../scripts/clean.mjs",

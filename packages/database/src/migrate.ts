@@ -2,19 +2,8 @@ import { readdir, readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import pg from 'pg'
-
-const { Pool } = pg
-
-export type Database = pg.Pool
-
-export function database(connectionString: string): Database {
-  return new Pool({ connectionString, max: 10 })
-}
-
-export async function closeDatabase(db: Database): Promise<void> {
-  await db.end()
-}
+import type { Database } from './pool.js'
+export { database, closeDatabase, type Database } from './pool.js'
 
 export async function migrateToLatest(
   db: Database,

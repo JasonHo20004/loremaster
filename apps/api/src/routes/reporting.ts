@@ -10,12 +10,13 @@ import type {
   LeaderboardPageRequest,
   LeaderboardPosition,
   ProfileProjection,
-} from '@loremaster/database'
+  PublishedSuggestionCache,
+} from '@loremaster/database/runtime'
 import {
   readAttemptSuggestions,
   readDailyLeaderboardPage,
   readProfile,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 
 import type {
   AuthenticatedIdentity,
@@ -70,10 +71,18 @@ export interface ReportingRouteRepository {
 
 export function createDatabaseReportingRepository(
   database: Database,
+  cache?: PublishedSuggestionCache,
 ): ReportingRouteRepository {
   return {
     readAttemptSuggestions: (guestId, attemptId, query, deadline) =>
-      readAttemptSuggestions(database, guestId, attemptId, query, deadline),
+      readAttemptSuggestions(
+        database,
+        guestId,
+        attemptId,
+        query,
+        deadline,
+        cache,
+      ),
     readDailyLeaderboardPage: (request, deadline) =>
       readDailyLeaderboardPage(database, request, deadline),
     readProfile: (guestId, deadline) =>

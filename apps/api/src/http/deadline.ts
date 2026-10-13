@@ -1,6 +1,6 @@
 import type { Request } from 'express'
 
-import type { DeadlineContext } from '@loremaster/database'
+import type { DeadlineContext } from '@loremaster/database/runtime'
 
 import type { Clock, DeadlineControl } from './dependencies.js'
 import { PublicHttpError } from './errors.js'

@@ -1,21 +1,34 @@
 import { createServer, type Server } from 'node:http'
 
-import type { ServerConfiguration } from '@loremaster/config'
+import type {
+  ApiRedisConfiguration,
+  ServerConfiguration,
+} from '@loremaster/config'
+import {
+  BoundedRedisConnection,
+  createRedisSharedLimiter,
+  createSuggestionCacheReader,
+  type SharedLimiter,
+  type SuggestionCacheReader,
+} from '@loremaster/cache'
 import {
   authenticateSession,
   closeDatabase,
   createGuestSession,
   database as createDatabase,
   isDatabaseTimeoutError,
+  assertOutsideTransaction,
+  readCurrentPublishedRevision,
   transaction,
   verifySessionCsrfToken,
   type Database,
-} from '@loremaster/database'
+} from '@loremaster/database/runtime'
 import {
   noOpTelemetry,
   type ApiTelemetry,
   type RequestLogEntry,
 } from '@loremaster/observability'
+import { createWarmProducer } from '@loremaster/queue'
 
 import { createApplication } from './app.js'
 import type {
@@ -44,16 +57,33 @@ import { createSourceIpResolver } from './security/source-ip.js'
 
 const DEFAULT_DRAIN_TIMEOUT_MS = 10_000
 
+function boundedSignal(family: string): (code: string) => void {
+  const last = new Map<string, number>()
+  return (code) => {
+    const now = Date.now()
+    if (now - (last.get(code) ?? 0) < 60_000) return
+    last.set(code, now)
+    process.stderr.write(`Loremaster ${family}: ${code}\n`)
+  }
+}
+
 export interface ComposedApplicationOptions {
   readonly clock?: Clock
   readonly config: ServerConfiguration
   readonly database: Database
   readonly telemetry?: ApiTelemetry
+  readonly cacheReader?: SuggestionCacheReader
+  readonly sharedLimiter?: {
+    readonly limiter: SharedLimiter
+    readonly hmacKey: Uint8Array
+    readonly onDegraded?: () => void
+  }
 }
 
 export interface ApiRuntimeOptions extends ComposedApplicationOptions {
   readonly drainTimeoutMs?: number
   readonly listenPort?: number
+  readonly redis?: ApiRedisConfiguration
 }
 
 export interface ApiRuntime {
@@ -159,7 +189,7 @@ export function createComposedApplication(
       createDatabaseGameplayRepository(options.database),
     ),
     ...createReportingHandlers(
-      createDatabaseReportingRepository(options.database),
+      createDatabaseReportingRepository(options.database, options.cacheReader),
       options.config.cursor,
     ),
     ...createHealthHandlers(options.database),
@@ -180,6 +210,9 @@ export function createComposedApplication(
         clock,
         config: options.config.limiter,
         sourceIp,
+        ...(options.sharedLimiter === undefined
+          ? {}
+          : { shared: options.sharedLimiter }),
       }),
       logger: createTelemetryMiddleware(telemetry, clock),
       policy: createRequestPolicy(options.config.origin),
@@ -189,11 +222,11 @@ export function createComposedApplication(
   })
 }
 
-function listen(server: Server, port: number): Promise<number> {
+function listen(server: Server, port: number, host: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const onError = (error: Error) => reject(error)
     server.once('error', onError)
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, host, () => {
       server.off('error', onError)
       const address = server.address()
       if (address === null || typeof address === 'string') {
@@ -206,7 +239,57 @@ function listen(server: Server, port: number): Promise<number> {
 }
 
 export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
-  const application = createComposedApplication(options)
+  const redisConfig =
+    options.redis?.enabled === true ? options.redis : undefined
+  const cacheSignal = boundedSignal('cache')
+  const queueSignal = boundedSignal('queue')
+  const limiterSignal = boundedSignal('limiter')
+  const cacheConnection = redisConfig
+    ? new BoundedRedisConnection(redisConfig.cacheUrl, 'api-cache')
+    : undefined
+  const limiterConnection = redisConfig
+    ? new BoundedRedisConnection(redisConfig.limiterUrl, 'api-limiter')
+    : undefined
+  const producerDatabase = redisConfig
+    ? createDatabase(redisConfig.producerDatabaseUrl, {
+        connectionTimeoutMs: 1000,
+      })
+    : undefined
+  const producer =
+    redisConfig && producerDatabase
+      ? createWarmProducer(redisConfig.producerUrl, {
+          currentRevision: (signal) =>
+            readCurrentPublishedRevision(producerDatabase, {
+              deadlineAt: Date.now() + 1_000,
+              now: () => Date.now(),
+              signal,
+            }),
+          onEvent: queueSignal,
+        })
+      : undefined
+  const application = createComposedApplication({
+    ...options,
+    ...(cacheConnection
+      ? {
+          cacheReader: createSuggestionCacheReader(cacheConnection, {
+            assertOutsideTransaction,
+            onEvent: cacheSignal,
+          }),
+        }
+      : {}),
+    ...(limiterConnection && redisConfig
+      ? {
+          sharedLimiter: {
+            limiter: createRedisSharedLimiter(
+              limiterConnection,
+              redisConfig.limiterHmacVersion,
+            ),
+            hmacKey: redisConfig.limiterHmacKey,
+            onDegraded: () => limiterSignal('degraded'),
+          },
+        }
+      : {}),
+  })
   const server = createServer(application)
   const listenPort = options.listenPort ?? options.config.port
   const drainTimeoutMs = options.drainTimeoutMs ?? DEFAULT_DRAIN_TIMEOUT_MS
@@ -226,8 +309,13 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
     server,
     async start() {
       if (started) throw new Error('API runtime is already started')
-      const port = await listen(server, listenPort)
+      const port = await listen(
+        server,
+        listenPort,
+        options.config.listenHost ?? '127.0.0.1',
+      )
       started = true
+      producer?.start()
       return port
     },
     stop() {
@@ -246,6 +334,10 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
           })
           started = false
         }
+        await producer?.stop()
+        if (producerDatabase) await closeDatabase(producerDatabase)
+        cacheConnection?.close()
+        limiterConnection?.close()
         await closeDatabase(options.database)
       })()
       return stopping

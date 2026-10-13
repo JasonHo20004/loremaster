@@ -7,6 +7,10 @@ import { importContentPack } from '../../packages/database/dist/content/index.js
 import {
   executeGameplayCommand,
   readAttemptSuggestions,
+  readCurrentPublishedRevision,
+  readPublishedSuggestionIndex,
+  assertOutsideTransaction,
+  transaction,
   readCurrentCase,
   readDailyLeaderboard,
   readDailyLeaderboardPage,
@@ -888,6 +892,83 @@ describe('S4.6 gameplay repository', () => {
       aliases: ['Mira'],
     })
 
+    const index = await readPublishedSuggestionIndex(db, revisionId)
+    if (!index) throw new Error('Published suggestion index missing')
+    expect(
+      await readPublishedSuggestionIndex(
+        db,
+        revisionId,
+        undefined,
+        'loremaster_cache_worker',
+      ),
+    ).toEqual(index)
+    expect(await readCurrentPublishedRevision(db)).toMatch(/^[0-9a-f-]{36}$/u)
+    let cacheReads = 0
+    const hit = {
+      get: async () => {
+        cacheReads++
+        return index
+      },
+    }
+    expect(
+      await readAttemptSuggestions(
+        db,
+        actor.guestId,
+        attemptId,
+        'mira',
+        undefined,
+        hit,
+      ),
+    ).toEqual(suggestions)
+    const other = await identity()
+    const otherAttemptId = await seedActiveAttempt(other.guestId)
+    expect(
+      await readAttemptSuggestions(
+        db,
+        other.guestId,
+        otherAttemptId,
+        'mira',
+        undefined,
+        hit,
+      ),
+    ).toEqual(suggestions)
+    expect(cacheReads).toBe(2)
+    expect(
+      await readAttemptSuggestions(
+        db,
+        other.guestId,
+        attemptId,
+        'mira',
+        undefined,
+        hit,
+      ),
+    ).toBeUndefined()
+    expect(cacheReads).toBe(2)
+    expect(
+      await readAttemptSuggestions(
+        db,
+        actor.guestId,
+        attemptId,
+        'mira',
+        undefined,
+        { get: async () => undefined },
+      ),
+    ).toEqual(suggestions)
+    expect(
+      await readAttemptSuggestions(
+        db,
+        actor.guestId,
+        attemptId,
+        'mira',
+        undefined,
+        {
+          get: async () => {
+            throw new Error('Redis unavailable')
+          },
+        },
+      ),
+    ).toEqual(suggestions)
+
     const foreign = await identity()
     expect(
       await readAttemptSuggestions(db, foreign.guestId, attemptId, 'mira'),
@@ -899,6 +980,15 @@ describe('S4.6 gameplay repository', () => {
     expect(
       await readAttemptSuggestions(db, actor.guestId, attemptId, 'mira'),
     ).toBeUndefined()
+  })
+
+  it('rejects a Redis command hook between BEGIN and COMMIT', async () => {
+    await expect(
+      transaction(db, async () => assertOutsideTransaction(), {
+        readOnly: true,
+      }),
+    ).rejects.toThrow('Redis command inside PostgreSQL transaction')
+    expect(() => assertOutsideTransaction()).not.toThrow()
   })
 
   it('rejects evidence overflow without a version or receipt (T07/T10)', async () => {

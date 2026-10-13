@@ -1,4 +1,5 @@
 import { once } from 'node:events'
+import { AsyncLocalStorage } from 'node:async_hooks'
 
 import type { PoolClient } from 'pg'
 
@@ -18,11 +19,21 @@ interface PostgreSqlError {
 
 const MAXIMUM_LOCK_TIMEOUT_MS = 1_000
 const MAXIMUM_STATEMENT_TIMEOUT_MS = 3_000
+const transactionContext = new AsyncLocalStorage<boolean>()
+
+export function assertOutsideTransaction(): void {
+  if (transactionContext.getStore() === true)
+    throw new Error('Redis command inside PostgreSQL transaction')
+}
 
 export interface TransactionOptions {
   readonly deadline?: DeadlineContext
   readonly lockTimeoutMs?: number
   readonly readOnly?: boolean
+  readonly role?:
+    | 'loremaster_runtime'
+    | 'loremaster_cache_worker'
+    | 'loremaster_cache_producer'
   readonly statementTimeoutMs?: number
 }
 
@@ -132,85 +143,95 @@ export async function transaction<T>(
   work: (client: PoolClient) => Promise<T>,
   options: TransactionOptions = {},
 ): Promise<T> {
-  const client = await acquireClient(db, options.deadline)
-  let released = false
-  let transactionStarted = false
-  let cancelling = false
-  let cancellationComplete: Promise<void> | undefined
+  return transactionContext.run(true, async () => {
+    const client = await acquireClient(db, options.deadline)
+    let released = false
+    let transactionStarted = false
+    let cancelling = false
+    let cancellationComplete: Promise<void> | undefined
 
-  const cancel = () => {
-    if (released || cancelling) return
-    cancelling = true
-    cancellationComplete = waitForClientEnd(client)
-    client.release(new Error('cancelled'))
-    released = true
-  }
-  options.deadline?.signal.addEventListener('abort', cancel, { once: true })
-
-  try {
-    if (options.deadline !== undefined) throwIfCancelled(options.deadline)
-    await client.query(options.readOnly === true ? 'BEGIN READ ONLY' : 'BEGIN')
-    transactionStarted = true
-    await client.query('SET LOCAL ROLE loremaster_runtime')
-
-    const lockTimeoutMs = boundedTimeout(
-      options.lockTimeoutMs,
-      MAXIMUM_LOCK_TIMEOUT_MS,
-    )
-    const configuredStatementTimeoutMs = boundedTimeout(
-      options.statementTimeoutMs,
-      MAXIMUM_STATEMENT_TIMEOUT_MS,
-    )
-    const statementTimeoutMs =
-      options.deadline === undefined
-        ? configuredStatementTimeoutMs
-        : Math.max(
-            1,
-            Math.min(
-              configuredStatementTimeoutMs,
-              remainingMilliseconds(options.deadline),
-            ),
-          )
-    await client.query("SELECT set_config('lock_timeout', $1, true)", [
-      `${lockTimeoutMs}ms`,
-    ])
-    await client.query("SELECT set_config('statement_timeout', $1, true)", [
-      `${statementTimeoutMs}ms`,
-    ])
-
-    const result = await runWork(work(client), options.deadline)
-
-    if (options.deadline !== undefined) throwIfCancelled(options.deadline)
-    options.deadline?.signal.removeEventListener('abort', cancel)
-    await client.query('COMMIT')
-    transactionStarted = false
-    return result
-  } catch (caught) {
-    const error = timeoutError(caught, options.deadline)
-    if (cancellationComplete !== undefined) {
-      await cancellationComplete
-      throw error
+    const cancel = () => {
+      if (released || cancelling) return
+      cancelling = true
+      cancellationComplete = waitForClientEnd(client)
+      client.release(new Error('cancelled'))
+      released = true
     }
-    if (transactionStarted) {
-      try {
-        await client.query('ROLLBACK')
-        transactionStarted = false
-      } catch (rollbackError) {
-        if (!released) {
-          cancellationComplete = waitForClientEnd(client)
-          client.release(rollbackError as Error)
-          released = true
-          await cancellationComplete
-        }
-        if (error instanceof DatabaseTimeoutError) throw error
-        throw new DatabaseRollbackError({ cause: error })
+    options.deadline?.signal.addEventListener('abort', cancel, { once: true })
+
+    try {
+      if (options.deadline !== undefined) throwIfCancelled(options.deadline)
+      await client.query(
+        options.readOnly === true ? 'BEGIN READ ONLY' : 'BEGIN',
+      )
+      transactionStarted = true
+      await client.query(
+        `SET LOCAL ROLE ${options.role ?? 'loremaster_runtime'}`,
+      )
+
+      const lockTimeoutMs = boundedTimeout(
+        options.lockTimeoutMs,
+        MAXIMUM_LOCK_TIMEOUT_MS,
+      )
+      const configuredStatementTimeoutMs = boundedTimeout(
+        options.statementTimeoutMs,
+        MAXIMUM_STATEMENT_TIMEOUT_MS,
+      )
+      const statementTimeoutMs =
+        options.deadline === undefined
+          ? configuredStatementTimeoutMs
+          : Math.max(
+              1,
+              Math.min(
+                configuredStatementTimeoutMs,
+                remainingMilliseconds(options.deadline),
+              ),
+            )
+      await client.query("SELECT set_config('lock_timeout', $1, true)", [
+        `${lockTimeoutMs}ms`,
+      ])
+      await client.query("SELECT set_config('statement_timeout', $1, true)", [
+        `${statementTimeoutMs}ms`,
+      ])
+
+      const result = await runWork(work(client), options.deadline)
+
+      if (options.deadline !== undefined) throwIfCancelled(options.deadline)
+      if (options.readOnly !== true)
+        options.deadline?.signal.removeEventListener('abort', cancel)
+      await runWork(
+        client.query('COMMIT'),
+        options.readOnly === true ? options.deadline : undefined,
+      )
+      transactionStarted = false
+      return result
+    } catch (caught) {
+      const error = timeoutError(caught, options.deadline)
+      if (cancellationComplete !== undefined) {
+        await cancellationComplete
+        throw error
       }
+      if (transactionStarted) {
+        try {
+          await client.query('ROLLBACK')
+          transactionStarted = false
+        } catch (rollbackError) {
+          if (!released) {
+            cancellationComplete = waitForClientEnd(client)
+            client.release(rollbackError as Error)
+            released = true
+            await cancellationComplete
+          }
+          if (error instanceof DatabaseTimeoutError) throw error
+          throw new DatabaseRollbackError({ cause: error })
+        }
+      }
+      throw error
+    } finally {
+      options.deadline?.signal.removeEventListener('abort', cancel)
+      if (!released) client.release()
     }
-    throw error
-  } finally {
-    options.deadline?.signal.removeEventListener('abort', cancel)
-    if (!released) client.release()
-  }
+  })
 }
 
 export async function lockGuest(

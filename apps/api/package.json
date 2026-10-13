@@ -15,6 +15,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@loremaster/cache": "workspace:*",
+    "@loremaster/queue": "workspace:*",
     "@loremaster/config": "workspace:*",
     "@loremaster/contracts": "workspace:*",
     "@loremaster/database": "workspace:*",

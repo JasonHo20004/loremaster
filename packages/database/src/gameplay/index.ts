@@ -9,4 +9,16 @@ export {
   startCurrentAttempt,
 } from './repository.js'
 export type * from './types.js'
-export { transaction, type TransactionOptions } from './runtime.js'
+export {
+  transaction,
+  assertOutsideTransaction,
+  type TransactionOptions,
+} from './runtime.js'
+export {
+  authorizeAttemptSuggestions,
+  readCurrentPublishedRevision,
+  readPublishedSuggestionIndex,
+  filterSuggestionIndex,
+  type PublishedSuggestionIndex,
+  type PublishedSuggestionCache,
+} from './suggestions.js'

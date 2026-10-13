@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 const WEB_ROOT = path.resolve('apps/web')
 const FORBIDDEN_IMPORTS =
-  /(?:from\s+|import\s*\()['"](?:@loremaster\/(?!contracts(?:['"/]))|.*(?:apps[\\/](?:api|worker|queue-observer)|packages[\\/](?:config|database|domain|observability|queue)))/u
+  /(?:from\s+|import\s*\()['"](?:@loremaster\/(?!contracts(?:['"/]))|.*(?:apps[\\/](?:api|worker|queue-observer)|packages[\\/](?:cache|config|database|domain|observability|queue)))/u
 const PRIVATE_CONTENT = [
   'aster quay',
   'the missing ninth bell',
