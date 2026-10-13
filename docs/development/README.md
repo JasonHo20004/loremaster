@@ -1,5 +1,7 @@
 # Local development
 
+For a Vietnamese overview of the product, architecture, local setup, and remaining work, read the [onboarding and team handoff guide](onboarding-vi.md).
+
 The [S8 container environment contract](s8-container-contract.md) records the
 new file-backed secret inputs and future Compose edge. The runnable workflow
 below remains the host-development path until S8 Compose is accepted.

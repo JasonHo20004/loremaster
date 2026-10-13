@@ -2,6 +2,8 @@
 
 A daily deduction game using original fiction, built as a portfolio for reliable delivery and operations. The MVP is one `WHO` case, a briefing and four evidence levels, guest play, results, participation streaks, regional knowledge, and a daily leaderboard.
 
+New to the project? Read the [Vietnamese onboarding and team handoff guide](docs/development/onboarding-vi.md) for the product, architecture, delivery status, local setup, remaining work, and a proposed split for three developers.
+
 **Status:** S7.0-S7.9 are accepted on `main` through [PR #13](https://github.com/JasonHo20004/loremaster/pull/13). S8.0-S8.2 contracts and S8.3-S8.5 service, operator, and web images are implemented on the S8 delivery branches. The six assembled images passed local behavior, disclosure, and vulnerability checks; hosted review is pending. S8.6-S8.11, including the Compose stack, remain open. The [S7 acceptance record](docs/architecture/s7-acceptance.md) freezes the runtime and S8 handoff.
 
 The [S8 progress checklist](plans/s8-containers.md#progress) is the canonical current-status source. The [S8.0 preflight](plans/s8-preflight.md) records the accepted S7 base and host gates; [S8 image evidence](plans/s8-images-evidence.md) records the local image gates.
