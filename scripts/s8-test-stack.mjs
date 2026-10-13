@@ -1,12 +1,19 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
+
+export function writeSyntheticFixture(path, content) {
+  // Synthetic bind mounts cross host/container UIDs; secrets use separate writers.
+  writeFileSync(path, content, { mode: 0o644 })
+  // Creation modes are filtered by umask and ignored when rewriting existing files.
+  chmodSync(path, 0o644)
+}
 
 export function createTestStack(kind, options = {}) {
   const project = `loremaster-s8-${kind}-${randomUUID().slice(0, 8)}`

@@ -6,7 +6,7 @@ import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { asterQuayContentPack } from '../packages/database/dist/content/fixtures/aster-quay.js'
-import { createTestStack } from './s8-test-stack.mjs'
+import { createTestStack, writeSyntheticFixture } from './s8-test-stack.mjs'
 
 const stack = createTestStack('worker-drain')
 const packFile = join(stack.temporary, 'pack.json')
@@ -53,7 +53,7 @@ async function releaseLock() {
 
 try {
   stack.docker('info')
-  writeFileSync(
+  writeSyntheticFixture(
     packFile,
     JSON.stringify({
       ...asterQuayContentPack,
@@ -61,7 +61,6 @@ try {
       closesAt: `${next}T00:00:00.000Z`,
       slotId: day,
     }),
-    { mode: 0o600 },
   )
   stack.wrapper('bootstrap')
   stack.wrapper('import')

@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve, join } from 'node:path'
 import process from 'node:process'
 import { asterQuayContentPack } from '../packages/database/dist/content/fixtures/aster-quay.js'
-import { createTestStack } from './s8-test-stack.mjs'
+import { createTestStack, writeSyntheticFixture } from './s8-test-stack.mjs'
 
 const override = resolve('deploy/compose/t25.override.yaml')
 const stack = createTestStack('e2e', {
@@ -29,7 +29,7 @@ const result = { project: stack.project, slot: first, passed: false }
 
 try {
   stack.docker('info')
-  writeFileSync(clockFile, `@${first} 12:00:00\n`, { mode: 0o600 })
+  writeSyntheticFixture(clockFile, `@${first} 12:00:00\n`)
   stack.run('docker', [
     'build',
     '--pull=false',
@@ -59,7 +59,7 @@ try {
     },
   ]
   for (const pack of packs) {
-    writeFileSync(packFile, JSON.stringify(pack), { mode: 0o600 })
+    writeSyntheticFixture(packFile, JSON.stringify(pack))
     stack.wrapper('import', '--dry-run')
     stack.wrapper('import')
   }

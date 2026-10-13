@@ -4,7 +4,7 @@ import { resolve, join } from 'node:path'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { asterQuayContentPack } from '../packages/database/dist/content/fixtures/aster-quay.js'
-import { createTestStack } from './s8-test-stack.mjs'
+import { createTestStack, writeSyntheticFixture } from './s8-test-stack.mjs'
 
 const override = resolve('deploy/compose/t25.override.yaml')
 const stack = createTestStack('t25', {
@@ -48,8 +48,8 @@ function clockMs() {
 
 try {
   stack.docker('info')
-  writeFileSync(clockFile, `@${day} 23:30:00\n`, { mode: 0o600 })
-  writeFileSync(
+  writeSyntheticFixture(clockFile, `@${day} 23:30:00\n`)
+  writeSyntheticFixture(
     packFile,
     JSON.stringify({
       ...asterQuayContentPack,
@@ -57,7 +57,6 @@ try {
       closesAt: `${next}T00:00:00.000Z`,
       slotId: day,
     }),
-    { mode: 0o400 },
   )
   stack.run('docker', [
     'build',
