@@ -155,7 +155,7 @@ try {
   const signaledAt = await watcherEvent('SIGNALED', 35_000)
   await stack.until(
     'signaled worker exit',
-    () => !stack.inspect('worker').State.Running,
+    () => !JSON.parse(stack.docker('inspect', workerId))[0].State.Running,
     16_000,
   )
   const stopped = JSON.parse(stack.docker('inspect', workerId))[0]
