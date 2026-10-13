@@ -6,6 +6,7 @@ import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { asterQuayContentPack } from '../packages/database/dist/content/fixtures/aster-quay.js'
+import { drainWatcherScript } from './s8-drain-barrier.mjs'
 import { createTestStack, writeSyntheticFixture } from './s8-test-stack.mjs'
 
 const stack = createTestStack('worker-drain')
@@ -17,6 +18,23 @@ const next = new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000)
   .slice(0, 10)
 const result = { project: stack.project, passed: false }
 let lock
+let watcher
+let watcherOutput = ''
+let watcherFailed = false
+
+async function watcherEvent(event, timeoutMs) {
+  const deadline = performance.now() + timeoutMs
+  while (performance.now() < deadline) {
+    const match = watcherOutput.match(
+      new RegExp(`^${event}(?: (\\d+))?\\r?\\n`, 'm'),
+    )
+    if (match) return match[1] === undefined ? undefined : Number(match[1])
+    if (watcherFailed || watcherOutput.includes('ERROR'))
+      throw Error('Worker drain watcher failed')
+    await delay(25)
+  }
+  throw Error(`Worker drain watcher ${event} timed out`)
+}
 
 function metric(name) {
   const response = stack.serviceHttp('observer', '/metrics')
@@ -72,9 +90,15 @@ try {
     ),
     1,
   )
-  stack.compose('up', '-d', 'api', 'observer')
-  await stack.health('api')
+  // Let the worker become ready before the API can produce its first warm job.
+  stack.compose('up', '-d', 'worker', 'observer')
+  await stack.health('worker')
   await stack.health('observer')
+  const workerId = stack.inspect('worker').Id
+  assert.equal(stack.inspect('worker').Config.WorkingDir, '/app')
+  // The in-container signal must leave the test worker stopped for inspection.
+  stack.docker('update', '--restart=no', workerId)
+  assert.equal(stack.inspect('worker').HostConfig.RestartPolicy.Name, 'no')
   const args = [
     'compose',
     '-p',
@@ -105,21 +129,43 @@ try {
     () => lockCount() === 1,
     15_000,
   )
-  stack.compose('up', '-d', 'worker')
-  await stack.health('worker')
-  await stack.until(
-    'active warm job blocked by PostgreSQL',
-    () => metric('active') > 0,
-    20_000,
+  watcher = spawn(
+    'docker',
+    [
+      'exec',
+      workerId,
+      '/usr/local/bin/node',
+      '--input-type=module',
+      '-e',
+      drainWatcherScript(),
+    ],
+    { env: stack.environment, stdio: ['ignore', 'pipe', 'ignore'] },
   )
-  const workerId = stack.inspect('worker').Id
-  const started = performance.now()
-  stack.compose('stop', '-t', '15', 'worker')
-  const drainMs = Math.round(performance.now() - started)
+  watcher.stdout.on('data', (chunk) => {
+    watcherOutput = (watcherOutput + chunk.toString()).slice(-1024)
+  })
+  watcher.on('error', () => {
+    watcherFailed = true
+  })
+  watcher.on('exit', (code) => {
+    if (code !== 0) watcherFailed = true
+  })
+  await watcherEvent('ARMED', 10_000)
+  stack.compose('up', '-d', 'api')
+  const signaledAt = await watcherEvent('SIGNALED', 35_000)
+  await stack.until(
+    'signaled worker exit',
+    () => !stack.inspect('worker').State.Running,
+    16_000,
+  )
   const stopped = JSON.parse(stack.docker('inspect', workerId))[0]
+  const drainMs = Date.parse(stopped.State.FinishedAt) - signaledAt
   assert.equal(stopped.State.ExitCode, 0)
   assert(!stopped.State.OOMKilled)
-  assert(drainMs <= 16_000, `Active worker drain took ${drainMs} ms`)
+  assert(
+    drainMs >= 0 && drainMs <= 16_000,
+    `Active worker drain took ${drainMs} ms`,
+  )
   await releaseLock()
   stack.compose('start', 'worker')
   const recoveryMs = await stack.health('worker')
@@ -129,10 +175,22 @@ try {
     () => metric('completed') >= 1,
     45_000,
   )
-  assert.equal(
-    Number(stack.sql('SELECT count(*) FROM loremaster.attempts;')),
-    0,
-  )
+  for (const table of [
+    'attempts',
+    'guesses',
+    'command_receipts',
+    'attempt_finalizations',
+    'participation_days',
+    'knowledge_contributions',
+    'regional_knowledge',
+    'leaderboard_entries',
+  ])
+    assert.equal(
+      Number(stack.sql(`SELECT count(*) FROM loremaster.${table};`)),
+      0,
+      `Warm job wrote gameplay effects to ${table}`,
+    )
+  result.signaledAt = new Date(signaledAt).toISOString()
   result.drainMs = drainMs
   result.recoveryMs = recoveryMs
   result.replayMs = replayMs
@@ -142,6 +200,7 @@ try {
   result.error = error instanceof Error ? error.message : String(error)
   process.exitCode = 1
 } finally {
+  if (watcher?.exitCode === null) watcher.kill()
   try {
     await releaseLock()
   } catch {
