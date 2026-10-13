@@ -556,7 +556,17 @@ try {
     const page = await http('/')
     const asset = page.text.match(/src="(\/assets\/[^"]+\.js)"/u)?.[1]
     assert(asset)
-    assert.match((await http(asset)).headers['cache-control'], /immutable/u)
+    const servedAsset = await http(asset)
+    assert.match(servedAsset.headers['cache-control'], /immutable/u)
+    const servedMap = await http(asset + '.map')
+    assert.equal(servedMap.status, 200)
+    for (const body of [page.text, servedAsset.text, servedMap.text])
+      assert(
+        !/(?:content\/fixtures|answerentityid|database_url|postgresql:\/\/|redis:\/\/|-----BEGIN [A-Z ]*PRIVATE KEY-----)/iu.test(
+          body,
+        ),
+        'Private marker in served public response',
+      )
     const contentType = ['Content-Type', 'application/json']
     const good = await http(
       '/api/v1/session',

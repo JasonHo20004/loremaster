@@ -16,6 +16,8 @@ Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and fu
 | Redis outage or poison/replayed cache job | Synchronous PG truth; fail-fast cache path; versioned validated job, bounded retries/retention, persistence/noeviction | [S7 acceptance](../architecture/s7-acceptance.md): strict contracts, real Redis failure/replay/drain, two-replica limiting and stored-data disclosure checks |
 | Cache content or queue privileges crossing process boundaries | Strict server-only envelope and public projection; worker reads published/eligible views; API read-only cache port; separate ACL identities and reviewed script hashes | S7.1 contracts, package boundary and database-role tests; [ACL and budget contract](../../ops/redis/README.md); real Redis denials and reviewed source hashes verified locally |
 | Cloud origin bypass, runaway cost or failed destroy | Origin restriction; admission and independent qualified cleanup; separate provisioning/cleanup permissions | S11/S12 admission rejection, direct-origin denial and residual inventory |
+| Test clock influencing production or synthesizing an unstarted attempt | Disposable, separately built PostgreSQL-only faketime layer; read-only clock mount; real monotonic time; no test control in runtime image contexts | S8 T25 evidence and [local acceptance map](../architecture/s8-acceptance.md) |
+| Private authored content or tools surviving in an image layer | All final image exports and layers inspected; public files and source maps scanned; allowlisted tools, non-root UIDs and no unapproved severe finding | `pnpm test:images`, [S8 acceptance map](../architecture/s8-acceptance.md) |
 
 ## Initial API bounds for S5
 

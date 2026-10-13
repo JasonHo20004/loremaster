@@ -10,6 +10,8 @@ lerna-debug.log*
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Runtime data
+deploy/compose/local-secrets/
+deploy/compose/local-content/
 pids
 *.pid
 *.seed

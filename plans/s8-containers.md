@@ -494,12 +494,12 @@ review before merge. Do not begin a dependent slice from an unreviewed tree.
 - [x] S8.3 Build hardened API, worker, and observer images (local gates PASS; hosted review pending)
 - [x] S8.4 Build migration and content-import operator images (local gates PASS; hosted review pending)
 - [x] S8.5 Build the public web gateway image (local gates PASS; hosted review pending)
-- [ ] S8.6 Add PostgreSQL and Redis data-service operations
-- [ ] S8.7 Compose the isolated local stack
-- [ ] S8.8 Prove probes, shutdown, restart, and dependency recovery
-- [ ] S8.9 Run clean-volume full-stack E2E and close T25
-- [ ] S8.10 Run final deployed-artifact and supply-chain acceptance
-- [ ] S8.11 Record acceptance and hand off to S9
+- [x] S8.6 Add PostgreSQL and Redis data-service operations (focused local gate PASS; hosted review pending)
+- [x] S8.7 Compose the isolated local stack (focused local gate PASS; hosted review pending)
+- [x] S8.8 Prove probes, shutdown, restart, and dependency recovery (focused local gate PASS; hosted review pending)
+- [x] S8.9 Run clean-volume full-stack E2E and close T25 (focused local gates PASS; hosted review pending)
+- [x] S8.10 Run final deployed-artifact and supply-chain acceptance (focused local gate PASS; hosted review pending)
+- [ ] S8.11 Record acceptance and hand off to S9 (acceptance map written; clean-checkout CI and independent review pending)
 
 ## Plan mutation protocol
 
@@ -533,3 +533,27 @@ stages. The new `proxy-addr` and `source-map-js` advisories required patched
 lockfile overrides; no exception was granted. S8.6 still owns durable data
 services and secret mount operations; S8.7 owns Compose. Rollback retains the
 accepted host commands and removes only the S8 image build path.
+
+2026-10-12: the user requested S8.6-S8.7 together. They share one Compose
+manifest and bootstrap/test harness, so the two slices remain one reviewable
+change. Docker Desktop mounted file-sourced Compose secrets with effective
+mode `0555`; that invalidated direct runtime mounts under the S8.2 secret-file
+contract. An explicit networkless preparation job now reads Compose secrets
+and copies them to service-specific named credential volumes at mode `0400`
+with the process UID. The importer pack uses the same explicit copy boundary.
+Bootstrap now orders credential preparation, data service health, forward
+migration, and login-role grants before normal application startup. The
+[Compose evidence](s8-compose-evidence.md) records the local gates and
+effective inspections. Rollback stops only the named Compose project while
+retaining developer data and credential volumes; the uniquely named test
+projects remove only their own volumes. Independent review remains pending.
+
+2026-10-12: the user requested S8.8-S8.11 together in the shared checkout while
+S8.6-S8.7 were still uncommitted. The four exit slices share one lifecycle,
+clean-volume browser/T25, final-artifact and acceptance evidence chain; this
+request supersedes the serial branch handoff for this delivery. The T25
+PostgreSQL-only test image and override are outside every runtime build context.
+Only the disposable test project's named volumes and image are removed.
+Production Compose, operator ordering and cloud/registry admission are not
+changed. Hosted CI and independent review remain gates before the S8 checklist
+can be marked accepted. Reviewer: pending independent review.

@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: ${LOREMASTER_T25_POSTGRES_IMAGE:?Build the disposable T25 image first}
+    environment:
+      FAKETIME_TIMESTAMP_FILE: /run/t25/clock
+      FAKETIME_NO_CACHE: '1'
+      FAKETIME_DONT_FAKE_MONOTONIC: '1'
+      FAKETIME_DISABLE_SHM: '1'
+    volumes:
+      - type: bind
+        source: ${LOREMASTER_T25_TIME_FILE:?Set the disposable clock file}
+        target: /run/t25/clock
+        read_only: true
