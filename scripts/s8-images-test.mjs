@@ -7,6 +7,10 @@ import { readFileSync } from 'node:fs'
 import { request } from 'node:http'
 import { setTimeout as delay } from 'node:timers/promises'
 import process from 'node:process'
+import {
+  removeTrackedContainer,
+  startTrackedContainer,
+} from './s8-image-resources.mjs'
 
 const scope = process.argv[2] ?? 'all'
 if (!['all', 'node', 'operator', 'web'].includes(scope))
@@ -56,9 +60,7 @@ function createVolume(suffix) {
 }
 function start(name, args) {
   const full = id + '-' + name
-  docker(['run', '--detach', '--name', full, ...args])
-  containers.push(full)
-  return full
+  return startTrackedContainer(containers, full, args, docker)
 }
 async function eventually(fn, ms = 30000) {
   const end = Date.now() + ms
@@ -716,8 +718,7 @@ try {
 } finally {
   const failures = []
   for (const container of containers.reverse())
-    if (check(['rm', '--force', container]).status !== 0)
-      failures.push(container)
+    if (!removeTrackedContainer(container, check)) failures.push(container)
   for (const network of networks.reverse())
     if (check(['network', 'rm', network]).status !== 0) failures.push(network)
   for (const volume of volumes.reverse())

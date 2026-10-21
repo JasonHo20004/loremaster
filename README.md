@@ -4,7 +4,7 @@ A daily deduction game using original fiction, built as a portfolio for reliable
 
 New to the project? Read the [Vietnamese onboarding and team handoff guide](docs/development/onboarding-vi.md) for the product, architecture, delivery status, local setup, remaining work, and a proposed split for three developers.
 
-**Status:** S7.0-S7.9 are accepted on `main` through [PR #13](https://github.com/JasonHo20004/loremaster/pull/13). S8.0-S8.10 local container work is implemented and its focused image, Compose, lifecycle, browser, T25, and supply-chain gates pass. S8.11 acceptance awaits clean-checkout hosted CI and independent review. The [S7 acceptance record](docs/architecture/s7-acceptance.md) freezes the runtime and S8 handoff.
+**Status (2026-10-21):** S1–S7 are accepted. S8.0–S8.10 merged through [PR #16](https://github.com/JasonHo20004/loremaster/pull/16), with [passing main CI](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326). The [independent S8 review](docs/architecture/s8-review.md) records corrections and peer review; S8.11 awaits final correction CI. The [S8 acceptance record](docs/architecture/s8-acceptance.md) defines the local Compose baseline and S9 handoff. Kubernetes/GitOps, full observability and AWS remain S9–S12 work.
 
 The [S8 progress checklist](plans/s8-containers.md#progress) is the canonical current-status source. The [S8.0 preflight](plans/s8-preflight.md) records the accepted S7 base and host gates; [S8 image evidence](plans/s8-images-evidence.md), [Compose evidence](plans/s8-compose-evidence.md), and the [local acceptance map](docs/architecture/s8-acceptance.md) record the gates. [Compose instructions](docs/development/s8-compose.md) cover the isolated stack.
 

@@ -9,6 +9,16 @@ const exceptionFile = fileURLToPath(
   new URL('../ops/s8/vulnerability-exceptions.json', import.meta.url),
 )
 
+function calendarDate(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value))
+    return Number.NaN
+  const timestamp = Date.parse(`${value}T00:00:00Z`)
+  return Number.isFinite(timestamp) &&
+    new Date(timestamp).toISOString().slice(0, 10) === value
+    ? timestamp
+    : Number.NaN
+}
+
 export function evaluateVulnerabilities(
   report,
   exceptions,
@@ -31,8 +41,8 @@ export function evaluateVulnerabilities(
       violations.push(`${finding.VulnerabilityID} in ${finding.PkgName}`)
       continue
     }
-    const approved = Date.parse(`${exception.approvedOn}T00:00:00Z`)
-    const expires = Date.parse(`${exception.expiresOn}T00:00:00Z`)
+    const approved = calendarDate(exception.approvedOn)
+    const expires = calendarDate(exception.expiresOn)
     if (
       !exception.owner ||
       !exception.reviewer ||
@@ -40,6 +50,8 @@ export function evaluateVulnerabilities(
       !exception.compensatingControl ||
       !Number.isFinite(approved) ||
       !Number.isFinite(expires) ||
+      !Number.isFinite(today.getTime()) ||
+      today.getTime() < approved ||
       expires <= approved ||
       expires - approved > 30 * 86_400_000 ||
       today.getTime() >= expires

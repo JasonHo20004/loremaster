@@ -3,11 +3,14 @@
 S8 packages the accepted S7 runtime for a local, isolated Docker Compose stack.
 The source of truth for slice status is the [S8 plan](../../plans/s8-containers.md).
 The commands below write machine-readable local results under `.cache/`; a
-failing or missing result does not count as acceptance. Hosted clean-checkout CI
-and independent review remain release gates until recorded here with links.
+failing or missing result does not count as acceptance. S8.0–S8.10 merged in
+[PR #16](https://github.com/JasonHo20004/loremaster/pull/16); [main CI](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326)
+passed on `c784660f339ee9ba792e28e4535cf2387fa6b656`. The
+[2026-10-21 independent review](s8-review.md) covers the full S8 scope and
+records peer-reviewed corrections. Final correction CI remains the S8.11 gate.
 The CI image-validation job uploads `s8-acceptance-evidence`, including the
 source-commit image IDs, context digests, reproducibility result, per-image
-SBOMs, filesystem inventories, scanner summary, lifecycle results, browser
+SBOMs, filesystem inventories, raw per-image scanner reports, scanner summary, lifecycle results, browser
 result, and T25 result. The six local image IDs are generated after checkout
 so their embedded revision labels match that exact commit.
 
@@ -41,13 +44,18 @@ suite passed 404 tests. The packaged Chromium suite passed all three journeys,
 and the T25 effect counts were zero in all eight tables before and after
 midnight. Every disposable test project reported `teardown: PASS`.
 
-The lifecycle result measured PostgreSQL recovery at 5.544 seconds and API
+The historical 2026-10-12 lifecycle result measured PostgreSQL recovery at 5.544 seconds and API
 readiness recovery at 0.458 seconds; Redis recovery at 5.975 seconds, worker
 readiness at 0.564 seconds, and observer readiness at 0.811 seconds. API
 SIGTERM closed an in-flight connection and exited zero in 1.162 seconds;
 idle worker SIGTERM exited zero in 2.463 seconds. The separately held active
 warm job drained in 0.614 seconds, then replayed to one completed job after
-restart. These are observations from the local run, not S9 timeout budgets.
+restart. These are historical observations, not S9 timeout budgets or proof of
+the revised API drain gate. The independent review found that gateway buffering
+could hide a pending API request. The revised gate connects privately to the
+API, waits for `100 Continue`, and records `requestAccepted` and `requestClosed`.
+Compose declares API/worker grace of 20s and observer/web grace of 15s; lifecycle
+checks the effective Docker `StopTimeout` and exercises default `stop`.
 
 The local edge uses `http://localhost:8080` and exact gateway address
 `172.30.80.2/32`; production mode rejects HTTP and requires its secure cookie
@@ -80,3 +88,27 @@ budgets. S9 adds kind, Helm, Argo CD, Kubernetes policy and drift/recovery
 evidence. Compose is local; no registry publication, Kubernetes rollout, or
 cloud deployment is part of S8. S12 still owns admitted shared-cache isolation
 in AWS.
+
+## Final review and S9 handoff
+
+The [independent review](s8-review.md) maps each finding to its correction and
+regression gate. Baseline evidence was inspected directly from the hosted
+artifact; fresh final-head CI must certify the corrected source. Accessibility
+has both the five-journey Chromium shell/axe suite (Vite preview with mocked API)
+and packaged mobile keyboard/focus checks (real gateway and database).
+
+S9 must preserve these reviewed inputs:
+
+| Contract | Source |
+| --- | --- |
+| Six exact source/image/context identities and reproducibility | Final CI `s8-build-results.json`, `s8-reproducibility.json`; OCI source revision must equal the CI checkout |
+| Numeric UID/GID, private ports, `/tmp`, entrypoints and minimal files | `deploy/images/contracts.json`, per-image file inventories and SBOMs |
+| Networks, effective CPU/memory/PID/FD bounds and shutdown grace | `deploy/compose/compose.yaml`; only web `127.0.0.1:8080`, exact trusted gateway `/32` |
+| Secret files and role boundaries | `docs/development/s8-container-contract.md`; prepared read-only per-service credential volumes |
+| Explicit migrate/import/bootstrap; persistence and recovery | `docs/development/s8-compose.md`; no operator work during application startup |
+| Dependency-independent liveness; process-specific readiness and measured drain | Final CI `s8-lifecycle.json` and `s8-worker-drain.json`; do not infer budgets from historical gateway-buffered measurements |
+| B13, vulnerability/secret admission and T25 | Raw scanner reports and summary, public inventory, `s8-t25.json` with eight zero-effect tables and successful exact teardown |
+
+There is no registry release digest to promote yet. CI image IDs identify
+unpublished, source-labeled local artifacts; S9 must define and verify its own
+admitted immutable promotion path. S8 acceptance does not authorize AWS.

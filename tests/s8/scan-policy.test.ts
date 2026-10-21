@@ -51,4 +51,49 @@ describe('S8 vulnerability admission', () => {
         .violations,
     ).toHaveLength(1)
   })
+
+  it('does not admit an exception before its approval date', () => {
+    const exception = {
+      package: 'libexample',
+      cve: 'CVE-2026-1234',
+      owner: 'release-owner',
+      reviewer: 'security-reviewer',
+      compensatingControl: 'Feature is unreachable',
+      approvedOn: '2026-10-25',
+      expiresOn: '2026-11-01',
+    }
+    expect(
+      evaluateVulnerabilities(report, [exception], new Date('2026-10-21'))
+        .violations,
+    ).toHaveLength(1)
+    expect(
+      evaluateVulnerabilities(report, [exception], new Date('2026-10-25'))
+        .violations,
+    ).toEqual([])
+  })
+
+  it.each([
+    ['2026-02-29', '2026-03-10'],
+    ['2026-02-28', '2026-02-30'],
+    ['2026-2-28', '2026-03-10'],
+    ['2026-02-28', '2026-3-10'],
+  ])('rejects invalid calendar dates %s to %s', (approvedOn, expiresOn) => {
+    expect(
+      evaluateVulnerabilities(
+        report,
+        [
+          {
+            package: 'libexample',
+            cve: 'CVE-2026-1234',
+            owner: 'release-owner',
+            reviewer: 'security-reviewer',
+            compensatingControl: 'Feature is unreachable',
+            approvedOn,
+            expiresOn,
+          },
+        ],
+        new Date('2026-03-01'),
+      ).violations,
+    ).toHaveLength(1)
+  })
 })

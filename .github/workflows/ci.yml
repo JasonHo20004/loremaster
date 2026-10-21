@@ -55,6 +55,12 @@ jobs:
           pnpm test:s8:secrets
           pnpm test:s8:proxy-contract
 
+      - name: Install Chromium for accessibility checks
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verify web accessibility and responsive shell
+        run: pnpm --filter @loremaster/web test:e2e
+
       - name: Verify clean PostgreSQL migrations and constraints
         run: pnpm test:database
 
@@ -127,6 +133,7 @@ jobs:
             .cache/s8-build-results.json
             .cache/s8-reproducibility.json
             .cache/s8-evidence/summary.json
+            .cache/s8-evidence/*-scan.json
             .cache/s8-evidence/*-sbom.cdx.json
             .cache/s8-evidence/*-files.txt
             .cache/s8-lifecycle.json

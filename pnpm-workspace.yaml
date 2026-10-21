@@ -9,6 +9,7 @@ overrides:
   brace-expansion: 5.0.12
   proxy-addr: 2.0.8
   source-map-js: 1.2.2
+  vite: 8.3.3
 
 catalog:
   typescript: 6.0.3
