@@ -7,7 +7,17 @@ failing or missing result does not count as acceptance. S8.0–S8.10 merged in
 [PR #16](https://github.com/JasonHo20004/loremaster/pull/16); [main CI](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326)
 passed on `c784660f339ee9ba792e28e4535cf2387fa6b656`. The
 [2026-10-21 independent review](s8-review.md) covers the full S8 scope and
-records peer-reviewed corrections. Final correction CI remains the S8.11 gate.
+records peer-reviewed corrections. **S8.11 accepted on 2026-10-21:** the
+[corrected-source CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085)
+passed all four jobs on `f6bf7d38d0eac2a4df3f4e8b6fd5f367f9c9cbf3`.
+That SHA is the workflow's PR head. Actions checked out synthetic merge
+`72383ddb6149ba1b315a45a3422f6653759b1d44`, which is the OCI source revision
+in all six images. Git verified both commits have identical complete source
+tree `a464c9abd7142a4e47da89e76622f72dd86434a7`; the snapshot records both
+identities. Final delivery runs must likewise use their actual checkout SHA.
+[PR #18](https://github.com/JasonHo20004/loremaster/pull/18) records delivery;
+its [checks](https://github.com/JasonHo20004/loremaster/pull/18/checks) must pass
+again on the final documentation head before merge.
 The CI image-validation job uploads `s8-acceptance-evidence`, including the
 source-commit image IDs, context digests, reproducibility result, per-image
 SBOMs, filesystem inventories, raw per-image scanner reports, scanner summary, lifecycle results, browser
@@ -92,10 +102,25 @@ in AWS.
 ## Final review and S9 handoff
 
 The [independent review](s8-review.md) maps each finding to its correction and
-regression gate. Baseline evidence was inspected directly from the hosted
-artifact; fresh final-head CI must certify the corrected source. Accessibility
+regression gate. Both baseline and corrected-source hosted artifacts were
+downloaded and inspected. The [durable JSON snapshot](s8-evidence-2026-10-21.json)
+preserves six exact image IDs/context digests, scan summaries/SBOM hashes,
+reproducibility, lifecycle, worker drain, browser and T25 results from correction
+CI run `39535223085`, artifact `12317790332`. The raw scanner reports and full
+SBOMs/inventories remain in that run's 14-day artifact; the snapshot preserves
+reviewable results after retention expires. IDs are source-specific local image
+identities, not registry release digests. Accessibility
 has both the five-journey Chromium shell/axe suite (Vite preview with mocked API)
 and packaged mobile keyboard/focus checks (real gateway and database).
+
+Corrected hosted lifecycle observations: PostgreSQL recovery 5.606s and API
+readiness 0.257s; Redis recovery 5.049s, worker readiness 0.248s, observer
+readiness 0.313s. The acknowledged pending API request closed and the API exited
+zero after 10.220s, within its declared 20s grace. The active worker drained in
+1.015s and replay completed in 0.204s with exactly one completed job. All
+disposable projects reported successful teardown, and T25 recorded zero effects
+in all eight tables on both sides of UTC midnight. These are observations from
+this CI host; S9 must preserve the budget contracts and remeasure on its cluster.
 
 S9 must preserve these reviewed inputs:
 

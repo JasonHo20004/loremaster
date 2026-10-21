@@ -15,7 +15,7 @@ Các điểm cần nhớ ngay:
 - Monorepo TypeScript: React/Vite, Express, PostgreSQL, Redis/BullMQ.
 - PostgreSQL giữ dữ liệu chính thức. Redis chỉ giữ dữ liệu có thể tái tạo; worker chỉ làm nóng cache.
 - Domain, database, API và web đã có triển khai và hồ sơ nghiệm thu S1–S6. S7.0–S7.9 đã được merge vào `main` qua PR #13.
-- S8.0–S8.10 đã merge qua PR #14, #15 và #16: sáu image, data services, Compose, lifecycle, browser, B13 và T25 đều có hosted CI. S8.11 đã review độc lập; CI cuối của bản sửa là điều kiện nghiệm thu.
+- S8 đã nghiệm thu qua [PR #18](https://github.com/JasonHo20004/loremaster/pull/18): review độc lập, bản sửa và [CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085) PASS đủ bốn job. Hồ sơ giữ image IDs/context digests, scans, lifecycle, browser, B13 và T25; CI được chạy lại trên commit tài liệu cuối trước merge.
 - Nhóm mới cần chạy lại stack local theo [Compose guide](s8-compose.md), đọc hồ sơ nghiệm thu rồi bắt đầu S9. Kubernetes/GitOps, full observability và AWS còn thuộc các giai đoạn sau.
 
 ## 2. Sản phẩm và phạm vi
@@ -147,7 +147,7 @@ Khi Redis hỏng, suggestions quay về PostgreSQL, gameplay vẫn dùng Postgre
 
 Mã tồn tại trong thư mục, test được hồ sơ ghi là PASS và thay đổi đã merge vào `main` là ba thông tin khác nhau. Không dùng số lượng checkbox để suy ra tỷ lệ hoàn thành hay kết luận sẵn sàng production.
 
-Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge ngày 13/10 và [main CI](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326) PASS cả bốn job. Review độc lập phát hiện và sửa các lỗi gate/teardown/secret-bootstrap/import-bound/shutdown; CI mới phải xác minh bản sửa, không lấy run lịch sử thay thế.
+Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge ngày 13/10 và [main CI](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326) PASS cả bốn job. Review độc lập phát hiện và sửa các lỗi gate/teardown/secret-bootstrap/import-bound/shutdown; Correction CI run 39535223085 đã xác minh bản sửa; PR #18 chạy lại CI trên commit tài liệu cuối.
 
 | Giai đoạn  | Phần việc                                                      | Trạng thái có thể kết luận từ repository                                                                                                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -161,7 +161,7 @@ Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge
 | S7.7–S7.9  | Probes, observer, composed failure tests, bàn giao             | Đã merge [PR #13](https://github.com/JasonHo20004/loremaster/pull/13) tại `e41cab1`; [hồ sơ S7](../architecture/s7-acceptance.md) giữ bằng chứng runtime                                                      |
 | S8.0–S8.5  | Preflight, file secrets, contract và sáu container images      | Đã merge [PR #14](https://github.com/JasonHo20004/loremaster/pull/14) và [PR #15](https://github.com/JasonHo20004/loremaster/pull/15); [image evidence](../../plans/s8-images-evidence.md) ghi các gate local |
 | S8.6–S8.10 | Data services, Compose, recovery và full-stack acceptance      | Đã merge PR #16; main CI PASS, có artifact lifecycle/browser/T25/SBOM; review cuối bổ sung các bản sửa robustness                                                                                             |
-| S8.11      | Review độc lập, hồ sơ nghiệm thu và bàn giao S9                | Review và tài liệu đã có; [hồ sơ S8](../architecture/s8-acceptance.md) ghi gate CI cuối và trạng thái nghiệm thu                                                                                              |
+| S8.11      | Review độc lập, hồ sơ nghiệm thu và bàn giao S9                | Đã nghiệm thu: review và correction CI PASS; PR #18 ghi final-head CI/delivery; [hồ sơ S8](../architecture/s8-acceptance.md) giữ bằng chứng                                                                   |
 | S9         | Local kind, Helm, Argo CD, GitOps                              | Lộ trình; chưa có triển khai trong checkout                                                                                                                                                                   |
 | S10        | Observability toàn hệ thống và release gate                    | Lộ trình; probes/metrics S7 chưa thay thế giai đoạn này                                                                                                                                                       |
 | S11–S12    | AWS bootstrap, cleanup qualification, lab và teardown          | Lộ trình có điều kiện; cloud đang DENIED trong hồ sơ admission                                                                                                                                                |

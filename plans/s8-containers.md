@@ -14,7 +14,9 @@ and S7 gates. S8.0–S8.10 merged in PRs #14, #15 and #16; [main CI on
 passed all four jobs. Candidate roots remain rejected wholesale; six minimal
 scratch final images have separate assembled-image admission evidence.
 The [2026-10-21 independent review](../docs/architecture/s8-review.md) records
-final corrections and peer review. S8.11 still requires final correction CI.
+final corrections and peer review. [Correction CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085)
+passed all four jobs on `f6bf7d3`; [PR #18](https://github.com/JasonHo20004/loremaster/pull/18)
+records S8.11 delivery and its final-head checks.
 
 `deploy/images` and `deploy/compose` now contain the local runtime, test
 harnesses and deployed-artifact gates. `platform/` and `infra/` remain future
@@ -500,7 +502,7 @@ review before merge. Do not begin a dependent slice from an unreviewed tree.
 - [x] S8.8 Prove probes, shutdown, restart, and dependency recovery (merged; hosted gates PASS; final review strengthens drain evidence)
 - [x] S8.9 Run clean-volume full-stack E2E and close T25 (merged; hosted gates PASS)
 - [x] S8.10 Run final deployed-artifact and supply-chain acceptance (merged; hosted gates PASS)
-- [ ] S8.11 Record acceptance and hand off to S9 (independent review complete; final correction CI pending)
+- [x] S8.11 Record acceptance and hand off to S9 (independent review and correction CI PASS; PR #18 records final delivery checks)
 
 ## Plan mutation protocol
 
@@ -570,4 +572,8 @@ raw scanner reports and complete labeled teardown checks strengthen evidence.
 No dependency-edge or gameplay change is introduced. Reviewers: independent
 AI code/delivery, security and database reviewers, with peer review of fixes.
 Rollback reverts these bounded corrections and documentation; developer data
-and unpublished images remain local. Final-head hosted CI gates S8.11.
+and unpublished images remain local. Correction CI run `39535223085` passed all
+four jobs on `f6bf7d3`; artifact `12317790332` was downloaded and verified,
+including six raw scanner reports. The [durable snapshot](../docs/architecture/s8-evidence-2026-10-21.json)
+preserves source/image/context identities, scans and runtime results beyond
+artifact retention. PR #18 records final documentation-head CI and delivery.

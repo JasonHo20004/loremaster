@@ -16,7 +16,7 @@ reviewed scanner, Compose, lifecycle and operator-input changes.
 | Container security | Six scratch final images, executable/library/package inventory, non-root users, file secrets/redaction, gateway Origin and forwarded IP, private networks, privileges, resources and scanner admission | Corrections below peer-reviewed; no HIGH/CRITICAL code finding; dynamic image admission remains mandatory |
 | Database/operator | Migration/import separation, database login/group roles, Redis ACLs/persistence, bootstrap credentials, bounded import, dependency recovery, T25 and exact teardown | Corrections below peer-reviewed; PostgreSQL remains authoritative |
 | Accessibility | Unchanged S6 UI semantics, route/gameplay focus, skip link, keyboard combobox/dialog, live announcements, mobile reflow, reduced motion, forced colors and gateway CSP | No S8 regression identified; recurring Chromium/axe gate added, plus packaged mobile keyboard/focus assertions |
-| Acceptance delivery | Baseline CI/artifact inspection, stale status reconciliation, exact-source final CI and S9 handoff | Final-head CI must pass before this candidate is accepted |
+| Acceptance delivery | Baseline and corrected CI/artifact inspection, stale status reconciliation, exact-source CI and S9 handoff | Correction CI PASS on `f6bf7d3`; PR #18 tracks final documentation-head checks and delivery |
 
 ## Findings and corrections
 
@@ -61,8 +61,25 @@ real PostgreSQL/Redis and gateway behavior, including mobile skip-link and
 focus checks; the two scopes must not be conflated.
 
 Final correction evidence and its exact CI source are recorded in the
-[S8 acceptance map](s8-acceptance.md). A green historical run, a successful local
-command, or this review alone cannot replace final-head clean-checkout hosted
-CI. Acceptance applies to the local Compose profile. S9 owns Kubernetes/GitOps;
+[S8 acceptance map](s8-acceptance.md). The [corrected-source CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085)
+passed all four jobs on `f6bf7d38d0eac2a4df3f4e8b6fd5f367f9c9cbf3` after
+independent review. Artifact `12317790332` was downloaded and verified: six raw
+scanner reports, six SBOMs/inventories, matching repeated image IDs, all runtime
+results PASS and exact teardown PASS. The [durable evidence snapshot](s8-evidence-2026-10-21.json)
+preserves those source-linked results. [PR #18 checks](https://github.com/JasonHo20004/loremaster/pull/18/checks)
+must also pass on the final documentation head before merge; historical or
+local-only evidence cannot replace this gate.
+
+The workflow's PR head is `f6bf7d3`; its actual synthetic merge checkout is
+`72383ddb6149ba1b315a45a3422f6653759b1d44`, recorded in each image's OCI
+revision. Fetching the PR merge ref and comparing complete Git trees verified
+both source trees equal `a464c9abd7142a4e47da89e76622f72dd86434a7`. The durable
+snapshot distinguishes reviewed branch, workflow head and actual runtime source;
+independent review also recomputed and matched all six SBOM SHA-256 hashes and
+inspected all six raw reports. CI head SHA must not be substituted for checkout
+provenance.
+
+S8.11 is accepted with this reviewed runtime and explicit handoff. Acceptance
+applies to the local Compose profile. S9 owns Kubernetes/GitOps;
 S10 owns full telemetry/release gates; S11–S12 still require separate cloud
 admission. Scan results are time-bound and must be rerun for future builds.
