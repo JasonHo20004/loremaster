@@ -1,6 +1,6 @@
 # Threat model
 
-Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and future AWS. Assets: hidden solutions, attempt integrity, session tokens, secrets and cloud credit. Browser inputs, imported files, queue payloads and untrusted PRs cross trust boundaries. The API/database own identity and truth. Controls through S6 have local executable evidence in the [S6 acceptance record](../architecture/s6-acceptance.md); The [S7 acceptance map](../architecture/s7-acceptance.md) records local cache/queue evidence; S8-S12 items below remain staged requirements.
+Scope: guest browser, API, PostgreSQL, Redis/workers, operator import, CI and future AWS. Assets: hidden solutions, attempt integrity, session tokens, secrets and cloud credit. Browser inputs, imported files, queue payloads and untrusted PRs cross trust boundaries. The API/database own identity and truth. Controls through S6 have executable evidence in the [S6 acceptance record](../architecture/s6-acceptance.md); the [S7 acceptance map](../architecture/s7-acceptance.md) records cache/queue evidence. The [S8 acceptance map](../architecture/s8-acceptance.md) and [independent review](../architecture/s8-review.md) cover local container boundaries and corrections. S9–S12 retain their separate admission gates.
 
 | Threat / attack | Required control | Verification owner / stage |
 | --- | --- | --- |

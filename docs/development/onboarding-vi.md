@@ -1,7 +1,7 @@
 # Loremaster Daily Case — tài liệu bàn giao cho lập trình viên mới
 
-> Cập nhật: **13/10/2026**. Đối tượng: 3 lập trình viên tham gia dự án.
-> Baseline: `origin/main` tại `b897f616e9cf0c1cbfe5e0735457c6ee81c4ae11`, đã đối chiếu trực tiếp với GitHub. Tài liệu tổng hợp từ mã nguồn, manifest, kế hoạch và hồ sơ nghiệm thu tại baseline này. Kết quả kiểm thử bên dưới là kết quả lịch sử đã được hồ sơ ghi nhận, không phải một đợt chạy lại toàn bộ hệ thống ngày 13/10.
+> Cập nhật: **21/10/2026**. Đối tượng: 3 lập trình viên tham gia dự án.
+> Baseline đã merge: `origin/main` tại `c784660f339ee9ba792e28e4535cf2387fa6b656` qua PR #16. [Review độc lập S8](../architecture/s8-review.md) ghi bản sửa nghiệm thu, peer review và phạm vi kiểm tra; [hồ sơ S8](../architecture/s8-acceptance.md) là nguồn bằng chứng CI cuối. Số liệu cũ bên dưới được ghi rõ theo ngày, không dùng thay kết quả của bản sửa cuối.
 
 ## 1. Đọc nhanh trong 2 phút
 
@@ -15,8 +15,8 @@ Các điểm cần nhớ ngay:
 - Monorepo TypeScript: React/Vite, Express, PostgreSQL, Redis/BullMQ.
 - PostgreSQL giữ dữ liệu chính thức. Redis chỉ giữ dữ liệu có thể tái tạo; worker chỉ làm nóng cache.
 - Domain, database, API và web đã có triển khai và hồ sơ nghiệm thu S1–S6. S7.0–S7.9 đã được merge vào `main` qua PR #13.
-- S8.0–S8.5 đã có contract, file secrets và sáu image API/worker/observer/migration/importer/web trên `main` qua PR #14 và #15. Compose và các mục S8.6–S8.11 còn mở; Kubernetes/GitOps và AWS thuộc các giai đoạn sau.
-- Việc cấp thiết cho nhóm mới là chạy được baseline local và hoàn thành data services, Compose và nghiệm thu S8 theo thứ tự phụ thuộc.
+- S8 đã nghiệm thu qua [PR #18](https://github.com/JasonHo20004/loremaster/pull/18): review độc lập, bản sửa và [CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085) PASS đủ bốn job. Hồ sơ giữ image IDs/context digests, scans, lifecycle, browser, B13 và T25; CI được chạy lại trên commit tài liệu cuối trước merge.
+- Nhóm mới cần chạy lại stack local theo [Compose guide](s8-compose.md), đọc hồ sơ nghiệm thu rồi bắt đầu S9. Kubernetes/GitOps, full observability và AWS còn thuộc các giai đoạn sau.
 
 ## 2. Sản phẩm và phạm vi
 
@@ -59,7 +59,7 @@ Chưa có trong phạm vi MVP: nhiều loại vụ án, khôi phục tài khoả
 | ---------------------------- | ---------------------------------------------------------------- |
 | Runtime và quản lý workspace | Node.js `22.23.3`, pnpm `11.19.0`, Corepack                      |
 | Ngôn ngữ                     | TypeScript `6.0.3`, ES modules                                   |
-| Web                          | React `19.3.0`, Vite `8.3.0`                                     |
+| Web                          | React `19.3.0`, Vite `8.3.3`                                     |
 | HTTP API                     | Express `5.2.1`                                                  |
 | Hợp đồng và validation       | Zod `4.6.4`, `@loremaster/contracts`                             |
 | Database                     | PostgreSQL; SQL migrations và driver `pg` `8.16.3`, không có ORM |
@@ -67,7 +67,7 @@ Chưa có trong phạm vi MVP: nhiều loại vụ án, khôi phục tài khoả
 | Kiểm thử                     | Vitest `5.0.0`, Supertest, Playwright `1.63.0`, axe              |
 | Chất lượng và CI             | ESLint, Prettier, GitHub Actions, dependency audit, Gitleaks     |
 
-PostgreSQL `17.6` và Redis `7.4.5` được dùng trong harness với image pin bằng digest. Điều này chưa đồng nghĩa các image runtime S8 đã được lựa chọn và nghiệm thu.
+PostgreSQL `17.6` và Redis `7.4.5` được pin bằng digest trong Compose và harness. Sáu image ứng dụng được dựng từ allowlist; CI ghi image IDs/context digests/SBOM/scanner cho đúng source commit. Các image local chưa được publish lên registry.
 
 ### Sơ đồ runtime hiện có
 
@@ -86,7 +86,7 @@ flowchart LR
   I[Operator import / migration] --> P
 ```
 
-Đây là monorepo với các module dùng chung và bốn app, không phải bốn microservice cùng ghi dữ liệu game. Producer chạy cùng API nhưng có quyền và kết nối riêng. Sơ đồ chưa mô tả một stack Compose/Kubernetes đã triển khai.
+Đây là monorepo với các module dùng chung và bốn app, không phải bốn microservice cùng ghi dữ liệu game. Producer chạy cùng API nhưng có quyền và kết nối riêng. Compose local đã ghép các process này qua gateway; Kubernetes thuộc S9.
 
 ### Trách nhiệm và ranh giới module
 
@@ -147,7 +147,7 @@ Khi Redis hỏng, suggestions quay về PostgreSQL, gameplay vẫn dùng Postgre
 
 Mã tồn tại trong thư mục, test được hồ sơ ghi là PASS và thay đổi đã merge vào `main` là ba thông tin khác nhau. Không dùng số lượng checkbox để suy ra tỷ lệ hoàn thành hay kết luận sẵn sàng production.
 
-Khảo sát ban đầu ngày 12/10/2026 dùng working tree của `codex/s7-completion` tại `2cf1b1e`. Bản cập nhật ngày 13/10 đối chiếu baseline `origin/main` tại `b897f61` với remote GitHub và dùng nội dung đã commit trên main để xác định trạng thái. Lịch sử Git xác nhận PR #13, #14 và #15 đã merge; lần cập nhật này không chạy lại toàn bộ CI hay các gate container.
+Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge ngày 13/10 và [main CI](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326) PASS cả bốn job. Review độc lập phát hiện và sửa các lỗi gate/teardown/secret-bootstrap/import-bound/shutdown; Correction CI run 39535223085 đã xác minh bản sửa; PR #18 chạy lại CI trên commit tài liệu cuối.
 
 | Giai đoạn  | Phần việc                                                      | Trạng thái có thể kết luận từ repository                                                                                                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -160,7 +160,8 @@ Khảo sát ban đầu ngày 12/10/2026 dùng working tree của `codex/s7-compl
 | S7.0–S7.6  | Cache/queue contracts, Redis, producer, worker, shared limiter | [Kế hoạch S7](../../plans/s7-cache-worker.md#progress) và [runtime evidence](../../plans/s7-runtime.md) ghi đã merge PR #8, #9, #12                                                                           |
 | S7.7–S7.9  | Probes, observer, composed failure tests, bàn giao             | Đã merge [PR #13](https://github.com/JasonHo20004/loremaster/pull/13) tại `e41cab1`; [hồ sơ S7](../architecture/s7-acceptance.md) giữ bằng chứng runtime                                                      |
 | S8.0–S8.5  | Preflight, file secrets, contract và sáu container images      | Đã merge [PR #14](https://github.com/JasonHo20004/loremaster/pull/14) và [PR #15](https://github.com/JasonHo20004/loremaster/pull/15); [image evidence](../../plans/s8-images-evidence.md) ghi các gate local |
-| S8.6–S8.11 | Data services, Compose, recovery và full-stack acceptance      | Còn mở trong [kế hoạch S8](../../plans/s8-containers.md#progress); chưa có stack Compose được nghiệm thu                                                                                                      |
+| S8.6–S8.10 | Data services, Compose, recovery và full-stack acceptance      | Đã merge PR #16; main CI PASS, có artifact lifecycle/browser/T25/SBOM; review cuối bổ sung các bản sửa robustness                                                                                             |
+| S8.11      | Review độc lập, hồ sơ nghiệm thu và bàn giao S9                | Đã nghiệm thu: review và correction CI PASS; PR #18 ghi final-head CI/delivery; [hồ sơ S8](../architecture/s8-acceptance.md) giữ bằng chứng                                                                   |
 | S9         | Local kind, Helm, Argo CD, GitOps                              | Lộ trình; chưa có triển khai trong checkout                                                                                                                                                                   |
 | S10        | Observability toàn hệ thống và release gate                    | Lộ trình; probes/metrics S7 chưa thay thế giai đoạn này                                                                                                                                                       |
 | S11–S12    | AWS bootstrap, cleanup qualification, lab và teardown          | Lộ trình có điều kiện; cloud đang DENIED trong hồ sơ admission                                                                                                                                                |
@@ -169,38 +170,30 @@ Khảo sát ban đầu ngày 12/10/2026 dùng working tree của `codex/s7-compl
 
 [Hồ sơ S7 ngày 01/10/2026](../architecture/s7-acceptance.md#final-local-gate-results-2026-10-01) ghi: full verify với **369 tests và 11 workspace builds**, **93 database tests**, **7 API/PostgreSQL tests**, **8 Redis scenarios**, **9 composed scenarios**, **4 real-stack và 5 shell/accessibility journeys**, **11 Chromium component tests**. Số lượng này là snapshot lịch sử; các suite có thể trùng phạm vi, không cộng thành tổng coverage và không coi là kết quả của checkout hiện tại.
 
-Workflow Quality hiện chạy verify, S7 contracts, S8 image policy/file secrets/proxy contract, database, API/database, Redis và composed S7. Job S8 image validation riêng chạy `pnpm test:images`, gồm build, browser journey qua gateway và artifact scan. Các gate browser host-development và disclosure cũng có lệnh riêng; đọc workflow và kết quả từng run để biết một PR đã thực sự chạy những gì.
+Workflow Quality chạy verify, S7 contracts, S8 image policy/file secrets/proxy contract, năm Chromium shell/accessibility journeys, database, API/database, Redis và composed S7. Job S8 image validation chạy image build/reproducibility/behavior/artifact scan, data services, Compose, lifecycle, active worker drain/replay, packaged browser và T25. Artifact giữ raw scanner reports, SBOM, file inventories và JSON kết quả. Accessibility axe dùng Vite preview/mock API; packaged E2E kiểm tra gateway thật, mobile keyboard/focus và dữ liệu thật.
 
 ### Hồ sơ cũ cần đọc theo thời điểm
 
-[S8 preflight ngày 02/10](../../plans/s8-preflight.md) thay thế lần kiểm tra bị chặn ngày 29/09 sau khi S7 được merge vào main. [Image evidence ngày 11/10](../../plans/s8-images-evidence.md) ghi các gate local của sáu image và Node pin mới `22.23.3`. Các bằng chứng này có ngày và phạm vi riêng; trước khi tiếp tục S8.6, kiểm tra baseline, toolchain và kết quả hosted CI tương ứng, rồi chạy lại gate cần thiết trên máy của nhóm.
+[S8 preflight ngày 02/10](../../plans/s8-preflight.md), [image evidence ngày 11/10](../../plans/s8-images-evidence.md) và [Compose evidence ngày 12/10](../../plans/s8-compose-evidence.md) giữ giá trị lịch sử theo ngày. [Review ngày 21/10](../architecture/s8-review.md) và acceptance map ghi các bản sửa cuối; không đọc phần handoff cũ như backlog hiện tại.
 
 ## 5. Công việc còn lại và thứ tự ưu tiên
 
 ### P0 — Chốt nền tảng bàn giao
 
-- Dùng main đã đồng bộ làm baseline; bản khảo sát này ghi `b897f61`, bao gồm PR #13, #14 và #15. Kiểm tra hosted CI tại commit nhóm chọn trước khi tiếp tục delivery.
+- Dùng baseline đã nghiệm thu trong hồ sơ S8; main đã đối chiếu tại `c784660`, gồm PR #16. Kiểm tra CI tại đúng commit nhóm chọn.
 - Giữ checkout sạch và branch riêng cho task mới; đối chiếu mọi thay đổi local với baseline chung.
 - Mỗi người có clone/branch riêng, đúng Node/pnpm, Docker Linux daemon và Chromium cần cho test.
-- Chạy lại các gate bắt buộc trên checkout sạch; ghi bằng chứng môi trường nhóm trước khi bắt đầu S8.6.
-- Làm rõ quy trình cấp local database, role/login và content pack để người mới không phụ thuộc vào database trên máy tác giả.
+- Chạy lại gate cần thiết trên checkout sạch trước khi bắt đầu S9.
+- Dùng `node scripts/s8-compose.mjs bootstrap` để cấp database/roles/credentials riêng và operator import để publish pack; xem Compose guide.
 
-### P1 — S8: stack local có thể tái tạo
+### P1 — Tái tạo baseline S8 và chuẩn bị S9
 
-Thực hiện theo [kế hoạch S8](../../plans/s8-containers.md), không bắt đầu từ Kubernetes:
+1. Đọc [review độc lập](../architecture/s8-review.md), [acceptance map](../architecture/s8-acceptance.md) và [kế hoạch S8](../../plans/s8-containers.md#progress); xác nhận CI cuối.
+2. Chạy build, bootstrap, import và start theo [Compose guide](s8-compose.md). Gateway duy nhất ở `http://localhost:8080`; database/Redis không publish port.
+3. Tái chạy focused gate theo phần mình sở hữu. API/worker có grace 20s, observer/web 15s; giữ nguyên probe semantics và quyền process khi chuyển sang Kubernetes.
+4. Giữ B13 và T25 trong CI: artifact/layers/maps không lộ private data; quan sát slot chưa start qua midnight không sinh hiệu ứng ở tám bảng gameplay.
 
-1. **S8.0–S8.2 đã có:** đọc preflight, base-image digest/build-context allowlist/scanner policy, file secrets và contract gateway/Origin/source IP; chạy lại các focused gate.
-2. **S8.3–S8.5 đã có:** build và kiểm tra sáu image API/worker/observer/migration/importer/web từ baseline nhóm chọn. Giữ các ranh giới image và đối chiếu artifact evidence trước khi composition.
-3. **S8.6–S8.7:** bootstrap PostgreSQL/Redis với quyền riêng, persistence/ACL, Compose networks/resources; mặc định chỉ công bố gateway `http://localhost:8080`.
-4. **S8.8–S8.9:** kiểm chứng probes, shutdown, restart, dependency outage và browser E2E từ volumes sạch.
-5. **S8.10–S8.11:** scan artifact đã đóng gói, SBOM/vulnerability/secret gate, cập nhật acceptance và bàn giao S9.
-
-Hai mục nghiệm thu còn thiếu cần theo dõi cụ thể:
-
-- **B13:** kiểm tra public image, layers, source maps và response thực tế không chứa dữ liệu private. Scan source/Vite dist hiện có chưa đủ để đóng mục này ở S8.
-- **T25:** bằng chứng quan sát qua thời điểm đóng ngày trong stack đóng gói, khi người chơi chưa start, không tự sinh attempt hay hiệu ứng profile. S4 đã có test repository; bằng chứng tích hợp theo lịch vẫn thuộc S8.
-
-Các lệnh `test:s8:image-policy`, `test:s8:secrets`, `test:s8:proxy-contract`, `build:images`, `test:images` và các gate image riêng đã có trong root `package.json`. Xem [image contract](../../deploy/images/README.md) trước khi chạy; chúng cần toolchain/Docker/Buildx/browser thích hợp và dùng dependencies disposable, chưa cung cấp Compose stack lâu dài.
+Các gate đã có và dùng project test riêng để dọn đúng tài nguyên. Compose developer giữ named volumes/credentials qua `stop`; không xóa volume để khắc phục lỗi cấu hình. Image IDs local chưa phải release digest trên registry.
 
 ### P2 — Sau khi S8 được nghiệm thu
 
@@ -219,15 +212,15 @@ AWS chưa được cấp admission. Số credit và thời hạn trong `ops/cost
 
 Chia theo ranh giới hiện có để giảm xung đột. Đây là phương án bàn giao, chưa gán cho người cụ thể.
 
-| Vai trò                           | Sở hữu chính                                                                 | Việc đầu tiên                                               | Đầu ra tiếp theo                                                  |
-| --------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------- |
-| LTV 1 — Web và public gateway     | `apps/web/`, browser tests, image/config gateway đã có                       | Chạy game và gateway journey; hiểu session/retry/disclosure | Browser proof qua Compose, B13 và public deployed-artifact checks |
-| LTV 2 — Backend và dữ liệu        | `apps/api/`, `packages/domain/`, `packages/database/`, operator images đã có | Trace command/retry và kiểm tra migration/import operator   | PostgreSQL provisioning, quyền/volume và bootstrap dữ liệu S8.6   |
-| LTV 3 — Cache và đóng gói runtime | Worker/observer, cache/queue, Node images và topology tích hợp               | Chạy Redis/composed gate; hiểu fallback/probes/ACL          | Redis data service S8.6, Compose S8.7 và lifecycle evidence       |
+| Vai trò                           | Sở hữu chính                               | Việc đầu tiên                                             | Đầu ra tiếp theo                                                      |
+| --------------------------------- | ------------------------------------------ | --------------------------------------------------------- | --------------------------------------------------------------------- |
+| LTV 1 — Web và public gateway     | `apps/web/`, browser tests, gateway        | Chạy packaged/mobile/a11y journeys; hiểu retry/disclosure | Giữ browser và B13 gates khi thiết kế ingress S9                      |
+| LTV 2 — Backend và dữ liệu        | API, domain, database, operator jobs       | Trace command/retry, bootstrap/import và quyền data       | Chuyển operator jobs/credentials/probes sang Kubernetes đúng contract |
+| LTV 3 — Cache và đóng gói runtime | Worker/observer, Redis, images và topology | Chạy recovery/drain/ACL gates                             | kind/Helm/GitOps và persistence theo kế hoạch S9                      |
 
 `packages/config/`, `packages/contracts/`, root scripts, lockfile, CI và Compose manifests là điểm dễ đụng nhau. Mỗi thay đổi cần một người sở hữu PR; hai người còn lại review hoặc cung cấp commit đã thống nhất. Riêng LTV 2 và LTV 3 cần thống nhất API binding/shutdown trước khi đóng gói API.
 
-**Nhịp tích hợp:** cả nhóm tái kiểm chứng baseline S8.0–S8.5 đã có; LTV 2 và LTV 3 phối hợp data services S8.6, chốt một người tích hợp Compose S8.7 rồi cả nhóm cung cấp test cho S8.8–S8.11. Không cho ba người cùng sửa manifest tích hợp độc lập. Mỗi task nên có phạm vi file, điều kiện phụ thuộc, tiêu chí hoàn thành, lệnh kiểm tra và cách rollback.
+**Nhịp tích hợp:** tái kiểm chứng baseline S8 đã nghiệm thu, chốt một người sở hữu manifest tích hợp S9 và giữ contracts image/network/secret/probes/operator jobs. Mỗi task cần phạm vi file, điều kiện phụ thuộc, tiêu chí hoàn thành, lệnh kiểm tra và rollback. Đây là đề xuất phân việc, chưa phải kế hoạch S9 đã được duyệt.
 
 ## 7. Thiết lập môi trường và chạy local
 
@@ -254,7 +247,7 @@ Dùng **`pnpm run verify`**, vì pnpm 11 có một built-in `verify` khác. Khô
 2. Có login runtime chỉ nhận group role `loremaster_runtime` và login importer riêng.
 3. Có pack đã publish cho **ngày UTC hiện tại**. Fixture Aster Quay mặc định dùng slot `2030-01-01`; nhập nguyên mẫu sẽ không tạo vụ án hôm nay. Chuẩn bị pack local với `slotId`, `opensAt`, `closesAt` nhất quán trước khi publish; không sửa revision đã publish.
 
-Repository có thư viện `migrateToLatest` trong `packages/database/src/migrate.ts`, harness test tự bootstrap database và migration/importer images S8.4. Operator entrypoint được đóng gói cho image, nhận database URL từ secret file và chạy riêng với quyền thích hợp; xem [image contract](../../deploy/images/README.md). Chưa có `pnpm db:migrate` hay Compose startup cho developer; LTV 2 cần bàn giao bootstrap data services S8.6 và không gắn migration vào API startup.
+Đường chạy khuyến nghị là [Compose guide](s8-compose.md): `pnpm build`, `pnpm build:images`, `node scripts/s8-compose.mjs bootstrap`, operator import rồi `start`. Bootstrap chạy migration và cấp roles rõ ràng; API startup không migrate/import. Host-development bên dưới vẫn cần database/roles do operator chuẩn bị.
 
 Importer hiện có lệnh chạy thật, với JSON pack nằm phía operator/server:
 
@@ -347,9 +340,9 @@ Nếu máy chưa có browser tương ứng, cài bằng `pnpm exec playwright in
 | Ngày 1    | Đọc tài liệu này, game rules, ADR; xác nhận baseline và môi trường                  | Ghi được branch/commit chung, tool versions và blocker                  |
 | Ngày 2    | Chạy API/web; thử refresh, reveal, give-up, profile; chạy focused gate theo vai trò | Mỗi người giải thích được một luồng request và ranh giới mình phụ trách |
 | Ngày 3    | Review retry, ownership, disclosure, role/ACL; đối chiếu S7 và S8 preflight         | Danh sách gap có owner; không còn nhầm mã có sẵn với phần đã nghiệm thu |
-| Ngày 4–5  | Hoàn thành một task nhỏ đúng phạm vi, review chéo; ghi gate của baseline S8.0–S8.5  | PR đầu tiên có bằng chứng; backlog data services/Compose được chia rõ   |
+| Ngày 4–5  | Hoàn thành task nhỏ, review chéo; ghi gate của baseline S8 và đọc handoff S9        | PR đầu tiên có bằng chứng; đề xuất S9 được chia theo contract           |
 
-Đây là lịch làm quen đề xuất, không phải deadline cam kết cho S8.
+Đây là lịch làm quen đề xuất, không phải deadline cam kết cho S9.
 
 ### Chẩn đoán nhanh khi gặp vướng mắc
 

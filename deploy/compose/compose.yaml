@@ -96,8 +96,14 @@ services:
       - -e
       - >-
         const fs=require('fs');const input='/run/input/pack.json';
-        const source=fs.readFileSync(input);
-        if(!source.length||source.length>262144||source.includes(0))throw Error('content');
+        const before=fs.lstatSync(input);if(!before.isFile()||before.isSymbolicLink())throw Error('content');
+        const fd=fs.openSync(input,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW|fs.constants.O_NONBLOCK);
+        let source;try{const stat=fs.fstatSync(fd);
+        if(!stat.isFile()||stat.ino!==before.ino||stat.dev!==before.dev||stat.size<1||stat.size>262144)throw Error('content');
+        const bytes=Buffer.alloc(262145);let count=0,n=0;
+        do{n=fs.readSync(fd,bytes,count,bytes.length-count,null);count+=n;}while(n>0&&count<bytes.length);
+        if(count!==stat.size||count>262144||bytes.subarray(0,count).includes(0))throw Error('content');
+        source=bytes.subarray(0,count);}finally{fs.closeSync(fd);}
         const output='/run/content/pack.json',next=output+'.next';
         if(fs.existsSync(next))fs.unlinkSync(next);fs.writeFileSync(next,source);
         fs.chownSync(next,10006,10006);fs.chmodSync(next,0o400);
@@ -188,6 +194,7 @@ services:
 
   api:
     <<: *app-security
+    stop_grace_period: 20s
     image: loremaster/api:s8
     environment:
       LOREMASTER_API_MODE: local
@@ -229,6 +236,7 @@ services:
 
   worker:
     <<: *app-security
+    stop_grace_period: 20s
     image: loremaster/worker:s8
     environment:
       LOREMASTER_REDIS_MODE: local
@@ -258,6 +266,7 @@ services:
 
   observer:
     <<: *app-security
+    stop_grace_period: 15s
     image: loremaster/observer:s8
     environment:
       LOREMASTER_REDIS_MODE: local
@@ -284,6 +293,7 @@ services:
 
   web:
     <<: *app-security
+    stop_grace_period: 15s
     image: loremaster/web:s8
     ports: ['127.0.0.1:8080:8080']
     networks:

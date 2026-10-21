@@ -60,6 +60,6 @@ own prepared volume read-only; the test gate inspects actual UID and mode.
   forwarding claims from all peers other than the exact gateway address.
 
 Production mode retains HTTPS-only origin and `__Host-` cookie validation. It
-cannot use this HTTP local profile. S8.5 must test the actual gateway against
-spoofed/repeated headers and distinct client addresses before claiming the
-edge behavior implemented.
+cannot use this HTTP local profile. The image and Compose gates test the actual
+gateway against spoofed/repeated headers and distinct client addresses; the
+[S8 acceptance map](../architecture/s8-acceptance.md) records evidence.

@@ -14,6 +14,10 @@ import { dirname, isAbsolute, resolve } from 'node:path'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath, URL } from 'node:url'
+import {
+  assertFreshSecretVolume,
+  validateContentFile,
+} from './s8-compose-inputs.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const composeFile = resolve(root, 'deploy/compose/compose.yaml')
@@ -164,18 +168,7 @@ function verifySecrets() {
 function initializeSecrets() {
   if (existsSync(secretDir)) return verifySecrets()
   // Reusing a data volume with new credentials strands PostgreSQL and Redis.
-  const volume = spawnSync(
-    'docker',
-    ['volume', 'inspect', `${project}_postgres_data`],
-    {
-      encoding: 'utf8',
-      env: composeEnv,
-    },
-  )
-  if (volume.status === 0)
-    throw Error(
-      'PostgreSQL volume exists but secrets are missing; restore the original secrets',
-    )
+  assertFreshSecretVolume(project, (args) => run('docker', args))
   const temporary = `${secretDir}.${process.pid}.tmp`
   mkdirSync(temporary, { recursive: true, mode: 0o700 })
   try {
@@ -292,11 +285,7 @@ try {
       verifySecrets()
       if (!process.env.LOREMASTER_S8_CONTENT_FILE)
         throw Error('Set LOREMASTER_S8_CONTENT_FILE to a reviewed pack.json')
-      if (!isAbsolute(process.env.LOREMASTER_S8_CONTENT_FILE))
-        throw Error('LOREMASTER_S8_CONTENT_FILE must be an absolute path')
-      const content = lstatSync(process.env.LOREMASTER_S8_CONTENT_FILE)
-      if (content.isSymbolicLink() || !content.isFile())
-        throw Error('LOREMASTER_S8_CONTENT_FILE must be a regular file')
+      validateContentFile(process.env.LOREMASTER_S8_CONTENT_FILE)
       compose(['--profile', 'operator', 'run', '--rm', '-T', 'content'])
       process.stdout.write(
         compose(

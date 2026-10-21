@@ -9,15 +9,18 @@ Kubernetes, registry, or cloud claims.
 
 The accepted S8 base is S7 merge `e41cab1c7170c6b9320fe3ee7cef28ea5e1f86a9`
 on `main`. The [2026-10-02 delivery preflight](s8-preflight.md) completed host
-and S7 gates. S8.1 build/supply-chain contracts and S8.2 file-secret/local-edge
-contracts are implemented for review. Their focused local gates pass; hosted CI
-and review remain delivery gates. Candidate bases are blocked by unapproved
-HIGH/CRITICAL scanner findings, so no runtime image is admitted.
+and S7 gates. S8.0–S8.10 merged in PRs #14, #15 and #16; [main CI on
+`c784660`](https://github.com/JasonHo20004/loremaster/actions/runs/38342836326)
+passed all four jobs. Candidate roots remain rejected wholesale; six minimal
+scratch final images have separate assembled-image admission evidence.
+The [2026-10-21 independent review](../docs/architecture/s8-review.md) records
+final corrections and peer review. [Correction CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085)
+passed all four jobs on `f6bf7d3`; [PR #18](https://github.com/JasonHo20004/loremaster/pull/18)
+records S8.11 delivery and its final-head checks.
 
-`deploy/`, `platform/`, and `infra/` currently contain no tracked runtime
-implementation. S8 owns `deploy/images`, a local Compose stack, container test
-harnesses, and deployed-artifact evidence. S9 owns kind/Helm/Argo CD and
-`platform/`; S11-S12 own cloud infrastructure.
+`deploy/images` and `deploy/compose` now contain the local runtime, test
+harnesses and deployed-artifact gates. `platform/` and `infra/` remain future
+boundaries: S9 owns kind/Helm/Argo CD; S11–S12 own cloud infrastructure.
 
 ## Fixed invariants and scope
 
@@ -488,18 +491,18 @@ review before merge. Do not begin a dependent slice from an unreviewed tree.
 
 ## Progress
 
-- [x] S8.0 Close the delivery preflight (S7 host gates PASS; candidate image admission blocked)
-- [x] S8.1 Freeze image, build-context, and supply-chain contracts (focused local gate PASS; hosted review pending)
-- [x] S8.2 Add file-backed secrets and freeze the local edge contract (focused local gates PASS; hosted review pending)
-- [x] S8.3 Build hardened API, worker, and observer images (local gates PASS; hosted review pending)
-- [x] S8.4 Build migration and content-import operator images (local gates PASS; hosted review pending)
-- [x] S8.5 Build the public web gateway image (local gates PASS; hosted review pending)
-- [x] S8.6 Add PostgreSQL and Redis data-service operations (focused local gate PASS; hosted review pending)
-- [x] S8.7 Compose the isolated local stack (focused local gate PASS; hosted review pending)
-- [x] S8.8 Prove probes, shutdown, restart, and dependency recovery (focused local gate PASS; hosted review pending)
-- [x] S8.9 Run clean-volume full-stack E2E and close T25 (focused local gates PASS; hosted review pending)
-- [x] S8.10 Run final deployed-artifact and supply-chain acceptance (focused local gate PASS; hosted review pending)
-- [ ] S8.11 Record acceptance and hand off to S9 (acceptance map written; clean-checkout CI and independent review pending)
+- [x] S8.0 Close the delivery preflight (accepted S7 host baseline)
+- [x] S8.1 Freeze image, build-context, and supply-chain contracts (merged; hosted gates PASS)
+- [x] S8.2 Add file-backed secrets and freeze the local edge contract (merged; hosted gates PASS)
+- [x] S8.3 Build hardened API, worker, and observer images (merged; hosted gates PASS)
+- [x] S8.4 Build migration and content-import operator images (merged; hosted gates PASS)
+- [x] S8.5 Build the public web gateway image (merged; hosted gates PASS)
+- [x] S8.6 Add PostgreSQL and Redis data-service operations (merged; hosted gates PASS)
+- [x] S8.7 Compose the isolated local stack (merged; hosted gates PASS)
+- [x] S8.8 Prove probes, shutdown, restart, and dependency recovery (merged; hosted gates PASS; final review strengthens drain evidence)
+- [x] S8.9 Run clean-volume full-stack E2E and close T25 (merged; hosted gates PASS)
+- [x] S8.10 Run final deployed-artifact and supply-chain acceptance (merged; hosted gates PASS)
+- [x] S8.11 Record acceptance and hand off to S9 (independent review and correction CI PASS; PR #18 records final delivery checks)
 
 ## Plan mutation protocol
 
@@ -557,3 +560,20 @@ Only the disposable test project's named volumes and image are removed.
 Production Compose, operator ordering and cloud/registry admission are not
 changed. Hosted CI and independent review remain gates before the S8 checklist
 can be marked accepted. Reviewer: pending independent review.
+
+2026-10-21: independent code/delivery, container-security, database/operator and
+accessibility review inspected the full merged S8 scope and historical hosted
+artifacts. The [review record](../docs/architecture/s8-review.md) documents
+corrections for approval dates, failed-start cleanup, credential regeneration,
+bounded import preparation and effective shutdown grace. The API drain gate now
+waits for the API's own HTTP acknowledgement instead of a buffered gateway
+request. Recurring accessibility checks, packaged mobile keyboard/focus checks,
+raw scanner reports and complete labeled teardown checks strengthen evidence.
+No dependency-edge or gameplay change is introduced. Reviewers: independent
+AI code/delivery, security and database reviewers, with peer review of fixes.
+Rollback reverts these bounded corrections and documentation; developer data
+and unpublished images remain local. Correction CI run `39535223085` passed all
+four jobs on `f6bf7d3`; artifact `12317790332` was downloaded and verified,
+including six raw scanner reports. The [durable snapshot](../docs/architecture/s8-evidence-2026-10-21.json)
+preserves source/image/context identities, scans and runtime results beyond
+artifact retention. PR #18 records final documentation-head CI and delivery.

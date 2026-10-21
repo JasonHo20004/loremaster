@@ -1,13 +1,12 @@
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { request } from 'node:http'
 import { performance } from 'node:perf_hooks'
 import process from 'node:process'
-import { setTimeout as delay } from 'node:timers/promises'
 import { URL } from 'node:url'
 import { createTestStack } from './s8-test-stack.mjs'
+import { pendingHttpClientScript } from './s8-pending-client.mjs'
 
 const stack = createTestStack('lifecycle')
 const results = { project: stack.project, checks: [], passed: false }
@@ -23,7 +22,8 @@ function container(id) {
 async function stopAndRestart(service, maximumMs) {
   const id = stack.inspect(service).Id
   const start = performance.now()
-  stack.compose('stop', '-t', '15', service)
+  // Exercise the same declared grace period as the documented stop/down path.
+  stack.compose('stop', service)
   const elapsedMs = Math.round(performance.now() - start)
   const stopped = container(id)
   check(!stopped.State.Running, `${service} remained running`)
@@ -38,21 +38,51 @@ async function stopAndRestart(service, maximumMs) {
   check(stack.inspect(service).Id === id, `${service} was recreated`)
   return { elapsedMs, recoveryMs, exitCode: stopped.State.ExitCode }
 }
-function pendingRequest() {
-  const call = request({
-    host: '127.0.0.1',
-    port: 8080,
-    path: '/api/v1/session',
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      origin: 'http://localhost:8080',
-      'transfer-encoding': 'chunked',
-    },
+async function pendingRequest() {
+  // NGINX buffers incomplete bodies. Use a private client and wait for the
+  // API's 100 Continue response to prove it accepted this HTTP request.
+  const client = spawn(
+    'docker',
+    [
+      'exec',
+      stack.inspect('worker').Id,
+      '/usr/local/bin/node',
+      '-e',
+      pendingHttpClientScript(),
+    ],
+    { env: stack.environment, stdio: ['ignore', 'pipe', 'ignore'] },
+  )
+  let output = ''
+  let failed = false
+  client.stdout.on('data', (chunk) => {
+    output = (output + chunk.toString()).slice(-1024)
   })
-  call.on('error', () => {})
-  call.write('{')
-  return call
+  client.on('error', () => {
+    failed = true
+  })
+  client.on('exit', (code) => {
+    if (code !== 0) failed = true
+  })
+  try {
+    await stack.until(
+      'API accepted pending HTTP request',
+      () => {
+        check(!failed && !output.includes('ERROR'), 'Pending client failed')
+        return output.includes('OPEN\n')
+      },
+      5_000,
+    )
+    check(!output.includes('CLOSED'), 'Pending request closed before SIGTERM')
+    return {
+      closed: () => output.includes('CLOSED\n') && !failed,
+      destroy: () => {
+        if (client.exitCode === null) client.kill()
+      },
+    }
+  } catch (error) {
+    if (client.exitCode === null) client.kill()
+    throw error
+  }
 }
 
 try {
@@ -69,6 +99,19 @@ try {
     'web',
   ])
     await stack.health(service)
+  const graceSeconds = { api: 20, worker: 20, observer: 15, web: 15 }
+  const configuration = JSON.parse(stack.compose('config', '--format', 'json'))
+  for (const [service, seconds] of Object.entries(graceSeconds)) {
+    check(
+      configuration.services[service].stop_grace_period === `${seconds}s`,
+      `${service} Compose shutdown grace differs from the reviewed budget`,
+    )
+    check(
+      stack.inspect(service).Config.StopTimeout === seconds,
+      `${service} effective shutdown grace differs from Compose`,
+    )
+  }
+  record('declared_shutdown_grace', { status: 'PASS', graceSeconds })
   check(
     (await stack.gateway('/health/ready')).status === 200,
     'gateway is not ready',
@@ -167,20 +210,20 @@ try {
     observerRecoveryMs,
   })
 
-  const requestInFlight = pendingRequest()
-  let requestClosed = false
-  requestInFlight.once('close', () => {
-    requestClosed = true
-  })
+  const requestInFlight = await pendingRequest()
   try {
-    await delay(250)
-    const stopped = await stopAndRestart('api', 16_000)
+    const stopped = await stopAndRestart('api', 19_000)
     await stack.until(
       'API in-flight connection closure',
-      () => requestClosed,
+      requestInFlight.closed,
       2_000,
     )
-    record('api_term_drain', { status: 'PASS', ...stopped, requestClosed })
+    record('api_term_drain', {
+      status: 'PASS',
+      ...stopped,
+      requestAccepted: true,
+      requestClosed: true,
+    })
   } finally {
     requestInFlight.destroy()
   }

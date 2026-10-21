@@ -64,11 +64,27 @@ test.describe.serial('packaged gateway and runtime', () => {
     browser,
     page,
   }) => {
+    await page.setViewportSize({ width: 360, height: 740 })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/')
     await expect(
       page.getByRole('heading', { name: 'A sealed record awaits' }),
     ).toBeVisible()
+    await page.keyboard.press('Tab')
+    await expect(
+      page.getByRole('link', { name: 'Skip to content' }),
+    ).toBeFocused()
+    await page.keyboard.press('Enter')
+    await expect(page.locator('main')).toBeFocused()
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true)
     const firstAttempt = await start(page)
+    await expect(
+      page.getByRole('heading', { name: 'The investigation is open' }),
+    ).toBeFocused()
     await page.reload()
     await expect(
       page.getByRole('heading', { name: 'The investigation is open' }),

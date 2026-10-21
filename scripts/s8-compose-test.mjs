@@ -370,6 +370,51 @@ try {
     "const s=require('fs').statSync('/run/content/pack.json');console.log(s.uid+':'+(s.mode&511).toString(8))",
   ])
   assert.equal(contentMode, '10006:400')
+  const oversizedPath = join(temporary, 'oversized-pack.json')
+  writeFileSync(oversizedPath, 'x'.repeat(262145), { mode: 0o444 })
+  const oversizedName = `${project}-oversized-content`
+  environment.LOREMASTER_S8_CONTENT_FILE = oversizedPath
+  try {
+    const oversized = spawnSync(
+      'docker',
+      [
+        'compose',
+        '-p',
+        project,
+        '-f',
+        manifest,
+        '--profile',
+        'operator',
+        'run',
+        '--name',
+        oversizedName,
+        '-T',
+        'content',
+      ],
+      { encoding: 'utf8', env: environment, timeout: 60000 },
+    )
+    assert.equal(oversized.status, 1, oversized.stderr)
+    assert.match(oversized.stderr, /Error: content/u)
+    const state = JSON.parse(run('docker', ['inspect', oversizedName]))[0].State
+    assert.equal(state.OOMKilled, false)
+    assert.equal(state.ExitCode, 1)
+    const retained = compose([
+      '--profile',
+      'operator',
+      'run',
+      '--rm',
+      '-T',
+      '--entrypoint',
+      '/usr/local/bin/node',
+      'importer',
+      '-e',
+      "process.stdout.write(require('fs').readFileSync('/run/content/pack.json','utf8'))",
+    ])
+    assert.equal(retained, '{"invalid":true}')
+  } finally {
+    environment.LOREMASTER_S8_CONTENT_FILE = packPath
+    run('docker', ['rm', '-f', oversizedName])
+  }
   const invalidImport = spawnSync(
     'docker',
     [
@@ -517,25 +562,24 @@ try {
       ],
       { encoding: 'utf8', env: environment, timeout: 120000 },
     )
-    const remaining =
-      cleanup.status === 0
-        ? spawnSync(
-            'docker',
-            [
-              'volume',
-              'ls',
-              '--filter',
-              `label=com.docker.compose.project=${project}`,
-              '--format',
-              '{{.Name}}',
-            ],
-            { encoding: 'utf8', env: environment, timeout: 30000 },
-          )
-        : undefined
+    const remaining = ['container', 'network', 'volume'].map((type) =>
+      spawnSync(
+        'docker',
+        [
+          type,
+          'ls',
+          ...(type === 'container' ? ['-a'] : []),
+          '--filter',
+          `label=com.docker.compose.project=${project}`,
+          '--format',
+          '{{.ID}}',
+        ],
+        { encoding: 'utf8', env: environment, timeout: 30000 },
+      ),
+    )
     if (
       cleanup.status !== 0 ||
-      remaining?.status !== 0 ||
-      remaining.stdout.trim()
+      remaining.some((result) => result.status !== 0 || result.stdout.trim())
     ) {
       process.stderr.write(
         `Could not remove disposable Compose project ${project}\n`,

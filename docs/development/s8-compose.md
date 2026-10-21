@@ -25,7 +25,9 @@ login roles. It is explicit and repeatable.
 their own file secrets. The generated directory is ignored by Git; back it up
 with the volumes, since regenerating passwords for a retained database would
 strand its logins. The script refuses a new secret directory when it finds an
-existing PostgreSQL volume. Compose file secrets are bind mounts: the local
+existing PostgreSQL volume. The
+volume listing must succeed before new credentials can be generated; daemon or
+permission failures abort bootstrap. Compose file secrets are bind mounts: the local
 tests inspect actual owner and mode inside the Linux containers rather than
 assuming the YAML `mode` field is enforced.
 
@@ -37,6 +39,9 @@ node scripts/s8-compose.mjs import --dry-run
 node scripts/s8-compose.mjs import
 ```
 
+The wrapper rejects empty, non-regular or larger-than-256KiB packs before
+starting Compose. The preparation job independently validates the opened file
+and performs a bounded read, so direct profile invocation has the same limit.
 The content preparation job copies that file into an importer-only volume as
 UID 10006 with mode `0400`; this also handles Docker Desktop's bind-mount mode.
 The importer is a one-shot `operator` profile. The migration image is also an
@@ -86,6 +91,17 @@ internal, and no database or queue port is published. The API can continue
 using PostgreSQL and its local limiter if Redis restarts. Readiness only gates
 initial developer startup; S8.8 measures later dependency recovery and drain
 behavior separately.
+
+Application shutdown grace is explicit: API/worker 20 seconds, observer/web
+15 seconds. The lifecycle gate exercises these defaults and checks Docker's
+effective timeout. It holds an API-acknowledged private request during SIGTERM;
+the gateway buffers request bodies and cannot prove this condition by itself.
+
+The [independent acceptance review](../architecture/s8-review.md) records
+corrections and the [acceptance map](../architecture/s8-acceptance.md) links CI
+evidence. `pnpm --filter @loremaster/web test:e2e` separately runs five Chromium
+shell/accessibility journeys against Vite preview; packaged E2E includes mobile
+skip-link and focus checks through the actual gateway.
 
 Docker Desktop on Windows exposes file-backed Compose secrets as `0555` in
 Linux containers, which the runtime parser rejects. The preparation job reads

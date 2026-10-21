@@ -5,7 +5,9 @@ workdirs, writable paths, required OCI labels, one target platform, and digest
 references for builder candidates. S8.3-S8.5 build six purpose-specific final
 images from generated allowlisted contexts. Their local acceptance evidence is
 in [`plans/s8-images-evidence.md`](../../plans/s8-images-evidence.md). The images
-are not a Compose stack or a published release.
+are assembled into the [local Compose stack](../../docs/development/s8-compose.md).
+They remain unpublished local artifacts; [S8 acceptance](../../docs/architecture/s8-acceptance.md)
+and the [independent review](../../docs/architecture/s8-review.md) define the gate.
 
 Run the image gates from a checkout with pinned Node, pnpm, Docker Engine,
 Buildx, and Chromium available:
@@ -53,7 +55,8 @@ workspace dependency audit. `node scripts/s8-scan-image.mjs <digest-pinned-image
 fails on any unapproved HIGH/CRITICAL finding. An exception in
 `ops/s8/vulnerability-exceptions.json` requires the exact package and CVE,
 compensating control, owner, a different reviewer, approval date, and expiry
-within 30 days. The ledger is empty. Scanner database updates may change
+within 30 days. Dates must be real UTC calendar dates, approval must have taken
+effect, and expiry is exclusive. The ledger is empty. Scanner database updates may change
 results without a source change, so every image slice reruns the policy before
 composition. Gitleaks and public artifact disclosure remain separate gates.
 

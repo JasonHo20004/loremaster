@@ -1,0 +1,299 @@
+{
+  "reviewDate": "2026-10-21",
+  "reviewedBranchCommit": "f6bf7d38d0eac2a4df3f4e8b6fd5f367f9c9cbf3",
+  "workflowHeadCommit": "f6bf7d38d0eac2a4df3f4e8b6fd5f367f9c9cbf3",
+  "runtimeSourceCommit": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+  "sourceTree": "a464c9abd7142a4e47da89e76622f72dd86434a7",
+  "sourceTreesEqual": true,
+  "sourceNote": "GitHub pull_request checkout uses the synthetic merge commit. Its complete source tree equals the reviewed branch head; OCI revisions identify the actual checkout.",
+  "workflowRun": "https://github.com/JasonHo20004/loremaster/actions/runs/39535223085",
+  "artifactName": "s8-acceptance-evidence",
+  "artifactId": 12317790332,
+  "rawScannerReports": 6,
+  "images": [
+    {
+      "profile": "api",
+      "image": "loremaster/api:s8",
+      "id": "sha256:8a909d922431c34d80139050ecf9c6a2e02e4e21aca3b4268c7f3a2eb36425ed",
+      "contextSha256": "30b5e3da3e72af960c16fda9f42976e4d012cd9cc55e4fb006a394a774432483",
+      "revision": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+      "created": "2026-10-21T02:50:13.000Z"
+    },
+    {
+      "profile": "worker",
+      "image": "loremaster/worker:s8",
+      "id": "sha256:5b5fa2aae6e13cf235a281e68518d9f6a4f882041f811ea16051ab8f94d6087c",
+      "contextSha256": "328ddf352e5781c1313afc1bc1b252b104a685135490a5d7f348db3150d9b3e3",
+      "revision": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+      "created": "2026-10-21T02:50:13.000Z"
+    },
+    {
+      "profile": "observer",
+      "image": "loremaster/observer:s8",
+      "id": "sha256:6c7642c3d0170a4beb65da7038f01034ab1b8a48da324e5a8f5aa3915be8845d",
+      "contextSha256": "d401b6a0879cd1706d243c685702e5adcee53170075d935c7a950504ffd30e9c",
+      "revision": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+      "created": "2026-10-21T02:50:13.000Z"
+    },
+    {
+      "profile": "migration",
+      "image": "loremaster/migration:s8",
+      "id": "sha256:30bd863e13bacbcea4901157b169767fc552ab3a1491c1c072ffc571904aa865",
+      "contextSha256": "3c862264f165850aed56b2b3b8aa2308e06def8a859d592dfe6ec966c7e1f2d1",
+      "revision": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+      "created": "2026-10-21T02:50:13.000Z"
+    },
+    {
+      "profile": "importer",
+      "image": "loremaster/importer:s8",
+      "id": "sha256:870d466f42fd7efb71c0ab63fbc40609b74529b64bc58220f055a772c3321f97",
+      "contextSha256": "45b18cfda45eb2ade803f4da6deba4c5479aa1036036880dc0d98386419a1d53",
+      "revision": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+      "created": "2026-10-21T02:50:13.000Z"
+    },
+    {
+      "profile": "web-public",
+      "image": "loremaster/web:s8",
+      "id": "sha256:673690d5caaaa03d7405e069441e9cbab54ccdf82c059bc242246c47d219fb1d",
+      "contextSha256": "f028b429e7fc6f2ebc4f309cfd6b0ba64ce98bd891133f418c13b19da8773ee1",
+      "revision": "72383ddb6149ba1b315a45a3422f6653759b1d44",
+      "created": "2026-10-21T02:50:13.000Z"
+    }
+  ],
+  "scans": [
+    {
+      "image": "loremaster/api:s8",
+      "id": "sha256:8a909d922431c34d80139050ecf9c6a2e02e4e21aca3b4268c7f3a2eb36425ed",
+      "configSha256": "8a909d922431c34d80139050ecf9c6a2e02e4e21aca3b4268c7f3a2eb36425ed",
+      "sbomSha256": "15ede1c0bf764967650c79d1f893103f5be1691149ce872a3401a65d3bee89cd",
+      "layerCount": 3,
+      "runtimeVersion": "v22.23.3",
+      "findings": 0,
+      "secretFindings": 0,
+      "violations": [],
+      "scannedAt": "2026-10-21T02:54:13.670Z"
+    },
+    {
+      "image": "loremaster/worker:s8",
+      "id": "sha256:5b5fa2aae6e13cf235a281e68518d9f6a4f882041f811ea16051ab8f94d6087c",
+      "configSha256": "5b5fa2aae6e13cf235a281e68518d9f6a4f882041f811ea16051ab8f94d6087c",
+      "sbomSha256": "8d0f21b13bac4abe51d193a9159b23446abbdd6a9ad6672ad6ff05ebce0f450b",
+      "layerCount": 3,
+      "runtimeVersion": "v22.23.3",
+      "findings": 0,
+      "secretFindings": 0,
+      "violations": [],
+      "scannedAt": "2026-10-21T02:54:17.703Z"
+    },
+    {
+      "image": "loremaster/observer:s8",
+      "id": "sha256:6c7642c3d0170a4beb65da7038f01034ab1b8a48da324e5a8f5aa3915be8845d",
+      "configSha256": "6c7642c3d0170a4beb65da7038f01034ab1b8a48da324e5a8f5aa3915be8845d",
+      "sbomSha256": "9a2abd31c0e37fc8622a464650dda68dcb245c24f4f23bdbebc530ea8c4e7ae8",
+      "layerCount": 3,
+      "runtimeVersion": "v22.23.3",
+      "findings": 0,
+      "secretFindings": 0,
+      "violations": [],
+      "scannedAt": "2026-10-21T02:54:21.769Z"
+    },
+    {
+      "image": "loremaster/migration:s8",
+      "id": "sha256:30bd863e13bacbcea4901157b169767fc552ab3a1491c1c072ffc571904aa865",
+      "configSha256": "30bd863e13bacbcea4901157b169767fc552ab3a1491c1c072ffc571904aa865",
+      "sbomSha256": "bfe3f2a667d277cd3309911fe618f633f7e876b7820722ad200e47bcf182bbbc",
+      "layerCount": 3,
+      "runtimeVersion": "v22.23.3",
+      "findings": 0,
+      "secretFindings": 0,
+      "violations": [],
+      "scannedAt": "2026-10-21T02:54:25.649Z"
+    },
+    {
+      "image": "loremaster/importer:s8",
+      "id": "sha256:870d466f42fd7efb71c0ab63fbc40609b74529b64bc58220f055a772c3321f97",
+      "configSha256": "870d466f42fd7efb71c0ab63fbc40609b74529b64bc58220f055a772c3321f97",
+      "sbomSha256": "d76fe96d045112067abcf2b8dacf1aefc48918e2e2e6557bd653efb8a3ed2474",
+      "layerCount": 3,
+      "runtimeVersion": "v22.23.3",
+      "findings": 0,
+      "secretFindings": 0,
+      "violations": [],
+      "scannedAt": "2026-10-21T02:54:29.546Z"
+    },
+    {
+      "image": "loremaster/web:s8",
+      "id": "sha256:673690d5caaaa03d7405e069441e9cbab54ccdf82c059bc242246c47d219fb1d",
+      "configSha256": "673690d5caaaa03d7405e069441e9cbab54ccdf82c059bc242246c47d219fb1d",
+      "sbomSha256": "7fb13478ba2d22d63c2cfa967432c0e9f6c1ec1c4c894d2ca984d3aeae482080",
+      "layerCount": 4,
+      "runtimeVersion": null,
+      "findings": 0,
+      "secretFindings": 0,
+      "violations": [],
+      "scannedAt": "2026-10-21T02:54:31.043Z"
+    }
+  ],
+  "reproducibility": {
+    "status": "PASS",
+    "profiles": [
+      {
+        "profile": "api",
+        "id": "sha256:8a909d922431c34d80139050ecf9c6a2e02e4e21aca3b4268c7f3a2eb36425ed",
+        "contextSha256": "30b5e3da3e72af960c16fda9f42976e4d012cd9cc55e4fb006a394a774432483"
+      },
+      {
+        "profile": "worker",
+        "id": "sha256:5b5fa2aae6e13cf235a281e68518d9f6a4f882041f811ea16051ab8f94d6087c",
+        "contextSha256": "328ddf352e5781c1313afc1bc1b252b104a685135490a5d7f348db3150d9b3e3"
+      },
+      {
+        "profile": "observer",
+        "id": "sha256:6c7642c3d0170a4beb65da7038f01034ab1b8a48da324e5a8f5aa3915be8845d",
+        "contextSha256": "d401b6a0879cd1706d243c685702e5adcee53170075d935c7a950504ffd30e9c"
+      },
+      {
+        "profile": "migration",
+        "id": "sha256:30bd863e13bacbcea4901157b169767fc552ab3a1491c1c072ffc571904aa865",
+        "contextSha256": "3c862264f165850aed56b2b3b8aa2308e06def8a859d592dfe6ec966c7e1f2d1"
+      },
+      {
+        "profile": "importer",
+        "id": "sha256:870d466f42fd7efb71c0ab63fbc40609b74529b64bc58220f055a772c3321f97",
+        "contextSha256": "45b18cfda45eb2ade803f4da6deba4c5479aa1036036880dc0d98386419a1d53"
+      },
+      {
+        "profile": "web-public",
+        "id": "sha256:673690d5caaaa03d7405e069441e9cbab54ccdf82c059bc242246c47d219fb1d",
+        "contextSha256": "f028b429e7fc6f2ebc4f309cfd6b0ba64ce98bd891133f418c13b19da8773ee1"
+      }
+    ]
+  },
+  "lifecycle": {
+    "project": "loremaster-s8-lifecycle-f9c25f16",
+    "checks": [
+      {
+        "name": "declared_shutdown_grace",
+        "status": "PASS",
+        "graceSeconds": {
+          "api": 20,
+          "worker": 20,
+          "observer": 15,
+          "web": 15
+        }
+      },
+      {
+        "name": "initial_probes",
+        "status": "PASS"
+      },
+      {
+        "name": "postgres_loss",
+        "status": "PASS",
+        "apiLive": 200,
+        "apiReady": "unhealthy"
+      },
+      {
+        "name": "postgres_recovery",
+        "status": "PASS",
+        "pgRecoveryMs": 5606,
+        "apiRecoveryMs": 257
+      },
+      {
+        "name": "redis_loss",
+        "status": "PASS",
+        "apiReady": 200,
+        "session": 201
+      },
+      {
+        "name": "redis_recovery",
+        "status": "PASS",
+        "redisRecoveryMs": 5049,
+        "workerRecoveryMs": 248,
+        "observerRecoveryMs": 313
+      },
+      {
+        "name": "api_term_drain",
+        "status": "PASS",
+        "elapsedMs": 10220,
+        "recoveryMs": 5617,
+        "exitCode": 0,
+        "requestAccepted": true,
+        "requestClosed": true
+      },
+      {
+        "name": "worker_term_drain",
+        "status": "PASS",
+        "elapsedMs": 166,
+        "recoveryMs": 5589,
+        "exitCode": 0
+      },
+      {
+        "name": "readonly_and_disk_full",
+        "status": "PASS",
+        "root": "EROFS",
+        "tmpfs": "ENOSPC"
+      },
+      {
+        "name": "bounded_oom",
+        "status": "PASS",
+        "oomKilled": true
+      },
+      {
+        "name": "bounded_redacted_logs",
+        "status": "PASS",
+        "lines": 160
+      },
+      {
+        "name": "post_restart_gameplay",
+        "status": "PASS"
+      }
+    ],
+    "passed": true,
+    "teardown": "PASS"
+  },
+  "workerDrain": {
+    "project": "loremaster-s8-worker-drain-cadffc00",
+    "passed": true,
+    "signaledAt": "2026-10-21T02:57:43.296Z",
+    "drainMs": 1015,
+    "recoveryMs": 5453,
+    "replayMs": 204,
+    "completed": 1,
+    "teardown": "PASS"
+  },
+  "packagedBrowser": {
+    "project": "loremaster-s8-e2e-bfd64ef8",
+    "slot": "2026-10-21",
+    "passed": true,
+    "browserOutput": "Running 3 tests using 1 worker\n\n[1/3] [chromium] › tests/containers/packaged-stack.spec.ts:63:3 › packaged gateway and runtime › refresh, solve, profile, leaderboard, and second guest isolation\n[2/3] [chromium] › tests/containers/packaged-stack.spec.ts:131:3 › packaged gateway and runtime › committed response loss retries one idempotent command\n\n\n\n\n[3/3] [chromium] › tests/containers/packaged-stack.spec.ts:181:3 › packaged gateway and runtime › real PostgreSQL midnight rollover leaves the old attempt and hostile text inert\n  3 passed (16.1s)",
+    "teardown": "PASS"
+  },
+  "t25": {
+    "project": "loremaster-s8-t25-243ac395",
+    "image": "loremaster/postgres-t25:243ac395",
+    "slot": "2026-10-21",
+    "passed": true,
+    "closedClock": "2026-10-22T00:00:05.089Z",
+    "effectsBefore": {
+      "attempts": 0,
+      "guesses": 0,
+      "command_receipts": 0,
+      "attempt_finalizations": 0,
+      "participation_days": 0,
+      "knowledge_contributions": 0,
+      "regional_knowledge": 0,
+      "leaderboard_entries": 0
+    },
+    "effectsAfter": {
+      "attempts": 0,
+      "guesses": 0,
+      "command_receipts": 0,
+      "attempt_finalizations": 0,
+      "participation_days": 0,
+      "knowledge_contributions": 0,
+      "regional_knowledge": 0,
+      "leaderboard_entries": 0
+    },
+    "teardown": "PASS"
+  }
+}
