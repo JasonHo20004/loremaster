@@ -98,7 +98,9 @@ const evidence = {
   teardown: {
     executed: false,
     reason:
-      'The final local lab is retained for use; a prior disposable lab teardown is recorded separately when available',
+      process.env.GITHUB_ACTIONS === 'true'
+        ? 'CI teardown runs in the following always step; see teardown.json in the same artifact'
+        : 'The final local lab is retained for use; a prior disposable lab teardown is recorded separately when available',
   },
 }
 const teardown = resolve(state, 'teardown.json')

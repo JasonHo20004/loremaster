@@ -45,7 +45,9 @@ jobs:
             --driver-opt image=moby/buildkit:v0.25.1@sha256:79cc6476ab1a3371c9afd8b44e7c55610057c43e18d9b39b68e2b0c2475cc1b6 \
             --use
       - name: Build, scan and verify immutable images
-        run: pnpm test:images
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:images
       - name: Bootstrap local platform and desired state
         run: |
           pnpm s9 cluster

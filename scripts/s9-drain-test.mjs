@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import { Buffer } from 'node:buffer'
 import { resolve } from 'node:path'
+import { performance } from 'node:perf_hooks'
 import process from 'node:process'
 import { setTimeout as delay } from 'node:timers/promises'
 import { asterQuayContentPack } from '../packages/database/dist/content/fixtures/aster-quay.js'
@@ -145,7 +146,7 @@ async function terminate(before, active) {
   const name = before.metadata.labels['app.kubernetes.io/name']
   const containerId =
     before.status.containerStatuses[0].containerID.split('://')[1]
-  const started = Date.now()
+  const started = performance.now()
   kubectl([
     'delete',
     '-n',
@@ -172,16 +173,9 @@ async function terminate(before, active) {
     (before.spec.terminationGracePeriodSeconds + 5) * 1000,
     100,
   )
-  const finishedAt = /^\d+$/u.test(String(status.finishedAt))
-    ? Number(BigInt(status.finishedAt) / 1000000n)
-    : Date.parse(status.finishedAt)
-  const drainMs = finishedAt - started
-  assert.equal(status.exitCode, 0, name + ' was killed or failed')
-  assert.notEqual(status.reason, 'OOMKilled')
-  assert(
-    drainMs >= 0 && drainMs <= before.spec.terminationGracePeriodSeconds * 1000,
-    name + ' exceeded grace budget',
-  )
+  // Host and Docker Desktop VM clocks can drift. This monotonic observation
+  // is an upper bound including deletion RPC and CRI polling, without mixing clocks.
+  const drainMs = Math.ceil(performance.now() - started)
   const record = {
     name,
     active,
@@ -190,9 +184,19 @@ async function terminate(before, active) {
     drainMs,
     exitCode: status.exitCode,
     oomKilled: false,
-    passed: true,
+    criFinishedAt: status.finishedAt,
+    measurement:
+      'monotonic time from deletion request to observed CRI exit (upper bound)',
+    passed: false,
   }
   result.checks.push(record)
+  assert.equal(status.exitCode, 0, name + ' was killed or failed')
+  assert.notEqual(status.reason, 'OOMKilled')
+  assert(
+    drainMs <= before.spec.terminationGracePeriodSeconds * 1000,
+    `${name} drain ${drainMs}ms exceeded ${before.spec.terminationGracePeriodSeconds}s grace budget`,
+  )
+  record.passed = true
   return record
 }
 function nodeExec(name, source) {
