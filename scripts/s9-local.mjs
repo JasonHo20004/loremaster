@@ -116,7 +116,7 @@ function preflight() {
   )
     throw Error('Helm version mismatch; run tools')
   const client = JSON.parse(
-    run('kubectl', ['version', '--client', '-o', 'json']),
+    run(tool('kubectl'), ['version', '--client', '-o', 'json']),
   ).clientVersion
   if (
     client.major !== '1' ||

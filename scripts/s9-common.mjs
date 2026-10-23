@@ -41,25 +41,24 @@ export function run(command, args, options = {}) {
   return result.stdout?.trim() ?? ''
 }
 export function tool(name) {
-  const local =
-    name === 'kind'
-      ? resolve(
-          state,
-          'tools',
-          process.platform === 'win32' ? 'kind.exe' : 'kind',
-        )
-      : resolve(
-          state,
-          'tools/helm',
-          process.platform === 'win32'
-            ? 'windows-amd64/helm.exe'
-            : 'linux-amd64/helm',
-        )
+  const local = ['kind', 'kubectl'].includes(name)
+    ? resolve(
+        state,
+        'tools',
+        name + (process.platform === 'win32' ? '.exe' : ''),
+      )
+    : resolve(
+        state,
+        'tools/helm',
+        process.platform === 'win32'
+          ? 'windows-amd64/helm.exe'
+          : 'linux-amd64/helm',
+      )
   return existsSync(local) ? local : name
 }
 export function kubectl(args, options) {
   return run(
-    'kubectl',
+    tool('kubectl'),
     [
       '--kubeconfig',
       kubeconfig,

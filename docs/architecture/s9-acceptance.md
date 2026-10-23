@@ -35,6 +35,9 @@ working tree.
 
 ## Corrections verified during local setup
 
+- CI uses checksum-pinned kubectl 1.34.1 rather than the runner's newer
+  preinstalled client. The dependency audit found new Vitest 5.0.0 advisories;
+  Vitest and its browser provider are pinned together at patched 5.0.5.
 - Calico uses iptables and omits the optional eBPF securityfs mount that
   cannot be created inside kind's read-only nested `/sys` on Docker Desktop.
 - The dedicated RuntimeClass extends kind's original OCI base spec and its

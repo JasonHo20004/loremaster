@@ -34,6 +34,17 @@ export async function installTools() {
     kindPath,
   )
   chmodSync(kindPath, 0o755)
+  const kubectlPath = resolve(
+    state,
+    'tools',
+    'kubectl' + (platform === 'win32' ? '.exe' : ''),
+  )
+  await download(
+    `https://dl.k8s.io/release/v${versions.kubectl}/bin/${os}/amd64/kubectl${platform === 'win32' ? '.exe' : ''}`,
+    checksums.kubectl,
+    kubectlPath,
+  )
+  chmodSync(kubectlPath, 0o755)
   const archive = resolve(
     state,
     'tools',

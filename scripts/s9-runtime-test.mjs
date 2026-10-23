@@ -15,6 +15,7 @@ import {
   run,
   save,
   state,
+  tool,
 } from './s9-common.mjs'
 
 const result = {
@@ -332,7 +333,7 @@ try {
   let forwardOutput = '',
     forwardError
   forward = spawn(
-    'kubectl',
+    tool('kubectl'),
     [
       '--kubeconfig',
       kubeconfig,

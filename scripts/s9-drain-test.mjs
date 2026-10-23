@@ -17,6 +17,7 @@ import {
   run,
   save,
   state,
+  tool,
 } from './s9-common.mjs'
 import { generateSecrets, roleSql, secretGroups } from './s9-secrets.mjs'
 
@@ -102,7 +103,7 @@ function child(command, args) {
   return proc
 }
 function kubeChild(args) {
-  return child('kubectl', [
+  return child(tool('kubectl'), [
     '--kubeconfig',
     kubeconfig,
     '--context',

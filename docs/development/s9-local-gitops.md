@@ -2,7 +2,7 @@
 
 S9 dùng kind, Calico, Helm và Argo CD. Xem [kế hoạch và điều kiện nghiệm
 thu](../../plans/s9-local-gitops.md) trước khi thay đổi topology. Cần Docker
-Linux engine với tối thiểu 4 CPU/8 GiB RAM, kubectl 1.33–1.35, Git, tar,
+Linux engine với tối thiểu 4 CPU/8 GiB RAM, Git, tar,
 Node và pnpm đúng phiên bản trong `.node-version`/`package.json`. Windows
 cần Docker Desktop chạy Linux containers. Chỉ hỗ trợ amd64 cho profile này.
 
@@ -18,7 +18,7 @@ pnpm test:s9
 pnpm s9 cluster
 ```
 
-`tools` tải kind/Helm từ upstream vào `.cache/s9/tools`, kiểm tra SHA-256
+`tools` tải kind/Helm/kubectl 1.34.1 từ upstream vào `.cache/s9/tools`, kiểm tra SHA-256
 đã ghim; không cài global hoặc sửa PATH. `cluster` dùng node image theo
 digest, cài manifest Calico/Argo đã kiểm tra hash. Kubeconfig nằm riêng
 ở `.cache/s9/kubeconfig`; lệnh luôn chọn context `kind-loremaster-s9`.
