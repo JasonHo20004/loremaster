@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import {
+  chmodSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -23,6 +24,9 @@ const result = {
 }
 mkdirSync(state, { recursive: true })
 const temporary = mkdtempSync(resolve(state, 'musl-scan-'))
+// The capability-free scanner has a different UID on Linux runners. These
+// archives contain only public images; make just this owned input traversable.
+chmodSync(temporary, 0o755)
 const cache = 'loremaster-musl-' + randomUUID()
 let cacheCreated = false
 const docker = (args) =>
@@ -79,6 +83,7 @@ try {
     docker(['pull', contract.image])
     const archive = resolve(temporary, name + '.tar')
     docker(['image', 'save', '-o', archive, contract.image])
+    chmodSync(archive, 0o644)
     const raw = docker([
       'run',
       '--rm',
