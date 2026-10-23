@@ -23,6 +23,7 @@ measurements. This stage does not require merging later S10–S12 work.
 | One control plane/three workers; Calico policy enforcement; Argo controllers | `pnpm s9 cluster` | `.cache/s9/platform.json`; runtime node/readiness checks |
 | Rendered Helm policy and isolated operators | `pnpm test:s9` | `.cache/s9/static-policy.json`; 21 focused tests |
 | Six reproducible, minimal, scanned S8 images | `pnpm test:images` | `.cache/s8-build-results.json`, `.cache/s8-reproducibility.json`, `.cache/s8-evidence/summary.json` and raw SBOM/scan files |
+| Patched musl in six application and two data images | `pnpm test:s9:musl` | `.cache/s9/musl.json`; exact package versions and CVE-2026-107891 absence in all eight raw scans; UNKNOWN findings block application image admission |
 | Registry manifest/config binding | `pnpm s9 promote` | `.cache/s9/promotion.json`; hash raw registry manifests and compare their config digest to saved scanner config hash |
 | Explicit migration and role provisioning | `pnpm s9 bootstrap` | `.cache/s9/bootstrap.json`; no Job or Secret in Argo-managed chart output |
 | Git desired state, self-heal and rollback | `pnpm s9 sync`, `pnpm test:s9:runtime` | `.cache/s9/gitops-source.json`, `.cache/s9/runtime.json`; exact desired revision Synced/Healthy |
@@ -53,6 +54,14 @@ policy gate passed 21 tests, and the patched Vitest browser provider passed
 
 ## Corrections verified during local setup
 
+- The musl regcomp advisory [CVE-2026-107891](https://www.openwall.com/lists/oss-security/2026/10/21/18)
+  requires Alpine's backport even while scanner severity is UNKNOWN. Runtime
+  assembly now installs exact musl `1.2.6-r3` before copying libraries and
+  package records. PostgreSQL 17.11 carries `1.2.6-r3`; Redis 7.4.11 carries
+  Alpine 3.21's fixed `1.2.5-r12`. Both data images are pinned by digest.
+  CI rejects UNKNOWN/unclassified application findings and verifies actual
+  package inventory and advisory absence in all eight images. No exception
+  was added. Current-head execution is reported by PR checks and its artifacts.
 - CI uses checksum-pinned kubectl 1.34.1 rather than the runner's newer
   preinstalled client. The dependency audit found new Vitest 5.0.0 advisories;
   Vitest and its browser provider are pinned together at patched 5.0.5.

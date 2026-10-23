@@ -2,6 +2,17 @@
   "schemaVersion": 1,
   "targetPlatform": "linux/amd64",
   "sourceDateEpoch": "git-commit-time",
+  "runtimePackages": { "musl": "1.2.6-r3" },
+  "dataServices": {
+    "postgres": {
+      "image": "postgres:17.11-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb",
+      "musl": "1.2.6-r3"
+    },
+    "redis": {
+      "image": "redis:7.4.11-alpine@sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541",
+      "musl": "1.2.5-r12"
+    }
+  },
   "labels": [
     "org.opencontainers.image.created",
     "org.opencontainers.image.revision",

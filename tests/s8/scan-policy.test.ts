@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { evaluateVulnerabilities } from '../../scripts/s8-scan-image.mjs'
+import {
+  assertRuntimePackages,
+  evaluateVulnerabilities,
+} from '../../scripts/s8-scan-image.mjs'
 
 const finding = {
   PkgName: 'libexample',
@@ -10,6 +13,44 @@ const finding = {
 const report = { Results: [{ Target: 'example', Vulnerabilities: [finding] }] }
 
 describe('S8 vulnerability admission', () => {
+  it.each(['UNKNOWN', undefined, 'UNRECOGNIZED'])(
+    'denies unclassified severity %s',
+    (severity) => {
+      const raw = {
+        Results: [
+          {
+            Vulnerabilities: [
+              {
+                PkgName: 'musl',
+                VulnerabilityID: 'CVE-2026-107891',
+                Severity: severity,
+              },
+            ],
+          },
+        ],
+      }
+      expect(evaluateVulnerabilities(raw, []).violations).toEqual([
+        'CVE-2026-107891 in musl',
+      ])
+    },
+  )
+  it('requires the patched package even when the scanner has no advisory metadata', () => {
+    const raw = {
+      Results: [
+        { Class: 'os-pkgs', Packages: [{ Name: 'musl', Version: '1.2.6-r2' }] },
+      ],
+    }
+    expect(() => assertRuntimePackages(raw, { musl: '1.2.6-r3' })).toThrow(
+      'Runtime package mismatch',
+    )
+    raw.Results[0]!.Packages[0]!.Version = '1.2.6-r3'
+    expect(assertRuntimePackages(raw, { musl: '1.2.6-r3' })).toEqual({
+      musl: '1.2.6-r3',
+    })
+    expect(() =>
+      assertRuntimePackages({ Results: [] }, { musl: '1.2.6-r3' }),
+    ).toThrow('Runtime package mismatch')
+  })
   it('denies unapproved HIGH and CRITICAL findings', () => {
     expect(evaluateVulnerabilities(report, [], new Date('2026-10-02'))).toEqual(
       {

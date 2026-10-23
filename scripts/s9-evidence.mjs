@@ -12,6 +12,7 @@ import {
 
 const runtime = json(resolve(state, 'runtime.json'))
 const drain = json(resolve(state, 'drain.json'))
+const musl = json(resolve(state, 'musl.json'))
 const promotion = json(resolve(state, 'promotion.json'))
 const revision = run('git', ['rev-parse', 'HEAD'])
 const source = json(resolve(state, 'gitops-source.json'))
@@ -30,6 +31,10 @@ const scans = json(resolve(root, '.cache/s8-evidence/summary.json'))
 if (
   !runtime.passed ||
   !drain.passed ||
+  !musl.passed ||
+  musl.sourceRevision !== revision ||
+  musl.images.length !== 8 ||
+  !musl.images.every((image) => image.advisoryAbsent) ||
   drain.teardown !== 'PASS' ||
   runtime.sourceRevision !== revision ||
   drain.sourceRevision !== revision ||
@@ -88,6 +93,7 @@ const evidence = {
     configSha256: scan.configSha256,
     sbomSha256: scan.sbomSha256,
     highCritical: scan.findings,
+    runtimePackages: scan.runtimePackages,
     unapproved: scan.violations.length,
     secrets: scan.secretFindings,
     scannedAt: scan.scannedAt,
@@ -95,6 +101,7 @@ const evidence = {
   staticPolicy: json(resolve(state, 'static-policy.json')),
   runtime,
   drain,
+  muslRemediation: musl,
   teardown: {
     executed: false,
     reason:

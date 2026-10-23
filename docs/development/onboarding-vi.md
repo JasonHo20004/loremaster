@@ -67,7 +67,7 @@ Chưa có trong phạm vi MVP: nhiều loại vụ án, khôi phục tài khoả
 | Kiểm thử                     | Vitest `5.0.5`, Supertest, Playwright `1.63.0`, axe              |
 | Chất lượng và CI             | ESLint, Prettier, GitHub Actions, dependency audit, Gitleaks     |
 
-PostgreSQL `17.6` và Redis `7.4.5` được pin bằng digest trong Compose và harness. Sáu image ứng dụng được dựng từ allowlist; CI ghi image IDs/context digests/SBOM/scanner cho đúng source commit. S9 promote image đã kiểm chứng vào registry loopback local theo immutable digest; chưa có public registry release.
+PostgreSQL `17.11` và Redis `7.4.11` được pin bằng digest trong Compose và harness. Sáu image ứng dụng được dựng từ allowlist; CI ghi image IDs/context digests/SBOM/scanner cho đúng source commit. S9 promote image đã kiểm chứng vào registry loopback local theo immutable digest; chưa có public registry release.
 
 ### Sơ đồ runtime hiện có
 

@@ -48,6 +48,8 @@ jobs:
         run: |
           pnpm exec playwright install --with-deps chromium
           pnpm test:images
+      - name: Verify musl remediation in applications and data services
+        run: pnpm test:s9:musl
       - name: Bootstrap local platform and desired state
         run: |
           pnpm s9 cluster
@@ -81,6 +83,7 @@ jobs:
             .cache/s9/gitops-source.json
             .cache/s9/runtime.json
             .cache/s9/drain.json
+            .cache/s9/musl.json
             .cache/s9/acceptance-evidence.json
             .cache/s9/teardown.json
             .cache/s9/last-failure.json

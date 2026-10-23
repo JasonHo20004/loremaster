@@ -13,7 +13,10 @@ import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { createHash } from 'node:crypto'
 import process from 'node:process'
-import { evaluateVulnerabilities } from './s8-scan-image.mjs'
+import {
+  assertRuntimePackages,
+  evaluateVulnerabilities,
+} from './s8-scan-image.mjs'
 import { buildContext } from './s8-context.mjs'
 
 const scanner =
@@ -210,6 +213,10 @@ try {
       report,
       JSON.parse(readFileSync('ops/s8/vulnerability-exceptions.json', 'utf8')),
     )
+    const runtimePackages = assertRuntimePackages(
+      report,
+      contracts.runtimePackages,
+    )
     writeFileSync(join(evidence, name + '-scan.json'), raw)
     const sbom = docker([
       ...base,
@@ -298,6 +305,7 @@ try {
       layerCount: imageManifest.Layers.length,
       runtimeVersion,
       findings: policy.findings,
+      runtimePackages,
       secretFindings: secretFindings.length,
       violations: policy.violations,
       scannedAt: new Date().toISOString(),
@@ -306,7 +314,7 @@ try {
       name +
         ': ' +
         policy.findings +
-        ' HIGH/CRITICAL, ' +
+        ' HIGH/CRITICAL/UNKNOWN, ' +
         policy.violations.length +
         ' unapproved\n',
     )

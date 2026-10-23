@@ -50,9 +50,9 @@ an accepted source of variation. S8.3-S8.5 own the measured comparison.
 
 The scanner is Trivy 0.74.0 at the digest in
 `scripts/s8-scan-image.mjs`. Each candidate or assembled image runs a
-HIGH/CRITICAL OS and application scan, SBOM/license inventory, and the
+HIGH/CRITICAL/UNKNOWN OS and application scan, SBOM/license inventory, and the
 workspace dependency audit. `node scripts/s8-scan-image.mjs <digest-pinned-image>`
-fails on any unapproved HIGH/CRITICAL finding. An exception in
+fails on any unapproved HIGH/CRITICAL/UNKNOWN finding. An exception in
 `ops/s8/vulnerability-exceptions.json` requires the exact package and CVE,
 compensating control, owner, a different reviewer, approval date, and expiry
 within 30 days. Dates must be real UTC calendar dates, approval must have taken
