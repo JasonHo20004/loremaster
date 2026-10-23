@@ -1,0 +1,55 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  annotations: { argocd.argoproj.io/sync-wave: '-2' }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dns
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: kube-system }
+          podSelector:
+            matchLabels: { k8s-app: kube-dns }
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+{{- range $edge := list (dict "from" (list "web") "to" "api" "port" 3000) (dict "from" (list "api" "worker" "migration" "importer") "to" "postgres" "port" 5432) (dict "from" (list "api" "worker" "observer") "to" "redis" "port" 6379) }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $edge.to }}-ingress
+spec:
+  podSelector:
+    matchLabels: { app.kubernetes.io/name: {{ $edge.to }} }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - { key: app.kubernetes.io/name, operator: In, values: {{ $edge.from | toJson }} }
+      ports: [{ port: {{ $edge.port }}, protocol: TCP }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $edge.to }}-egress
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app.kubernetes.io/name, operator: In, values: {{ $edge.from | toJson }} }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector:
+            matchLabels: { app.kubernetes.io/name: {{ $edge.to }} }
+      ports: [{ port: {{ $edge.port }}, protocol: TCP }]
+{{- end }}

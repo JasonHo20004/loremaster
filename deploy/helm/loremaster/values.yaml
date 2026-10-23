@@ -1,0 +1,69 @@
+# Filled by the admission/promotion command; no mutable application tags.
+images:
+  api: ''
+  worker: ''
+  observer: ''
+  web: ''
+  migration: ''
+  importer: ''
+postgresImage: postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+redisImage: redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08
+gatewayIP: 10.244.240.10
+operator: ''
+importDryRun: true
+components:
+  api:
+    uid: 10002
+    port: 3000
+    replicas: 2
+    grace: 20
+    cpu: '1'
+    memory: 256Mi
+    env:
+      LOREMASTER_API_MODE: local
+      LOREMASTER_API_ORIGIN: http://localhost:8080
+      LOREMASTER_API_CURSOR_ACTIVE_VERSION: s9
+      LOREMASTER_REDIS_MODE: local
+      LOREMASTER_REDIS_ENABLED: 'true'
+      LOREMASTER_REDIS_LIMITER_HMAC_VERSION: v1
+    files:
+      DATABASE_URL_FILE: api_database_url
+      LOREMASTER_API_CURSOR_ACTIVE_KEY_FILE: cursor_key
+      LOREMASTER_REDIS_CACHE_URL_FILE: redis_api_cache_url
+      LOREMASTER_REDIS_LIMITER_URL_FILE: redis_api_limiter_url
+      LOREMASTER_REDIS_PRODUCER_URL_FILE: redis_producer_url
+      LOREMASTER_REDIS_PRODUCER_DATABASE_URL_FILE: producer_database_url
+      LOREMASTER_REDIS_LIMITER_HMAC_KEY_FILE: limiter_hmac_key
+  worker:
+    uid: 10003
+    port: 3001
+    replicas: 1
+    grace: 20
+    cpu: '1'
+    memory: 256Mi
+    env:
+      LOREMASTER_REDIS_MODE: local
+    files:
+      LOREMASTER_WORKER_DATABASE_URL_FILE: worker_database_url
+      LOREMASTER_WORKER_REDIS_URL_FILE: redis_worker_url
+      LOREMASTER_WORKER_CACHE_REDIS_URL_FILE: redis_worker_cache_url
+  observer:
+    uid: 10004
+    port: 3002
+    replicas: 1
+    grace: 15
+    cpu: '0.5'
+    memory: 128Mi
+    env:
+      LOREMASTER_REDIS_MODE: local
+    files:
+      LOREMASTER_OBSERVER_REDIS_URL_FILE: redis_observer_url
+  web:
+    uid: 10001
+    port: 8080
+    replicas: 1
+    grace: 15
+    cpu: '0.5'
+    memory: 128Mi
+    env: {}
+    files: {}

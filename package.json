@@ -49,11 +49,15 @@
     "test:s8:e2e": "pnpm build && pnpm build:images && node scripts/container-e2e.mjs && node scripts/s8-t25.mjs",
     "test:images": "pnpm build && pnpm build:images && node scripts/s8-reproducible.mjs && node scripts/s8-images-test.mjs all && node scripts/s8-artifacts.mjs",
     "test:web:deployed-disclosure": "node scripts/s8-artifacts.mjs web",
-    "test:s8:reproducible": "node scripts/s8-reproducible.mjs"
+    "test:s8:reproducible": "node scripts/s8-reproducible.mjs",
+    "s9": "node scripts/s9-local.mjs",
+    "test:s9": "node scripts/s9-validate.mjs && vitest run tests/s9",
+    "test:s9:runtime": "node scripts/s9-runtime-test.mjs",
+    "test:s9:drain": "node scripts/s9-drain-test.mjs"
   },
   "devDependencies": {
-    "@playwright/test": "1.63.0",
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
     "@types/node": "22.20.2",
     "@types/supertest": "6.0.3",
     "eslint": "10.10.0",
@@ -61,6 +65,7 @@
     "supertest": "7.2.2",
     "typescript": "6.0.3",
     "typescript-eslint": "8.70.0",
-    "vitest": "5.0.0"
+    "vitest": "5.0.0",
+    "yaml": "2.9.1"
   }
 }

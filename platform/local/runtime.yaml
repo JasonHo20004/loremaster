@@ -1,0 +1,69 @@
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: loremaster
+handler: loremaster
+---
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: loremaster-redis
+handler: loremaster-redis
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: local-budget
+  namespace: loremaster
+spec:
+  hard:
+    pods: '20'
+    requests.cpu: '4'
+    requests.memory: 3Gi
+    limits.cpu: '12'
+    limits.memory: 4Gi
+    requests.storage: 2Gi
+    services.loadbalancers: '0'
+    services.nodeports: '0'
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: loremaster-local-runtime
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ['']
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [pods, pods/ephemeralcontainers]
+  validations:
+    - expression: "has(object.spec.runtimeClassName) && object.spec.runtimeClassName in ['loremaster', 'loremaster-redis']"
+      message: Loremaster pods require the bounded containerd runtime
+    - expression: >-
+        object.spec.containers.all(c,
+          (c.image == 'redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08') ==
+          (object.spec.runtimeClassName == 'loremaster-redis'))
+      message: Redis requires its dedicated 64-PID runtime; other containers use the application runtime
+    - expression: 'has(object.spec.automountServiceAccountToken) && object.spec.automountServiceAccountToken == false'
+      message: Runtime pods must not mount Kubernetes credentials
+    - expression: '!has(object.spec.initContainers) && !has(object.spec.ephemeralContainers)'
+      message: Unreviewed init and ephemeral containers are disabled in this local profile
+    - expression: >-
+        object.spec.containers.all(c,
+          c.image.matches('^localhost:5001/loremaster/[a-z-]+@sha256:[a-f0-9]{64}$') ||
+          c.image == 'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94' ||
+          c.image == 'redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08')
+      message: Only digest-addressed local application and pinned data images are allowed
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: loremaster-local-runtime
+spec:
+  policyName: loremaster-local-runtime
+  validationActions: [Deny]
+  matchResources:
+    namespaceSelector:
+      matchLabels: { kubernetes.io/metadata.name: loremaster }

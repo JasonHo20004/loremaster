@@ -55,6 +55,12 @@ jobs:
           pnpm test:s8:secrets
           pnpm test:s8:proxy-contract
 
+      - name: Install hash-pinned S9 local tools
+        run: pnpm s9 tools
+
+      - name: Verify S9 Helm and Kubernetes policy
+        run: pnpm test:s9
+
       - name: Install Chromium for accessibility checks
         run: pnpm exec playwright install --with-deps chromium
 

@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: loremaster-local
+  namespace: argocd
+spec:
+  description: Local application resources only; platform and secrets are operator owned
+  sourceRepos:
+    - git://git-source.argocd.svc.cluster.local:9418/repository.git
+  destinations:
+    - namespace: loremaster
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - { group: '', kind: Service }
+    - { group: '', kind: ServiceAccount }
+    - { group: apps, kind: Deployment }
+    - { group: apps, kind: StatefulSet }
+    - { group: networking.k8s.io, kind: NetworkPolicy }
+    - { group: policy, kind: PodDisruptionBudget }
+  orphanedResources:
+    warn: true

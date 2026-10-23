@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-23T04:32:39.193Z",
+  "scope": "local S9 setup; no hosted CI, active-worker drain, node-loss backup, or cloud acceptance claim",
+  "sourceRevision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+  "worktreeHasChanges": true,
+  "versions": {
+    "kind": "0.30.0",
+    "helm": "3.19.0",
+    "kubernetes": "1.34.0",
+    "nodeImage": "kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a",
+    "calico": {
+      "url": "https://raw.githubusercontent.com/projectcalico/calico/v3.31.7/manifests/calico.yaml",
+      "sha256": "d6d8a489a4ed8e5b8efd8b339047b496ca657b55ee2e3618e791507b0a853e8d"
+    },
+    "argocd": {
+      "url": "https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.4/manifests/install.yaml",
+      "sha256": "1feb02cc7bacf3a379da58b0ca8c6f07d18288cd04d531dabd08816375e5e010"
+    },
+    "registryImage": "registry:3.0.0@sha256:6c5666b861f3505b116bb9aa9b25175e71210414bd010d92035ff64018f9457e",
+    "tools": {
+      "win32": {
+        "kind": "a75fed2b6964d877461cc145b37e997ac0f59a63bd02a750134ac25378f78ce7",
+        "helm": "6488630c2e5d5945ed990fa02fd9e99f9c6792cdbcd79eb264b6cfb90179d2d1"
+      },
+      "linux": {
+        "kind": "517ab7fc89ddeed5fa65abf71530d90648d9638ef0c4cde22c2c11f8097b8889",
+        "helm": "a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496"
+      }
+    },
+    "gitImage": "quay.io/argoproj/argocd@sha256:49dff79439bb38b1b942b19a113fe1fec7e6b6c671ddf9fe6a4a7c46bde0b77b"
+  },
+  "nodes": [
+    {
+      "name": "loremaster-s9-control-plane",
+      "version": "v1.34.0",
+      "ready": true
+    },
+    {
+      "name": "loremaster-s9-worker",
+      "version": "v1.34.0",
+      "ready": true
+    },
+    {
+      "name": "loremaster-s9-worker2",
+      "version": "v1.34.0",
+      "ready": true
+    },
+    {
+      "name": "loremaster-s9-worker3",
+      "version": "v1.34.0",
+      "ready": true
+    }
+  ],
+  "desiredRevision": "6dc9753f15b7e9b9dd958285363f513bd4fd2597",
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "repoURL": "git://git-source.argocd.svc.cluster.local:9418/repository.git"
+  },
+  "images": [
+    {
+      "name": "api",
+      "imageId": "sha256:0fbaaeab6543891d074ce5ecda93edeae71e1b5192a74c48142a965af22d4bde",
+      "manifest": "localhost:5001/loremaster/api@sha256:0fbaaeab6543891d074ce5ecda93edeae71e1b5192a74c48142a965af22d4bde",
+      "configSha256": "2a288d8806f68f7dd5b128426d4c816b9d6426802ba8bf2c220d3324af55ece5",
+      "revision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+      "contextSha256": "95982b19f0ff15b5260ffdfe23871d492a84e98c0a1a0596036af86437e40d58"
+    },
+    {
+      "name": "worker",
+      "imageId": "sha256:3cf2718b3bdd547fb5aaabc03af8c967576a0abec79f89691b776d31758fea1a",
+      "manifest": "localhost:5001/loremaster/worker@sha256:3cf2718b3bdd547fb5aaabc03af8c967576a0abec79f89691b776d31758fea1a",
+      "configSha256": "71defc57cdc460b1ca2a19ac1e858b45323af9054773ec653c48aab95c54173f",
+      "revision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+      "contextSha256": "1f9c616db8669d219140815c1b626e9b0c766fbf82224abe0e0f898bdae72300"
+    },
+    {
+      "name": "observer",
+      "imageId": "sha256:7c0622e000110129e5c232d8fe9d10e1673010ec5bd5ca60bb7ad27f67cd5487",
+      "manifest": "localhost:5001/loremaster/observer@sha256:7c0622e000110129e5c232d8fe9d10e1673010ec5bd5ca60bb7ad27f67cd5487",
+      "configSha256": "a5350e8b1e92cfc7a7d5da1e4294318662817dc97f89d706e884b434a81b45d1",
+      "revision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+      "contextSha256": "31a940748161f2e342c29df6a5de6ffba9e6dedeb08ec257449e36ae056e6ddf"
+    },
+    {
+      "name": "web",
+      "imageId": "sha256:6bd7354baf48298c4d3da125ed2f539415c615d1790003b7a10f7d75f648ed4f",
+      "manifest": "localhost:5001/loremaster/web@sha256:6bd7354baf48298c4d3da125ed2f539415c615d1790003b7a10f7d75f648ed4f",
+      "configSha256": "82d5521247aa8b288773df327dfa1d17fabc7c67c0b82edd5ec892b0b46f07fd",
+      "revision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+      "contextSha256": "51804b9455bd3bcf341f0f658422a3b6138028b68c9dc8d39e02b6d1a7565566"
+    },
+    {
+      "name": "migration",
+      "imageId": "sha256:5b8d46d9dc67424ded75d143300e2f8bdc6d24a0f9ac98637d4d767caadc6ffe",
+      "manifest": "localhost:5001/loremaster/migration@sha256:5b8d46d9dc67424ded75d143300e2f8bdc6d24a0f9ac98637d4d767caadc6ffe",
+      "configSha256": "7312b3b66a41460bea74be35fa0ccf2d68c99fbb6bd1db5cf9562c1a30cb9c58",
+      "revision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+      "contextSha256": "35df72aec6bdcd48b5fc4eaac951c31de57fe9ea272c298b019478435fae09c5"
+    },
+    {
+      "name": "importer",
+      "imageId": "sha256:917b287490a5ad8d3a4dba45a994088382f668660a8b1dbbbf5126917cfd2de4",
+      "manifest": "localhost:5001/loremaster/importer@sha256:917b287490a5ad8d3a4dba45a994088382f668660a8b1dbbbf5126917cfd2de4",
+      "configSha256": "156dec00c1d3fa29a6e97e05f52836548b19241e4151f10ba9b072e6716384fb",
+      "revision": "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+      "contextSha256": "cfbe8621fedfbd95a10dd35847b0518c1fba708b078f0e52878ba2b26c9a1f83"
+    }
+  ],
+  "scans": [
+    {
+      "image": "loremaster/api:s8",
+      "id": "sha256:0fbaaeab6543891d074ce5ecda93edeae71e1b5192a74c48142a965af22d4bde",
+      "configSha256": "2a288d8806f68f7dd5b128426d4c816b9d6426802ba8bf2c220d3324af55ece5",
+      "sbomSha256": "25419417b28b36e02a6f8ed9e7e66f875ed662ebb9d1479fa04a1750f5c84562",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T04:03:43.035Z"
+    },
+    {
+      "image": "loremaster/worker:s8",
+      "id": "sha256:3cf2718b3bdd547fb5aaabc03af8c967576a0abec79f89691b776d31758fea1a",
+      "configSha256": "71defc57cdc460b1ca2a19ac1e858b45323af9054773ec653c48aab95c54173f",
+      "sbomSha256": "e548a642e6f65ca6b772b6907321a162d4025b96ea09b9ee385559e0b58d90cd",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T04:03:52.226Z"
+    },
+    {
+      "image": "loremaster/observer:s8",
+      "id": "sha256:7c0622e000110129e5c232d8fe9d10e1673010ec5bd5ca60bb7ad27f67cd5487",
+      "configSha256": "a5350e8b1e92cfc7a7d5da1e4294318662817dc97f89d706e884b434a81b45d1",
+      "sbomSha256": "f90d32c0f9ff5713739e205cf1a80da82cff3e880a51815d15c87e79c4ae5f23",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T04:04:05.156Z"
+    },
+    {
+      "image": "loremaster/migration:s8",
+      "id": "sha256:5b8d46d9dc67424ded75d143300e2f8bdc6d24a0f9ac98637d4d767caadc6ffe",
+      "configSha256": "7312b3b66a41460bea74be35fa0ccf2d68c99fbb6bd1db5cf9562c1a30cb9c58",
+      "sbomSha256": "32c7753f53f51c43612c0c685fb10959a5182cbf947255091f89ef514e578d41",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T04:04:13.730Z"
+    },
+    {
+      "image": "loremaster/importer:s8",
+      "id": "sha256:917b287490a5ad8d3a4dba45a994088382f668660a8b1dbbbf5126917cfd2de4",
+      "configSha256": "156dec00c1d3fa29a6e97e05f52836548b19241e4151f10ba9b072e6716384fb",
+      "sbomSha256": "41835aeccab2439bd7d855d0ff26e4909337876c96af6397be955bbac805874f",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T04:04:24.221Z"
+    },
+    {
+      "image": "loremaster/web:s8",
+      "id": "sha256:6bd7354baf48298c4d3da125ed2f539415c615d1790003b7a10f7d75f648ed4f",
+      "configSha256": "82d5521247aa8b288773df327dfa1d17fabc7c67c0b82edd5ec892b0b46f07fd",
+      "sbomSha256": "a8d081874a8d17300ce9e697913a1dd53bd82ef4a8131b66ccf8055fb8e6a955",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T04:04:28.886Z"
+    }
+  ],
+  "staticPolicy": {
+    "passed": true,
+    "evidenceType": "synthetic image values; no running cluster",
+    "checkedAt": "2026-10-23T04:30:21.183Z",
+    "resourceCount": 22
+  },
+  "runtime": {
+    "passed": true,
+    "checkedAt": "2026-10-23T04:29:42.001Z",
+    "checks": [
+      {
+        "name": "four-node GitOps sync",
+        "passed": true
+      },
+      {
+        "name": "allowed and denied network paths",
+        "passed": true
+      },
+      {
+        "name": "effective FD ceiling",
+        "passed": true
+      },
+      {
+        "name": "effective secret file ownership and modes",
+        "passed": true
+      },
+      {
+        "name": "replica drift repair",
+        "passed": true,
+        "elapsedMs": 1731
+      },
+      {
+        "name": "PostgreSQL pod/PVC recovery",
+        "passed": true,
+        "elapsedMs": 4306
+      },
+      {
+        "name": "Redis AOF/PVC recovery",
+        "passed": true,
+        "elapsedMs": 4883
+      },
+      {
+        "name": "desired Git change and rollback",
+        "passed": true
+      },
+      {
+        "name": "fixed gateway identity",
+        "passed": true
+      },
+      {
+        "name": "packaged gateway HTML and guest session",
+        "passed": true
+      }
+    ],
+    "cluster": "loremaster-s9",
+    "sourceRevision": "147ec84dc83c3a0924f28e898e031e4ea65843d3"
+  },
+  "teardown": {
+    "executed": false,
+    "reason": "The final local lab is retained for use; a prior disposable lab teardown is recorded separately when available"
+  },
+  "previousDisposableTeardown": {
+    "passed": true,
+    "checkedAt": "2026-10-23T04:26:36.518Z"
+  }
+}

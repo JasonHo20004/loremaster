@@ -1,7 +1,7 @@
 # Loremaster Daily Case — tài liệu bàn giao cho lập trình viên mới
 
-> Cập nhật: **21/10/2026**. Đối tượng: 3 lập trình viên tham gia dự án.
-> Baseline đã merge: `origin/main` tại `c784660f339ee9ba792e28e4535cf2387fa6b656` qua PR #16. [Review độc lập S8](../architecture/s8-review.md) ghi bản sửa nghiệm thu, peer review và phạm vi kiểm tra; [hồ sơ S8](../architecture/s8-acceptance.md) là nguồn bằng chứng CI cuối. Số liệu cũ bên dưới được ghi rõ theo ngày, không dùng thay kết quả của bản sửa cuối.
+> Cập nhật: **23/10/2026**. Đối tượng: 3 lập trình viên tham gia dự án.
+> Mốc baseline S8 trước review đã merge tại `c784660f339ee9ba792e28e4535cf2387fa6b656` qua PR #16. [Review độc lập S8](../architecture/s8-review.md) ghi bản sửa nghiệm thu, peer review và phạm vi kiểm tra; [hồ sơ S8](../architecture/s8-acceptance.md) là nguồn bằng chứng CI cuối. Số liệu cũ bên dưới được ghi rõ theo ngày, không dùng thay kết quả của bản sửa cuối.
 
 ## 1. Đọc nhanh trong 2 phút
 
@@ -16,7 +16,7 @@ Các điểm cần nhớ ngay:
 - PostgreSQL giữ dữ liệu chính thức. Redis chỉ giữ dữ liệu có thể tái tạo; worker chỉ làm nóng cache.
 - Domain, database, API và web đã có triển khai và hồ sơ nghiệm thu S1–S6. S7.0–S7.9 đã được merge vào `main` qua PR #13.
 - S8 đã nghiệm thu qua [PR #18](https://github.com/JasonHo20004/loremaster/pull/18): review độc lập, bản sửa và [CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085) PASS đủ bốn job. Hồ sơ giữ image IDs/context digests, scans, lifecycle, browser, B13 và T25; CI được chạy lại trên commit tài liệu cuối trước merge.
-- Nhóm mới cần chạy lại stack local theo [Compose guide](s8-compose.md), đọc hồ sơ nghiệm thu rồi bắt đầu S9. Kubernetes/GitOps, full observability và AWS còn thuộc các giai đoạn sau.
+- S9 đã có triển khai Kubernetes/GitOps local và gate runtime PASS. Dùng [hướng dẫn S9](s9-local-gitops.md) để chạy kind/Helm/Argo; [hồ sơ S9](../architecture/s9-acceptance.md) ghi bằng chứng và các phần nghiệm thu toàn giai đoạn còn lại. Full observability và AWS thuộc S10–S12.
 
 ## 2. Sản phẩm và phạm vi
 
@@ -86,7 +86,7 @@ flowchart LR
   I[Operator import / migration] --> P
 ```
 
-Đây là monorepo với các module dùng chung và bốn app, không phải bốn microservice cùng ghi dữ liệu game. Producer chạy cùng API nhưng có quyền và kết nối riêng. Compose local đã ghép các process này qua gateway; Kubernetes thuộc S9.
+Đây là monorepo với các module dùng chung và bốn app, không phải bốn microservice cùng ghi dữ liệu game. Producer chạy cùng API nhưng có quyền và kết nối riêng. Compose và Kubernetes S9 local đã ghép các process này qua gateway.
 
 ### Trách nhiệm và ranh giới module
 
@@ -162,7 +162,7 @@ Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge
 | S8.0–S8.5  | Preflight, file secrets, contract và sáu container images      | Đã merge [PR #14](https://github.com/JasonHo20004/loremaster/pull/14) và [PR #15](https://github.com/JasonHo20004/loremaster/pull/15); [image evidence](../../plans/s8-images-evidence.md) ghi các gate local |
 | S8.6–S8.10 | Data services, Compose, recovery và full-stack acceptance      | Đã merge PR #16; main CI PASS, có artifact lifecycle/browser/T25/SBOM; review cuối bổ sung các bản sửa robustness                                                                                             |
 | S8.11      | Review độc lập, hồ sơ nghiệm thu và bàn giao S9                | Đã nghiệm thu: review và correction CI PASS; PR #18 ghi final-head CI/delivery; [hồ sơ S8](../architecture/s8-acceptance.md) giữ bằng chứng                                                                   |
-| S9         | Local kind, Helm, Argo CD, GitOps                              | Lộ trình; chưa có triển khai trong checkout                                                                                                                                                                   |
+| S9         | Local kind, Helm, Argo CD, GitOps                              | Đã triển khai và gate local PASS; xem [hồ sơ S9](../architecture/s9-acceptance.md) để biết phạm vi còn lại                                                                                                    |
 | S10        | Observability toàn hệ thống và release gate                    | Lộ trình; probes/metrics S7 chưa thay thế giai đoạn này                                                                                                                                                       |
 | S11–S12    | AWS bootstrap, cleanup qualification, lab và teardown          | Lộ trình có điều kiện; cloud đang DENIED trong hồ sơ admission                                                                                                                                                |
 
