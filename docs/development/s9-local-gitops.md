@@ -106,10 +106,12 @@ recovery chưa phải bằng chứng gameplay sau mất cache; các gate S8 tư�
 Chạy `pnpm test:s9:drain` để kiểm tra shutdown qua xóa pod và SIGTERM của
 kubelet. Gate tạo namespace riêng, credential mới và một fixture tổng hợp;
 chặn truy vấn đọc entity của warm job thật trước khi xóa worker, rồi kiểm
-tra replay hoàn tất đúng một lần và không ghi tám bảng gameplay. API phải
+tra đúng job ID là job duy nhất trong tập completed và không ghi tám bảng gameplay. API phải
 đóng request HTTP đã nhận nhưng chưa nhận đủ body. Worker/API có budget
-20 giây; observer/web có budget 15 giây. Gate đọc exit code và thời gian
-thoát từ CRI, dọn namespace/PVC/PV thử và ghi `.cache/s9/drain.json`.
+20 giây; observer/web có budget 15 giây. Gate đọc exit code từ CRI và đo
+thời gian monotonic từ lúc gửi yêu cầu xóa đến khi thấy container đã thoát.
+Số đo là upper bound gồm RPC/poll overhead; timestamp CRI được giữ riêng,
+không trừ đồng hồ host với Docker VM. Gate dọn namespace/PVC/PV thử và ghi `.cache/s9/drain.json`.
 Web trong namespace thử dùng IP động cho kiểm tra idle shutdown; bài
 runtime chính kiểm tra gateway fixed IP và proxy trust.
 

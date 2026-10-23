@@ -16,7 +16,7 @@ Các điểm cần nhớ ngay:
 - PostgreSQL giữ dữ liệu chính thức. Redis chỉ giữ dữ liệu có thể tái tạo; worker chỉ làm nóng cache.
 - Domain, database, API và web đã có triển khai và hồ sơ nghiệm thu S1–S6. S7.0–S7.9 đã được merge vào `main` qua PR #13.
 - S8 đã nghiệm thu qua [PR #18](https://github.com/JasonHo20004/loremaster/pull/18): review độc lập, bản sửa và [CI](https://github.com/JasonHo20004/loremaster/actions/runs/39535223085) PASS đủ bốn job. Hồ sơ giữ image IDs/context digests, scans, lifecycle, browser, B13 và T25; CI được chạy lại trên commit tài liệu cuối trước merge.
-- S9 đã có triển khai Kubernetes/GitOps local và gate runtime PASS. Dùng [hướng dẫn S9](s9-local-gitops.md) để chạy kind/Helm/Argo; [hồ sơ S9](../architecture/s9-acceptance.md) ghi bằng chứng và các phần nghiệm thu toàn giai đoạn còn lại. Full observability và AWS thuộc S10–S12.
+- S9 đã có Kubernetes/GitOps local, gate runtime/PID và drain/replay qua kubelet. [Hồ sơ S9](../architecture/s9-acceptance.md) giữ bằng chứng local, hosted CI và [checks của PR #19](https://github.com/JasonHo20004/loremaster/pull/19/checks) tại head cuối. Dùng [hướng dẫn S9](s9-local-gitops.md) để vận hành kind/Helm/Argo; full observability và AWS thuộc S10–S12.
 
 ## 2. Sản phẩm và phạm vi
 
@@ -64,10 +64,10 @@ Chưa có trong phạm vi MVP: nhiều loại vụ án, khôi phục tài khoả
 | Hợp đồng và validation       | Zod `4.6.4`, `@loremaster/contracts`                             |
 | Database                     | PostgreSQL; SQL migrations và driver `pg` `8.16.3`, không có ORM |
 | Cache và queue               | Redis; BullMQ `5.81.5`, ioredis `5.11.1`                         |
-| Kiểm thử                     | Vitest `5.0.0`, Supertest, Playwright `1.63.0`, axe              |
+| Kiểm thử                     | Vitest `5.0.5`, Supertest, Playwright `1.63.0`, axe              |
 | Chất lượng và CI             | ESLint, Prettier, GitHub Actions, dependency audit, Gitleaks     |
 
-PostgreSQL `17.6` và Redis `7.4.5` được pin bằng digest trong Compose và harness. Sáu image ứng dụng được dựng từ allowlist; CI ghi image IDs/context digests/SBOM/scanner cho đúng source commit. Các image local chưa được publish lên registry.
+PostgreSQL `17.6` và Redis `7.4.5` được pin bằng digest trong Compose và harness. Sáu image ứng dụng được dựng từ allowlist; CI ghi image IDs/context digests/SBOM/scanner cho đúng source commit. S9 promote image đã kiểm chứng vào registry loopback local theo immutable digest; chưa có public registry release.
 
 ### Sơ đồ runtime hiện có
 
@@ -162,7 +162,7 @@ Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge
 | S8.0–S8.5  | Preflight, file secrets, contract và sáu container images      | Đã merge [PR #14](https://github.com/JasonHo20004/loremaster/pull/14) và [PR #15](https://github.com/JasonHo20004/loremaster/pull/15); [image evidence](../../plans/s8-images-evidence.md) ghi các gate local |
 | S8.6–S8.10 | Data services, Compose, recovery và full-stack acceptance      | Đã merge PR #16; main CI PASS, có artifact lifecycle/browser/T25/SBOM; review cuối bổ sung các bản sửa robustness                                                                                             |
 | S8.11      | Review độc lập, hồ sơ nghiệm thu và bàn giao S9                | Đã nghiệm thu: review và correction CI PASS; PR #18 ghi final-head CI/delivery; [hồ sơ S8](../architecture/s8-acceptance.md) giữ bằng chứng                                                                   |
-| S9         | Local kind, Helm, Argo CD, GitOps                              | Đã triển khai và gate local PASS; xem [hồ sơ S9](../architecture/s9-acceptance.md) để biết phạm vi còn lại                                                                                                    |
+| S9         | Local kind, Helm, Argo CD, GitOps                              | Đã triển khai; [hồ sơ S9](../architecture/s9-acceptance.md) ghi runtime/PID, active drain/replay, hosted CI và final-head checks                                                                                  |
 | S10        | Observability toàn hệ thống và release gate                    | Lộ trình; probes/metrics S7 chưa thay thế giai đoạn này                                                                                                                                                       |
 | S11–S12    | AWS bootstrap, cleanup qualification, lab và teardown          | Lộ trình có điều kiện; cloud đang DENIED trong hồ sơ admission                                                                                                                                                |
 
@@ -171,6 +171,8 @@ Khảo sát ngày 21/10 đối chiếu GitHub tại `c784660`: PR #16 đã merge
 [Hồ sơ S7 ngày 01/10/2026](../architecture/s7-acceptance.md#final-local-gate-results-2026-10-01) ghi: full verify với **369 tests và 11 workspace builds**, **93 database tests**, **7 API/PostgreSQL tests**, **8 Redis scenarios**, **9 composed scenarios**, **4 real-stack và 5 shell/accessibility journeys**, **11 Chromium component tests**. Số lượng này là snapshot lịch sử; các suite có thể trùng phạm vi, không cộng thành tổng coverage và không coi là kết quả của checkout hiện tại.
 
 Workflow Quality chạy verify, S7 contracts, S8 image policy/file secrets/proxy contract, năm Chromium shell/accessibility journeys, database, API/database, Redis và composed S7. Job S8 image validation chạy image build/reproducibility/behavior/artifact scan, data services, Compose, lifecycle, active worker drain/replay, packaged browser và T25. Artifact giữ raw scanner reports, SBOM, file inventories và JSON kết quả. Accessibility axe dùng Vite preview/mock API; packaged E2E kiểm tra gateway thật, mobile keyboard/focus và dữ liệu thật.
+
+Quality còn render/lint policy Helm S9. Workflow `S9 local runtime` tạo lab Linux sạch cho PR/push/manual, chạy đủ 12 kiểm tra runtime/PID/admission, active worker và request HTTP đang mở, giữ evidence không chứa secret rồi luôn teardown đúng cluster/registry/Git server do job sở hữu. Vitest/browser provider được nâng đồng bộ lên 5.0.5 để đóng advisory mới; không hạ audit threshold.
 
 ### Hồ sơ cũ cần đọc theo thời điểm
 

@@ -1,0 +1,316 @@
+{
+  "recordedAt": "2026-10-23T05:30:36.407Z",
+  "scope": "S9 implementation acceptance on a clean hosted Linux checkout; final documentation head is tracked by PR checks",
+  "pullRequest": "https://github.com/JasonHo20004/loremaster/pull/19",
+  "headRevision": "29ebba3e64eb91433d832169d80be528bc4dfa44",
+  "checkoutRevision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+  "checkoutParents": [
+    "147ec84dc83c3a0924f28e898e031e4ea65843d3",
+    "29ebba3e64eb91433d832169d80be528bc4dfa44"
+  ],
+  "worktreeHasChanges": false,
+  "workflows": [
+    {
+      "id": 39904324826,
+      "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324826",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T05:10:48Z",
+      "updatedAt": "2026-10-23T05:27:56Z",
+      "jobs": [
+        {
+          "name": "Secret scan",
+          "conclusion": "success",
+          "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324826/job/120252670533"
+        },
+        {
+          "name": "Dependency audit",
+          "conclusion": "success",
+          "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324826/job/120252670591"
+        },
+        {
+          "name": "Quality",
+          "conclusion": "success",
+          "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324826/job/120252670655"
+        },
+        {
+          "name": "S8 image validation",
+          "conclusion": "success",
+          "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324826/job/120252670656"
+        }
+      ]
+    },
+    {
+      "id": 39904324620,
+      "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324620",
+      "conclusion": "success",
+      "startedAt": "2026-10-23T05:10:48Z",
+      "updatedAt": "2026-10-23T05:29:02Z",
+      "jobs": [
+        {
+          "name": "local-runtime",
+          "conclusion": "success",
+          "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324620/job/120252669404"
+        }
+      ]
+    }
+  ],
+  "artifact": {
+    "id": 12480123963,
+    "name": "s9-local-evidence",
+    "providedArchiveDigest": "sha256:c16f1f9316bb1ba7692cab74ff32621b6d7b29b55253126f31b3687d3bb18c3d",
+    "url": "https://github.com/JasonHo20004/loremaster/actions/runs/39904324620/artifacts/12480123963",
+    "retentionDays": 14,
+    "acceptanceJsonSha256": "a6bd6a71d49408e3651e8591a82d1c61005d9d8860682095ab6465dcf2e05c6d"
+  },
+  "runtime": {
+    "passed": true,
+    "checkedAt": "2026-10-23T05:26:12.768Z",
+    "checks": [
+      {
+        "name": "four-node GitOps sync",
+        "passed": true
+      },
+      {
+        "name": "allowed and denied network paths",
+        "passed": true
+      },
+      {
+        "name": "effective FD ceiling",
+        "passed": true
+      },
+      {
+        "name": "effective Redis PID ceiling",
+        "passed": true,
+        "runtimeClass": "loremaster-redis",
+        "ociLimit": 64,
+        "kernelPidsMax": 64
+      },
+      {
+        "name": "Redis runtime escape denied by admission",
+        "passed": true
+      },
+      {
+        "name": "effective secret file ownership and modes",
+        "passed": true
+      },
+      {
+        "name": "replica drift repair",
+        "passed": true,
+        "elapsedMs": 1725
+      },
+      {
+        "name": "PostgreSQL pod/PVC recovery",
+        "passed": true,
+        "elapsedMs": 4258
+      },
+      {
+        "name": "Redis AOF/PVC recovery",
+        "passed": true,
+        "elapsedMs": 4071
+      },
+      {
+        "name": "desired Git change and rollback",
+        "passed": true
+      },
+      {
+        "name": "fixed gateway identity",
+        "passed": true
+      },
+      {
+        "name": "packaged gateway HTML and guest session",
+        "passed": true
+      }
+    ],
+    "cluster": "loremaster-s9",
+    "sourceRevision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df"
+  },
+  "drain": {
+    "passed": true,
+    "checkedAt": "2026-10-23T05:27:16.070Z",
+    "sourceRevision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+    "namespace": "loremaster-s9-drain-e0b21948",
+    "checks": [
+      {
+        "name": "worker",
+        "active": "published warm job blocked on PostgreSQL entity read",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 20,
+        "drainMs": 979,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:27:51.133481839Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true,
+        "blockedReadObserved": true,
+        "replayMs": 401,
+        "completed": 1,
+        "replayedJobId": "warm-v1-1975fea0-e334-8887-bc97-735a165fb7ea"
+      },
+      {
+        "name": "api",
+        "active": "acknowledged HTTP request with incomplete JSON body",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 20,
+        "drainMs": 10288,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:28:05.125388374Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true,
+        "requestAcknowledged": true,
+        "connectionClosed": true
+      },
+      {
+        "name": "observer",
+        "active": "idle health/metrics service",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 15,
+        "drainMs": 220,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:28:06.610825754Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true
+      },
+      {
+        "name": "web",
+        "active": "idle packaged gateway",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 15,
+        "drainMs": 2199,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:28:14.468898217Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true
+      }
+    ],
+    "gameplayEffects": {
+      "attempts": 0,
+      "guesses": 0,
+      "command_receipts": 0,
+      "attempt_finalizations": 0,
+      "participation_days": 0,
+      "knowledge_contributions": 0,
+      "regional_knowledge": 0,
+      "leaderboard_entries": 0
+    },
+    "teardown": "PASS"
+  },
+  "teardown": {
+    "passed": true,
+    "checkedAt": "2026-10-23T05:28:57.844Z"
+  },
+  "images": [
+    {
+      "name": "api",
+      "imageId": "sha256:02418c88ab2b9d4aa1da3a4d9faf5728a62e64f5182a3860d0f7d8be06b8db78",
+      "manifest": "localhost:5001/loremaster/api@sha256:5b5312bae1c379177234dfa85af826289b9d1d9a9d39e4ea5dc206647a92e33c",
+      "configSha256": "02418c88ab2b9d4aa1da3a4d9faf5728a62e64f5182a3860d0f7d8be06b8db78",
+      "revision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+      "contextSha256": "d53fb526b843086d6a4fa165ea96e41392b5f5a78451c33562a817bc235fc7d6"
+    },
+    {
+      "name": "worker",
+      "imageId": "sha256:f32efe8dcf2e88a7e1da3b9c125e391770ed9f68cd089b3ddb455a735cf0af30",
+      "manifest": "localhost:5001/loremaster/worker@sha256:4ead8e00f02d7ca1312556bf6a50b29c74b7765310a87e76a4fd2fd44c02a422",
+      "configSha256": "f32efe8dcf2e88a7e1da3b9c125e391770ed9f68cd089b3ddb455a735cf0af30",
+      "revision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+      "contextSha256": "0ec34fbdfbe7d96e52fefaad4f3a60b79091c36b9ec332c4fd14c1dc7e44f4a1"
+    },
+    {
+      "name": "observer",
+      "imageId": "sha256:50d4980de947fb19bf0bc324711b81e6decb15d4e2a7567897c37a091dbf2e18",
+      "manifest": "localhost:5001/loremaster/observer@sha256:85017051aa2cfbc4e2f238d1d514f991a801ec5b5fa72a4667f3cfc49f2bbd3a",
+      "configSha256": "50d4980de947fb19bf0bc324711b81e6decb15d4e2a7567897c37a091dbf2e18",
+      "revision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+      "contextSha256": "f18ad33c6cf4a2f529021bc5f8dec04332ff21332a3b3220171c03a299084d4b"
+    },
+    {
+      "name": "web",
+      "imageId": "sha256:11e8b526ce16344b0c0973243687ad9ca5622538d8f0321f51ffc387eaf5d44f",
+      "manifest": "localhost:5001/loremaster/web@sha256:220edd0ac5abc258a265b05785d9c43166faecdc1061dc8e5a678c895961163a",
+      "configSha256": "11e8b526ce16344b0c0973243687ad9ca5622538d8f0321f51ffc387eaf5d44f",
+      "revision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+      "contextSha256": "15b6179ead6a8c46f81db2737228f9f50221e78f7b9b0eaea00c523d2c965274"
+    },
+    {
+      "name": "migration",
+      "imageId": "sha256:8e27401b334b1282e716dbb4f8d314f8c2852a00d9c62bf8cf7547e77f9a720d",
+      "manifest": "localhost:5001/loremaster/migration@sha256:d16f55ee9e0d80558faeb84d91ae2da826b215d27634a716cec660bd6963b6f6",
+      "configSha256": "8e27401b334b1282e716dbb4f8d314f8c2852a00d9c62bf8cf7547e77f9a720d",
+      "revision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+      "contextSha256": "096df58c6df869e1e6733003abb1854153b65a5df79364b1c1238b46cf25d1ec"
+    },
+    {
+      "name": "importer",
+      "imageId": "sha256:81802a1d1a91d94bd67410651736b8c9211ac4e1b14d4b63ba07461619dafef1",
+      "manifest": "localhost:5001/loremaster/importer@sha256:e65b30097765b8f0f75152d89a256062a80e36be28d005558f3ce75c0ff95fbf",
+      "configSha256": "81802a1d1a91d94bd67410651736b8c9211ac4e1b14d4b63ba07461619dafef1",
+      "revision": "662ffdd5af368e301d8974d3b863ab3c3b1a52df",
+      "contextSha256": "0c75b7f8bc7eb4f83dc38bd13152a2c00711742ea6983aaf475ca23d5f51757a"
+    }
+  ],
+  "scans": [
+    {
+      "image": "loremaster/api:s8",
+      "id": "sha256:02418c88ab2b9d4aa1da3a4d9faf5728a62e64f5182a3860d0f7d8be06b8db78",
+      "configSha256": "02418c88ab2b9d4aa1da3a4d9faf5728a62e64f5182a3860d0f7d8be06b8db78",
+      "sbomSha256": "d0e01c1a353d0fbe3be6999bb6ad6defcfa47be81a9c77b1e4c3e057ae042b7c",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:23:35.500Z"
+    },
+    {
+      "image": "loremaster/worker:s8",
+      "id": "sha256:f32efe8dcf2e88a7e1da3b9c125e391770ed9f68cd089b3ddb455a735cf0af30",
+      "configSha256": "f32efe8dcf2e88a7e1da3b9c125e391770ed9f68cd089b3ddb455a735cf0af30",
+      "sbomSha256": "10a164e74b89be223fb894a75fcd0fcfd2d5f02e240de07b9828aeab7137765e",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:23:38.563Z"
+    },
+    {
+      "image": "loremaster/observer:s8",
+      "id": "sha256:50d4980de947fb19bf0bc324711b81e6decb15d4e2a7567897c37a091dbf2e18",
+      "configSha256": "50d4980de947fb19bf0bc324711b81e6decb15d4e2a7567897c37a091dbf2e18",
+      "sbomSha256": "1ea02e11d3cfd794b18fd568c65c4d9de72fe5a3b90fc2e1ba0a0ecfe74645f8",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:23:41.504Z"
+    },
+    {
+      "image": "loremaster/migration:s8",
+      "id": "sha256:8e27401b334b1282e716dbb4f8d314f8c2852a00d9c62bf8cf7547e77f9a720d",
+      "configSha256": "8e27401b334b1282e716dbb4f8d314f8c2852a00d9c62bf8cf7547e77f9a720d",
+      "sbomSha256": "4694a7e250fb59b2372e7413f30d38b5c044682de730d418ca48d52f31f2ccf9",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:23:44.175Z"
+    },
+    {
+      "image": "loremaster/importer:s8",
+      "id": "sha256:81802a1d1a91d94bd67410651736b8c9211ac4e1b14d4b63ba07461619dafef1",
+      "configSha256": "81802a1d1a91d94bd67410651736b8c9211ac4e1b14d4b63ba07461619dafef1",
+      "sbomSha256": "7ffa1a3a529ec5e72afcb2f07b08cd033cbc43df31ece5b254076bb2ead253af",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:23:46.807Z"
+    },
+    {
+      "image": "loremaster/web:s8",
+      "id": "sha256:11e8b526ce16344b0c0973243687ad9ca5622538d8f0321f51ffc387eaf5d44f",
+      "configSha256": "11e8b526ce16344b0c0973243687ad9ca5622538d8f0321f51ffc387eaf5d44f",
+      "sbomSha256": "976310ca08080ec7d9bad2cc7a4bc1109bf258b758956ed8be1385809cfa37da",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:23:48.363Z"
+    }
+  ]
+}

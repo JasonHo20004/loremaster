@@ -66,3 +66,8 @@ Implementation and local evidence are recorded in the
 [S9 acceptance map](../docs/architecture/s9-acceptance.md). Acceptance is based
 on executed gates, not the existence of configuration files. S10 observability
 and S11–S12 cloud work remain separate stages.
+
+CI, the 12 runtime/PID/admission checks and active-work drain/replay are
+recorded with exact source revisions in the acceptance map and hosted record.
+The PR checks page tracks the final documentation head; the local lab remains
+available, while each CI-created lab is destroyed after evidence capture.
