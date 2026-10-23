@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 2,
+  "recordedAt": "2026-10-23T05:10:28.159Z",
+  "scope": "S9 local Kubernetes/GitOps with kernel PID limits and active-work termination; node-loss backup and cloud are outside scope",
+  "sourceRevision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+  "execution": {
+    "provider": "local"
+  },
+  "worktreeHasChanges": true,
+  "versions": {
+    "kind": "0.30.0",
+    "helm": "3.19.0",
+    "kubernetes": "1.34.0",
+    "kubectl": "1.34.1",
+    "nodeImage": "kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a",
+    "calico": {
+      "url": "https://raw.githubusercontent.com/projectcalico/calico/v3.31.7/manifests/calico.yaml",
+      "sha256": "d6d8a489a4ed8e5b8efd8b339047b496ca657b55ee2e3618e791507b0a853e8d"
+    },
+    "argocd": {
+      "url": "https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.4/manifests/install.yaml",
+      "sha256": "1feb02cc7bacf3a379da58b0ca8c6f07d18288cd04d531dabd08816375e5e010"
+    },
+    "registryImage": "registry:3.0.0@sha256:6c5666b861f3505b116bb9aa9b25175e71210414bd010d92035ff64018f9457e",
+    "tools": {
+      "win32": {
+        "kubectl": "d118a8ddb0de15ff230189c85f5157e752405eb0ae8fa680d284de094c9a20f0",
+        "kind": "a75fed2b6964d877461cc145b37e997ac0f59a63bd02a750134ac25378f78ce7",
+        "helm": "6488630c2e5d5945ed990fa02fd9e99f9c6792cdbcd79eb264b6cfb90179d2d1"
+      },
+      "linux": {
+        "kubectl": "7721f265e18709862655affba5343e85e1980639395d5754473dafaadcaa69e3",
+        "kind": "517ab7fc89ddeed5fa65abf71530d90648d9638ef0c4cde22c2c11f8097b8889",
+        "helm": "a7f81ce08007091b86d8bd696eb4d86b8d0f2e1b9f6c714be62f82f96a594496"
+      }
+    },
+    "gitImage": "quay.io/argoproj/argocd@sha256:49dff79439bb38b1b942b19a113fe1fec7e6b6c671ddf9fe6a4a7c46bde0b77b"
+  },
+  "nodes": [
+    {
+      "name": "loremaster-s9-control-plane",
+      "version": "v1.34.0",
+      "ready": true
+    },
+    {
+      "name": "loremaster-s9-worker",
+      "version": "v1.34.0",
+      "ready": true
+    },
+    {
+      "name": "loremaster-s9-worker2",
+      "version": "v1.34.0",
+      "ready": true
+    },
+    {
+      "name": "loremaster-s9-worker3",
+      "version": "v1.34.0",
+      "ready": true
+    }
+  ],
+  "desiredRevision": "6cc190c39df5a968cb1d6a6d359700f0c95e9ac7",
+  "argo": {
+    "sync": "Synced",
+    "health": "Healthy",
+    "repoURL": "git://git-source.argocd.svc.cluster.local:9418/repository.git"
+  },
+  "images": [
+    {
+      "name": "api",
+      "imageId": "sha256:19197f582c88f28228f8401276f7382f4eb17ac63ba313b0bf9671911b0bd183",
+      "manifest": "localhost:5001/loremaster/api@sha256:19197f582c88f28228f8401276f7382f4eb17ac63ba313b0bf9671911b0bd183",
+      "configSha256": "de012fa53ce71925f4b51d45958ee4fa1d7c3d9ac77f19bc385f712f2bfb5da6",
+      "revision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+      "contextSha256": "d53fb526b843086d6a4fa165ea96e41392b5f5a78451c33562a817bc235fc7d6"
+    },
+    {
+      "name": "worker",
+      "imageId": "sha256:bf7fe336323eb09fc82b30d46a1db0b9e38275f1888e5b8de3271f1703dded1d",
+      "manifest": "localhost:5001/loremaster/worker@sha256:bf7fe336323eb09fc82b30d46a1db0b9e38275f1888e5b8de3271f1703dded1d",
+      "configSha256": "c00e0b04307d2f0bddcc718d3cb8fb4191d422310d56f006abc6e6ee3c0f0660",
+      "revision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+      "contextSha256": "0ec34fbdfbe7d96e52fefaad4f3a60b79091c36b9ec332c4fd14c1dc7e44f4a1"
+    },
+    {
+      "name": "observer",
+      "imageId": "sha256:4d3186694ca06c3bef9b305c324adbb7cddcf5adb45d331076fbdaf55786f0b7",
+      "manifest": "localhost:5001/loremaster/observer@sha256:4d3186694ca06c3bef9b305c324adbb7cddcf5adb45d331076fbdaf55786f0b7",
+      "configSha256": "46468bc3dcf83b1a8c94ee04248409b0fed2fef31bc203ee2fdb956876972cd6",
+      "revision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+      "contextSha256": "f18ad33c6cf4a2f529021bc5f8dec04332ff21332a3b3220171c03a299084d4b"
+    },
+    {
+      "name": "web",
+      "imageId": "sha256:ded3abc5813a15df9465af6a1895349132f28a38f184534891c78d7d23c26915",
+      "manifest": "localhost:5001/loremaster/web@sha256:ded3abc5813a15df9465af6a1895349132f28a38f184534891c78d7d23c26915",
+      "configSha256": "d7a2fb43dc462086382ccffd55dd664cf13aa50b6c7dbaf55b87eb94b580061c",
+      "revision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+      "contextSha256": "15b6179ead6a8c46f81db2737228f9f50221e78f7b9b0eaea00c523d2c965274"
+    },
+    {
+      "name": "migration",
+      "imageId": "sha256:510c1a3e9ab68f7b756f6c01eb539d6f992c29cd9c1e761d190a68fc739f682b",
+      "manifest": "localhost:5001/loremaster/migration@sha256:510c1a3e9ab68f7b756f6c01eb539d6f992c29cd9c1e761d190a68fc739f682b",
+      "configSha256": "d53f83fa85b3abe2cdfe6bdaef78de7129baea11970cfa8f8e2afec46a4a1e71",
+      "revision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+      "contextSha256": "096df58c6df869e1e6733003abb1854153b65a5df79364b1c1238b46cf25d1ec"
+    },
+    {
+      "name": "importer",
+      "imageId": "sha256:e99f2f56cc4130167d2bb9792ec007b5266f2d278a1f32759b0128db88a1500e",
+      "manifest": "localhost:5001/loremaster/importer@sha256:e99f2f56cc4130167d2bb9792ec007b5266f2d278a1f32759b0128db88a1500e",
+      "configSha256": "3abee55eba2925678dc300e125980f5861a009d767a8a32c1e89eb0754319597",
+      "revision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+      "contextSha256": "0c75b7f8bc7eb4f83dc38bd13152a2c00711742ea6983aaf475ca23d5f51757a"
+    }
+  ],
+  "scans": [
+    {
+      "image": "loremaster/api:s8",
+      "id": "sha256:19197f582c88f28228f8401276f7382f4eb17ac63ba313b0bf9671911b0bd183",
+      "configSha256": "de012fa53ce71925f4b51d45958ee4fa1d7c3d9ac77f19bc385f712f2bfb5da6",
+      "sbomSha256": "5c9942968de90ff7b46aea20a7d1f7845927087b5709f5f82f3f250e707caf48",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:02:26.693Z"
+    },
+    {
+      "image": "loremaster/worker:s8",
+      "id": "sha256:bf7fe336323eb09fc82b30d46a1db0b9e38275f1888e5b8de3271f1703dded1d",
+      "configSha256": "c00e0b04307d2f0bddcc718d3cb8fb4191d422310d56f006abc6e6ee3c0f0660",
+      "sbomSha256": "db40839e0ac8f7625ea8ae4bb2ff9023d5de4fc964e5295e80a4370546508886",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:02:36.098Z"
+    },
+    {
+      "image": "loremaster/observer:s8",
+      "id": "sha256:4d3186694ca06c3bef9b305c324adbb7cddcf5adb45d331076fbdaf55786f0b7",
+      "configSha256": "46468bc3dcf83b1a8c94ee04248409b0fed2fef31bc203ee2fdb956876972cd6",
+      "sbomSha256": "4492018a6c3dee3a76533d7dcc0f5288f5ceee07417805a3f63454802321ea33",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:02:45.715Z"
+    },
+    {
+      "image": "loremaster/migration:s8",
+      "id": "sha256:510c1a3e9ab68f7b756f6c01eb539d6f992c29cd9c1e761d190a68fc739f682b",
+      "configSha256": "d53f83fa85b3abe2cdfe6bdaef78de7129baea11970cfa8f8e2afec46a4a1e71",
+      "sbomSha256": "7dcfab2fb1995f71ceeb2feb78c68c316d29df17dd2a7faf514bb92f311dc65d",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:02:56.868Z"
+    },
+    {
+      "image": "loremaster/importer:s8",
+      "id": "sha256:e99f2f56cc4130167d2bb9792ec007b5266f2d278a1f32759b0128db88a1500e",
+      "configSha256": "3abee55eba2925678dc300e125980f5861a009d767a8a32c1e89eb0754319597",
+      "sbomSha256": "1a030ee2f6488a89f771e16f23a538fa53a6d46b03226d56e2e104d76421bdfa",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:03:05.815Z"
+    },
+    {
+      "image": "loremaster/web:s8",
+      "id": "sha256:ded3abc5813a15df9465af6a1895349132f28a38f184534891c78d7d23c26915",
+      "configSha256": "d7a2fb43dc462086382ccffd55dd664cf13aa50b6c7dbaf55b87eb94b580061c",
+      "sbomSha256": "497908777eadce9e02e2c10bbf994ca1eeaa39f749405d61ac3fd4ac075b7506",
+      "highCritical": 0,
+      "unapproved": 0,
+      "secrets": 0,
+      "scannedAt": "2026-10-23T05:03:11.197Z"
+    }
+  ],
+  "staticPolicy": {
+    "passed": true,
+    "evidenceType": "synthetic image values; no running cluster",
+    "checkedAt": "2026-10-23T04:52:02.272Z",
+    "resourceCount": 22
+  },
+  "runtime": {
+    "passed": true,
+    "checkedAt": "2026-10-23T05:04:12.603Z",
+    "checks": [
+      {
+        "name": "four-node GitOps sync",
+        "passed": true
+      },
+      {
+        "name": "allowed and denied network paths",
+        "passed": true
+      },
+      {
+        "name": "effective FD ceiling",
+        "passed": true
+      },
+      {
+        "name": "effective Redis PID ceiling",
+        "passed": true,
+        "runtimeClass": "loremaster-redis",
+        "ociLimit": 64,
+        "kernelPidsMax": 64
+      },
+      {
+        "name": "Redis runtime escape denied by admission",
+        "passed": true
+      },
+      {
+        "name": "effective secret file ownership and modes",
+        "passed": true
+      },
+      {
+        "name": "replica drift repair",
+        "passed": true,
+        "elapsedMs": 1739
+      },
+      {
+        "name": "PostgreSQL pod/PVC recovery",
+        "passed": true,
+        "elapsedMs": 4099
+      },
+      {
+        "name": "Redis AOF/PVC recovery",
+        "passed": true,
+        "elapsedMs": 4044
+      },
+      {
+        "name": "desired Git change and rollback",
+        "passed": true
+      },
+      {
+        "name": "fixed gateway identity",
+        "passed": true
+      },
+      {
+        "name": "packaged gateway HTML and guest session",
+        "passed": true
+      }
+    ],
+    "cluster": "loremaster-s9",
+    "sourceRevision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e"
+  },
+  "drain": {
+    "passed": true,
+    "checkedAt": "2026-10-23T05:09:05.192Z",
+    "sourceRevision": "fa00460563bf744da82d3b3251fc68c7f0e81c8e",
+    "namespace": "loremaster-s9-drain-9a1442a4",
+    "checks": [
+      {
+        "name": "worker",
+        "active": "published warm job blocked on PostgreSQL entity read",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 20,
+        "drainMs": 1246,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:09:32.998681739Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true,
+        "blockedReadObserved": true,
+        "replayMs": 296,
+        "completed": 1,
+        "replayedJobId": "warm-v1-1975fea0-e334-8887-bc97-735a165fb7ea"
+      },
+      {
+        "name": "api",
+        "active": "acknowledged HTTP request with incomplete JSON body",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 20,
+        "drainMs": 9928,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:09:45.124794327Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true,
+        "requestAcknowledged": true,
+        "connectionClosed": true
+      },
+      {
+        "name": "observer",
+        "active": "idle health/metrics service",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 15,
+        "drainMs": 305,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:09:46.978994749Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true
+      },
+      {
+        "name": "web",
+        "active": "idle packaged gateway",
+        "signal": "Kubernetes pod deletion / kubelet SIGTERM",
+        "graceSeconds": 15,
+        "drainMs": 2165,
+        "exitCode": 0,
+        "oomKilled": false,
+        "criFinishedAt": "2026-10-23T05:09:54.534537886Z",
+        "measurement": "monotonic time from deletion request to observed CRI exit (upper bound)",
+        "passed": true
+      }
+    ],
+    "gameplayEffects": {
+      "attempts": 0,
+      "guesses": 0,
+      "command_receipts": 0,
+      "attempt_finalizations": 0,
+      "participation_days": 0,
+      "knowledge_contributions": 0,
+      "regional_knowledge": 0,
+      "leaderboard_entries": 0
+    },
+    "teardown": "PASS"
+  },
+  "teardown": {
+    "executed": false,
+    "reason": "The final local lab is retained for use; a prior disposable lab teardown is recorded separately when available"
+  },
+  "previousDisposableTeardown": {
+    "passed": true,
+    "checkedAt": "2026-10-23T04:26:36.518Z"
+  }
+}

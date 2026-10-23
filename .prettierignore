@@ -14,3 +14,6 @@ docs/architecture/**
 
 # Generated mirror of the reviewed S7 queue policy.
 packages/queue/policy/bullmq-script-inventory.json
+
+# Helm Go templates are checked after Helm rendering.
+deploy/helm/**/templates/**

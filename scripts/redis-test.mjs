@@ -11,7 +11,7 @@ const require = createRequire(
 )
 const Redis = require('ioredis')
 const image =
-  'redis:7.4.5-alpine@sha256:bb186d083732f669da90be8b0f975a37812b15e913465bb14d845db72a4e3e08'
+  'redis:7.4.11-alpine@sha256:57e4255cc971b1c8d6f8a6ca283ac01bc3ecdd914273ef6bfaede87aaecd6541'
 const name = `loremaster-redis-test-${randomUUID()}`
 let started = false
 // Docker reallocates an automatically published host port after restart.

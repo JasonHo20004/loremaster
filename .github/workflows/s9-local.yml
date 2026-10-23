@@ -1,0 +1,95 @@
+name: S9 local runtime
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: s9-local-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  local-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Install pinned workspace dependencies
+        run: |
+          corepack enable
+          corepack install
+          pnpm install --frozen-lockfile
+      - name: Admit host and check static policy
+        run: |
+          pnpm s9 tools
+          pnpm s9 preflight
+          pnpm test:s9
+      - name: Configure pinned BuildKit builder
+        run: |
+          docker buildx create \
+            --name loremaster-s9-build \
+            --driver docker-container \
+            --driver-opt image=moby/buildkit:v0.25.1@sha256:79cc6476ab1a3371c9afd8b44e7c55610057c43e18d9b39b68e2b0c2475cc1b6 \
+            --use
+      - name: Build, scan and verify immutable images
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          pnpm test:images
+      - name: Verify musl remediation in applications and data services
+        run: pnpm test:s9:musl
+      - name: Bootstrap local platform and desired state
+        run: |
+          pnpm s9 cluster
+          pnpm s9 promote
+          pnpm s9 bootstrap
+          pnpm s9 sync
+      - name: Verify real GitOps, network policy, persistence and rollback
+        run: pnpm test:s9:runtime
+      - name: Verify Kubernetes termination with active HTTP and warm work
+        run: pnpm test:s9:drain
+      - name: Capture current non-secret acceptance evidence
+        run: node scripts/s9-evidence.mjs
+      - name: Remove exactly the disposable S9 environment
+        if: always()
+        run: |
+          if test -f .cache/s9/cluster.json; then
+            pnpm s9 destroy --delete-data
+          fi
+      - name: Preserve non-secret local evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: s9-local-evidence
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            .cache/s9/preflight.json
+            .cache/s9/platform.json
+            .cache/s9/static-policy.json
+            .cache/s9/promotion.json
+            .cache/s9/gitops-source.json
+            .cache/s9/runtime.json
+            .cache/s9/drain.json
+            .cache/s9/musl.json
+            .cache/s9/acceptance-evidence.json
+            .cache/s9/teardown.json
+            .cache/s9/last-failure.json
+            .cache/s8-build-results.json
+            .cache/s8-reproducibility.json
+            .cache/s8-evidence/summary.json
+            .cache/s8-evidence/*-scan.json
+            .cache/s8-evidence/*-sbom.cdx.json
+            .cache/s8-evidence/*-files.txt

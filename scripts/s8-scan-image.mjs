@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import process from 'node:process'
 import { fileURLToPath, URL } from 'node:url'
 
-const scanner =
+export const scanner =
   'aquasec/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969'
 const exceptionFile = fileURLToPath(
   new URL('../ops/s8/vulnerability-exceptions.json', import.meta.url),
@@ -29,7 +29,7 @@ export function evaluateVulnerabilities(
   }
   const findings = report.Results.flatMap(
     (result) => result.Vulnerabilities ?? [],
-  ).filter((finding) => ['HIGH', 'CRITICAL'].includes(finding.Severity))
+  ).filter((finding) => !['LOW', 'MEDIUM'].includes(finding.Severity))
   const violations = []
   for (const finding of findings) {
     const exception = exceptions.find(
@@ -64,6 +64,20 @@ export function evaluateVulnerabilities(
   return { findings: findings.length, violations }
 }
 
+export function assertRuntimePackages(report, expected) {
+  const packages = report.Results.filter(
+    (result) => result.Class === 'os-pkgs',
+  ).flatMap((result) => result.Packages ?? [])
+  const versions = {}
+  for (const [name, version] of Object.entries(expected)) {
+    const found = packages.filter((pkg) => pkg.Name === name)
+    if (found.length !== 1 || found[0].Version !== version)
+      throw Error(`Runtime package mismatch: ${name} must be ${version}`)
+    versions[name] = version
+  }
+  return versions
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const image = process.argv[2]
   if (!image || !/@sha256:[a-f0-9]{64}$/u.test(image)) {
@@ -81,7 +95,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
       '--scanners',
       'vuln',
       '--severity',
-      'HIGH,CRITICAL',
+      'HIGH,CRITICAL,UNKNOWN',
       '--exit-code',
       '0',
       '--no-progress',
@@ -96,7 +110,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     JSON.parse(readFileSync(exceptionFile, 'utf8')),
   )
   process.stdout.write(
-    `S8 scan: ${result.findings} HIGH/CRITICAL findings, ${result.violations.length} unapproved\n`,
+    `S8 scan: ${result.findings} HIGH/CRITICAL/UNKNOWN findings, ${result.violations.length} unapproved\n`,
   )
   if (result.violations.length > 0) {
     process.stderr.write(`${result.violations.join('\n')}\n`)

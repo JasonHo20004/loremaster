@@ -55,6 +55,12 @@ jobs:
           pnpm test:s8:secrets
           pnpm test:s8:proxy-contract
 
+      - name: Install hash-pinned S9 local tools
+        run: pnpm s9 tools
+
+      - name: Verify S9 Helm and Kubernetes policy
+        run: pnpm test:s9
+
       - name: Install Chromium for accessibility checks
         run: pnpm exec playwright install --with-deps chromium
 
@@ -113,6 +119,9 @@ jobs:
       - name: Build and verify S8 images
         run: pnpm test:images
 
+      - name: Verify musl remediation in applications and data services
+        run: pnpm test:s9:musl
+
       - name: Verify clean-volume Compose and dependency lifecycle
         run: |
           pnpm test:s8:data-services
@@ -140,6 +149,7 @@ jobs:
             .cache/s8-worker-drain.json
             .cache/s8-e2e.json
             .cache/s8-t25.json
+            .cache/s9/musl.json
 
   dependency-audit:
     name: Dependency audit

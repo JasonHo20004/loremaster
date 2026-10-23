@@ -1,6 +1,9 @@
 #!/bin/sh
 set -eu
 kind="$1"
+# Upgrade the shared library before copying it and its package inventory.
+# This exact Alpine backport fixes CVE-2026-107891 in all six runtime images.
+apk add --no-cache musl=1.2.6-r3
 mkdir -p /runtime/lib/apk/db /runtime/etc /runtime/tmp
 chmod 1777 /runtime/tmp
 cp /etc/alpine-release /etc/os-release /runtime/etc/

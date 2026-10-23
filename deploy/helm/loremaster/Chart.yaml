@@ -1,0 +1,7 @@
+apiVersion: v2
+name: loremaster
+description: S9 local runtime; explicit operators and external per-role secrets
+type: application
+version: 0.1.0
+appVersion: s9
+kubeVersion: '>=1.34.0-0 <1.35.0-0'

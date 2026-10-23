@@ -149,7 +149,7 @@ the optional runtime without deleting wildcard keys.
 ## PostgreSQL integration tests
 
 Run `pnpm test:database` with Docker running. The command uses the immutable
-`postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94`
+`postgres:17.11-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb`
 image, creates a disposable database with ephemeral local credentials, applies
 every migration, runs the database constraint suite, and removes the container.
 It fails clearly if Docker or PostgreSQL startup is unavailable; it never skips.

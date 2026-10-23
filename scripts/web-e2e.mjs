@@ -9,7 +9,7 @@ import { setTimeout as delay } from 'node:timers/promises'
 import { fileURLToPath, URL } from 'node:url'
 
 const POSTGRES_IMAGE =
-  'postgres:17.6-alpine@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94'
+  'postgres:17.11-alpine@sha256:eee6c6e1b0894fa4fe0075eb054af9fd1cf39a35321c2d4110626cfe506411fb'
 const repositoryRoot = fileURLToPath(new URL('..', import.meta.url))
 const containerName = `loremaster-web-e2e-${randomUUID()}`
 const password = randomUUID()

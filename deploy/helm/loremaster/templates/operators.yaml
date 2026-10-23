@@ -1,0 +1,52 @@
+{{- if .Values.operator }}
+{{- $name := .Values.operator }}
+{{- if not (has $name (list "migration" "importer")) }}
+{{- fail "operator must be migration or importer" }}
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $name }}-{{ .Release.Revision }}
+  labels: { app.kubernetes.io/name: {{ $name }} }
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 120
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: {{ $name }} }
+    spec:
+      runtimeClassName: loremaster
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 20
+      securityContext:
+        {{- include "loremaster.podSecurity" (ternary 10005 10006 (eq $name "migration")) | nindent 8 }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "loremaster.image" (dict "name" $name "image" (index .Values.images $name)) }}
+          securityContext:
+            {{- include "loremaster.security" . | nindent 12 }}
+          {{- if and (eq $name "importer") .Values.importDryRun }}
+          args: [--dry-run]
+          {{- end }}
+          resources:
+            requests: { cpu: 100m, memory: 64Mi }
+            limits: { cpu: '1', memory: 256Mi }
+          env:
+            - name: {{ if eq $name "migration" }}LOREMASTER_MIGRATION_DATABASE_URL_FILE{{ else }}LOREMASTER_IMPORT_DATABASE_URL_FILE{{ end }}
+              value: /run/secrets/{{ $name }}_database_url
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: credentials, mountPath: /run/secrets/{{ $name }}_database_url, subPath: {{ $name }}_database_url, readOnly: true }
+            {{- if eq $name "importer" }}
+            - { name: content, mountPath: /run/content/pack.json, subPath: pack.json, readOnly: true }
+            {{- end }}
+      volumes:
+        - { name: tmp, emptyDir: { medium: Memory, sizeLimit: 32Mi } }
+        - name: credentials
+          secret: { secretName: {{ $name }}-credentials, defaultMode: 292 }
+        {{- if eq $name "importer" }}
+        - name: content
+          secret: { secretName: import-content, defaultMode: 292 }
+        {{- end }}
+{{- end }}

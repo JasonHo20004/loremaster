@@ -1,0 +1,86 @@
+{{- range $name := list "postgres" "redis" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+spec:
+  clusterIP: None
+  selector: { app.kubernetes.io/name: {{ $name }} }
+  ports:
+    - { name: data, port: {{ if eq $name "postgres" }}5432{{ else }}6379{{ end }} }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  serviceName: {{ $name }}
+  replicas: 1
+  persistentVolumeClaimRetentionPolicy: { whenDeleted: Retain, whenScaled: Retain }
+  selector:
+    matchLabels: { app.kubernetes.io/name: {{ $name }} }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: {{ $name }} }
+    spec:
+      runtimeClassName: {{ ternary "loremaster" "loremaster-redis" (eq $name "postgres") }}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        {{- include "loremaster.podSecurity" (ternary 70 999 (eq $name "postgres")) | nindent 8 }}
+      containers:
+        - name: {{ $name }}
+          image: {{ if eq $name "postgres" }}{{ $.Values.postgresImage | quote }}{{ else }}{{ $.Values.redisImage | quote }}{{ end }}
+          securityContext:
+            {{- include "loremaster.security" . | nindent 12 }}
+          {{- if eq $name "postgres" }}
+          env:
+            - { name: POSTGRES_DB, value: loremaster }
+            - { name: POSTGRES_USER, value: migration }
+            - { name: POSTGRES_PASSWORD_FILE, value: /run/secrets/postgres_password }
+            - { name: PGDATA, value: /data/pgdata }
+          {{- else }}
+          args: [redis-server, --appendonly, 'yes', --appendfsync, everysec, --save, '', --maxmemory, 128mb, --maxmemory-policy, noeviction, --maxclients, '128', --protected-mode, 'yes', --bind, 0.0.0.0, --aclfile, /run/secrets/redis_acl]
+          {{- end }}
+          ports: [{ containerPort: {{ if eq $name "postgres" }}5432{{ else }}6379{{ end }} }]
+          resources:
+            requests: { cpu: 100m, memory: 128Mi }
+            limits: { cpu: '1', memory: {{ if eq $name "postgres" }}512Mi{{ else }}192Mi{{ end }} }
+          startupProbe:
+            exec:
+              command: {{ if eq $name "postgres" }}[pg_isready, -U, migration, -d, loremaster]{{ else }}[redis-cli, --user, loremaster_health, --pass, '', ping]{{ end }}
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: {{ if eq $name "postgres" }}[pg_isready, -U, migration, -d, loremaster]{{ else }}[redis-cli, --user, loremaster_health, --pass, '', ping]{{ end }}
+            periodSeconds: 3
+            timeoutSeconds: 2
+          volumeMounts:
+            - { name: data, mountPath: /data }
+            - { name: tmp, mountPath: /tmp }
+            {{- if eq $name "postgres" }}
+            - { name: run, mountPath: /var/run/postgresql }
+            - { name: credentials, mountPath: /run/secrets/postgres_password, subPath: postgres_password, readOnly: true }
+            {{- else }}
+            - { name: credentials, mountPath: /run/secrets/redis_acl, subPath: redis_acl, readOnly: true }
+            {{- end }}
+      volumes:
+        - { name: tmp, emptyDir: { medium: Memory, sizeLimit: 32Mi } }
+        - { name: run, emptyDir: { medium: Memory, sizeLimit: 8Mi } }
+        - name: credentials
+          secret: { secretName: {{ $name }}-credentials, defaultMode: 292 }
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        annotations:
+          argocd.argoproj.io/sync-options: Prune=false,Delete=false
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: standard
+        resources:
+          requests: { storage: 1Gi }
+{{- end }}

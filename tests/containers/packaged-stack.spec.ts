@@ -160,8 +160,17 @@ test.describe.serial('packaged gateway and runtime', () => {
       const after = gameplayCounts().split(':').map(Number)
       expect(after).toEqual([before[0], before[1] + 1])
     } finally {
-      compose('start', 'redis')
-      compose('start', 'worker')
+      // Restart only the two stopped fixture containers. Compose start also
+      // traverses worker dependencies, including the fake-clock PostgreSQL.
+      execFileSync(
+        'docker',
+        [
+          'start',
+          compose('ps', '-aq', 'redis'),
+          compose('ps', '-aq', 'worker'),
+        ],
+        { timeout: 60_000 },
+      )
     }
     await expect
       .poll(

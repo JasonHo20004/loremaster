@@ -1,7 +1,7 @@
 # S8 local Compose stack
 
-The stack uses the six reviewed `loremaster/*:s8` images, PostgreSQL 17.6 and
-Redis 7.4.5 at immutable digests. The only default host listener is the web
+The stack uses the six reviewed `loremaster/*:s8` images, PostgreSQL 17.11 and
+Redis 7.4.11 at immutable digests. The only default host listener is the web
 gateway at `127.0.0.1:8080`. PostgreSQL and Redis store data in separate named
 volumes on the internal backend network. Web and API share the fixed edge
 network from [`local-edge.json`](../../ops/s8/local-edge.json).
