@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+import { createServer as createNetServer } from 'node:net'
 
 import request from 'supertest'
 import { describe, expect, it, vi } from 'vitest'
@@ -20,6 +21,21 @@ function configuration() {
     LOREMASTER_API_CURSOR_ACTIVE_KEY: Buffer.alloc(32, 0x11).toString(
       'base64url',
     ),
+  })
+}
+
+function freePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const probe = createNetServer()
+    probe.once('error', reject)
+    probe.listen(0, '127.0.0.1', () => {
+      const address = probe.address()
+      probe.close(() =>
+        typeof address === 'object' && address !== null
+          ? resolve(address.port)
+          : reject(new Error('No probe port')),
+      )
+    })
   })
 }
 
@@ -50,6 +66,38 @@ describe('S5.6 API runtime', () => {
 
     await runtime.stop()
     expect(end).toHaveBeenCalledOnce()
+  })
+
+  it('serves Prometheus text only on the configured private metrics port', async () => {
+    const metricsPort = await freePort()
+    const db = {
+      connect: vi.fn(async () => {
+        throw new Error('unavailable')
+      }),
+      end: vi.fn(async () => undefined),
+    } as unknown as Database
+    const runtime = createApiRuntime({
+      config: {
+        ...configuration(),
+        metrics: { port: metricsPort, host: '127.0.0.1' },
+      },
+      database: db,
+      drainTimeoutMs: 100,
+      listenPort: 0,
+      metricsSource: () => 'loremaster_api_requests_total 0\n',
+    })
+    const port = await runtime.start()
+    try {
+      const metrics = await request(`http://127.0.0.1:${metricsPort}`)
+        .get('/metrics')
+        .expect(200)
+      expect(metrics.headers['content-type']).toContain('text/plain')
+      expect(metrics.text).toContain('loremaster_api_requests_total 0')
+      expect(metrics.text).toContain('process_resident_memory_bytes')
+      await request(`http://127.0.0.1:${port}`).get('/metrics').expect(404)
+    } finally {
+      await runtime.stop()
+    }
   })
 
   it('handles repeated termination signals with one graceful stop', async () => {

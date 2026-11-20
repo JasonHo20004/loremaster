@@ -63,6 +63,11 @@ export interface ServerConfiguration {
     readonly ipCapacity: number
   }
   readonly sessionAbsoluteTtlDays: 30
+  /** Private Prometheus listener; absent unless explicitly configured. */
+  readonly metrics?: {
+    readonly port: number
+    readonly host: '127.0.0.1' | '0.0.0.0'
+  }
 }
 
 const ENVIRONMENT_KEYS = [
@@ -87,6 +92,8 @@ const ENVIRONMENT_KEYS = [
   'LOREMASTER_API_CURSOR_PREVIOUS_GRACE_SECONDS',
   'LOREMASTER_API_LIMITER_GUEST_CAPACITY',
   'LOREMASTER_API_LIMITER_IP_CAPACITY',
+  'LOREMASTER_API_METRICS_PORT',
+  'LOREMASTER_API_METRICS_HOST',
 ] as const
 
 type EnvironmentKey = (typeof ENVIRONMENT_KEYS)[number]
@@ -432,6 +439,27 @@ export function parseServerEnvironment(
     errors,
   )
 
+  const metricsHost = environment.LOREMASTER_API_METRICS_HOST ?? '127.0.0.1'
+  if (metricsHost !== '127.0.0.1' && metricsHost !== '0.0.0.0')
+    errors.push('LOREMASTER_API_METRICS_HOST')
+  const metricsConfigured =
+    environment.LOREMASTER_API_METRICS_PORT !== undefined
+  if (
+    !metricsConfigured &&
+    environment.LOREMASTER_API_METRICS_HOST !== undefined
+  )
+    errors.push('LOREMASTER_API_METRICS_PORT')
+  const metricsPort = exactInteger(
+    environment,
+    'LOREMASTER_API_METRICS_PORT',
+    0,
+    1,
+    65_535,
+    errors,
+  )
+  if (metricsConfigured && metricsPort === port)
+    errors.push('LOREMASTER_API_METRICS_PORT')
+
   if (errors.length > 0 || active === undefined)
     throw new ConfigurationError(errors)
 
@@ -467,6 +495,14 @@ export function parseServerEnvironment(
       ipCapacity,
     },
     sessionAbsoluteTtlDays: 30,
+    ...(metricsConfigured
+      ? {
+          metrics: {
+            port: metricsPort,
+            host: metricsHost as '127.0.0.1' | '0.0.0.0',
+          },
+        }
+      : {}),
   }
   const redacted = () => ({
     ...configuration,

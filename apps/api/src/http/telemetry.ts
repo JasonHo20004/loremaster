@@ -14,6 +14,22 @@ const unmatchedState: RequestTelemetryState = Object.freeze({
   routeTemplate: 'UNMATCHED',
 })
 const requestTelemetry = new WeakMap<Request, RequestTelemetryState>()
+const requestErrors = new WeakMap<
+  Request,
+  { readonly errorCode: string; readonly cause?: string }
+>()
+
+/** Attaches a public error code and redacted cause to the request log. */
+export function recordRequestError(
+  request: Request,
+  errorCode: string,
+  cause?: string,
+): void {
+  requestErrors.set(request, {
+    errorCode,
+    ...(cause === undefined ? {} : { cause }),
+  })
+}
 
 function statusClass(status: number): HttpStatusClass {
   if (status < 300) return '2xx'
@@ -48,11 +64,13 @@ export function createTelemetryMiddleware(
       const safeRequestId =
         typeof requestId === 'string' ? requestId : 'unavailable'
 
+      const failure = requestErrors.get(request)
       telemetry.logs.write({
         durationMs,
         requestId: safeRequestId,
         routeTemplate: state.routeTemplate,
         status: response.statusCode,
+        ...failure,
       })
       const labels = {
         operation: state.operation,

@@ -3,6 +3,10 @@ export interface RequestLogEntry {
   readonly requestId: string
   readonly routeTemplate: string
   readonly status: number
+  /** Public API error code; present only for error responses. */
+  readonly errorCode?: string
+  /** Redacted internal cause class for 5xx, e.g. `sqlstate:40P01`. */
+  readonly cause?: string
 }
 
 export interface RequestLogSink {
@@ -44,7 +48,58 @@ function copyLog(entry: RequestLogEntry): RequestLogEntry {
     requestId: entry.requestId,
     routeTemplate: entry.routeTemplate,
     status: entry.status,
+    ...(entry.errorCode === undefined ? {} : { errorCode: entry.errorCode }),
+    ...(entry.cause === undefined ? {} : { cause: entry.cause }),
   })
+}
+
+const sqlStatePattern = /^[0-9A-Z]{5}$/u
+const errorNamePattern = /^[A-Za-z][A-Za-z0-9]{0,63}$/u
+
+/**
+ * Classifies an internal failure without its message, stack or properties,
+ * which may carry query values or narrative. Only a SQLSTATE or a plain
+ * constructor name survives.
+ */
+export function classifyErrorCause(error: unknown): string {
+  if (typeof error === 'object' && error !== null) {
+    const code: unknown = (error as { code?: unknown }).code
+    if (typeof code === 'string' && sqlStatePattern.test(code))
+      return `sqlstate:${code}`
+    const name: unknown = (error as { name?: unknown }).name
+    if (typeof name === 'string' && errorNamePattern.test(name)) return name
+  }
+  return 'unknown'
+}
+
+export type LogLevel = 'info' | 'warn' | 'error' | 'fatal'
+
+export interface StructuredLogRecord extends RequestLogEntry {
+  readonly ts: string
+  readonly level: LogLevel
+  readonly service: string
+  readonly event: 'http_request'
+}
+
+export function levelForStatus(status: number): LogLevel {
+  if (status >= 500) return 'error'
+  if (status >= 400) return 'warn'
+  return 'info'
+}
+
+/** Wraps an allowlisted request entry; never adds request-derived fields. */
+export function toStructuredLogRecord(
+  entry: RequestLogEntry,
+  service: string,
+  now: Date = new Date(),
+): StructuredLogRecord {
+  return {
+    ts: now.toISOString(),
+    level: levelForStatus(entry.status),
+    service,
+    event: 'http_request',
+    ...copyLog(entry),
+  }
 }
 
 function copyMetric(point: ApiMetricPoint): ApiMetricPoint {
@@ -97,4 +152,5 @@ export const noOpTelemetry: ApiTelemetry = Object.freeze({
   metrics: Object.freeze({ record: () => undefined }),
 })
 export * from './health.js'
+export * from './prometheus.js'
 export * from './queue.js'

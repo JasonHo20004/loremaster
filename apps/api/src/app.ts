@@ -14,6 +14,7 @@ import {
   type ApiOperationId,
 } from '@loremaster/contracts'
 import { isDatabaseTimeoutError } from '@loremaster/database/runtime'
+import { classifyErrorCause } from '@loremaster/observability'
 
 import type {
   KernelDependencies,
@@ -26,7 +27,10 @@ import {
   type PublicFieldError,
 } from './http/errors.js'
 import { parseBoundedJsonBody } from './http/raw-json.js'
-import { identifyTelemetryOperation } from './http/telemetry.js'
+import {
+  identifyTelemetryOperation,
+  recordRequestError,
+} from './http/telemetry.js'
 
 type FrozenOperation = (typeof API_OPERATIONS)[ApiOperationId]
 type SchemaKey = 'bodySchema' | 'headersSchema' | 'pathSchema' | 'querySchema'
@@ -302,15 +306,18 @@ function errorHandler(): ErrorRequestHandler {
     void _next
     const state = requestState.get(request)
     const requestId = state?.requestId ?? randomUUID()
-    sendPublicError(
-      response,
-      requestId,
+    const publicError =
       error instanceof PublicHttpError
         ? error
         : isDatabaseTimeoutError(error)
           ? new PublicHttpError('REQUEST_TIMEOUT')
-          : new PublicHttpError('INTERNAL_ERROR'),
+          : new PublicHttpError('INTERNAL_ERROR')
+    recordRequestError(
+      request,
+      publicError.code,
+      error instanceof PublicHttpError ? undefined : classifyErrorCause(error),
     )
+    sendPublicError(response, requestId, publicError)
   }
 }
 
