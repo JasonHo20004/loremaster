@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Loremaster Daily Case: a daily deduction game with original fiction (one `WHO` case per UTC day, briefing plus four evidence levels, guest play, streaks, regional knowledge, daily leaderboard). It doubles as a portfolio for reliable delivery and operations, built in numbered stages S1–S12. S1–S9 are accepted (through local kind/Helm/Argo CD GitOps). S10 observability, S11 cloud bootstrap and S12 AWS lab are **not implemented**; do not treat future runtime or infrastructure as existing.
+Loremaster Daily Case: a daily deduction game with original fiction (one `WHO` case per UTC day, briefing plus four evidence levels, guest play, streaks, regional knowledge, daily leaderboard). It doubles as a portfolio for reliable delivery and operations, built in numbered stages S1–S12. S1–S9 are accepted (through local kind/Helm/Argo CD GitOps). S10 observability is in progress ([plan](plans/s10-observability.md)): API metrics, structured logs, the kind monitoring stack, SLO alerts and runbooks exist; backup/restore ([ADR 0006](docs/adr/0006-backup-and-restore.md), proposed), the TLS edge, load tests and drills do not. S11 cloud bootstrap and S12 AWS lab are **not implemented**; do not treat future runtime or infrastructure as existing.
 
 Authoritative sources, in priority order: accepted ADRs (`docs/adr/`), [game rules](docs/architecture/game-rules.md), [architecture](docs/architecture/README.md), the frozen [S5 API contract](docs/architecture/s5-api-contract.md). `docs/DailyRuneterraCase_Description.md` is historical inspiration only, not a spec. Stage plans live in `plans/`; acceptance evidence in `docs/architecture/s*-acceptance.md`.
 
@@ -42,7 +42,7 @@ pnpm --filter @loremaster/api dev   # rebuilds deps, restarts on change; needs e
 pnpm --filter @loremaster/worker start
 pnpm content:import                 # operator-only content pack import (docs/development/content-import.md)
 
-# Stage gates: test:s7:*, test:s8:*, test:images, test:s9, `pnpm s9 <tools|cluster|promote|sync|status|...>`
+# Stage gates: test:s7:*, test:s8:*, test:images, test:s9, test:s10, test:s10:rules, `pnpm s9 <tools|cluster|promote|sync|status|...>`, `pnpm s10 <render|install|status|forward|uninstall>`
 ```
 
 Tests under `tests/` import package source directly (`../../packages/domain/src/index.js`), but apps consume workspace packages through their built `dist/`. If an app test or typecheck fails on a missing module, build the dependency (`pnpm --filter <pkg> build`) or rely on the package's `pre*` scripts.
