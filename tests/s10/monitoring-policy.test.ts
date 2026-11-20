@@ -8,7 +8,13 @@ import {
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { documents, render, root, save } from '../../scripts/s9-common.mjs'
+import {
+  documents,
+  render,
+  root,
+  save,
+  tool,
+} from '../../scripts/s9-common.mjs'
 import {
   dashboardConfigMaps,
   imageReferences,
@@ -165,7 +171,11 @@ describe('S10 monitoring configuration', () => {
           expect(target.expr.match(known)?.length ?? 0).toBeGreaterThan(0)
     }
   })
+})
 
+// pnpm test stays usable without infrastructure tools; CI runs test:s10
+// after `pnpm s9 tools`, so these always render with Helm there.
+describe.skipIf(!existsSync(tool('helm')))('S10 rendered scrape access', () => {
   it('scrapes only application Services that expose the named metrics ports', () => {
     const monitors = documents(read('platform/monitoring/scrape.yaml')) as {
       spec: {
