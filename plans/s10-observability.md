@@ -43,6 +43,10 @@ disclosure rules and the S5 API contract do not change.
   backlog, so no alert uses it.
 - Logs reach Loki through the Kubernetes API (`loki.source.kubernetes`), so
   no host mounts are needed. `requestId` stays out of labels.
+- `minimatch` is overridden to 11.0.5 for GHSA-g3hv-75wg-m249 (moderate,
+  ESLint only, not shipped). It is a major bump outside ESLint's `^10`
+  range; ESLint lints the same files with it. 11.0.5 (2026-11-05) is the
+  newest release older than two weeks.
 
 ## Open items
 
@@ -58,7 +62,3 @@ disclosure rules and the S5 API contract do not change.
   that series locally.
 - `KubeQuotaFullyUsed` (info) fires for `requests.storage` 2Gi/2Gi in
   `loremaster`. This is expected today and blocks a backup PVC; see ADR 0006.
-- `pnpm audit` still reports `minimatch` <11.0.1 (moderate, ESLint only, not
-  shipped). The only fix is 11.0.1 (2026-10-27), a major bump outside
-  ESLint's `^10` range and newer than the two-week rule. Override after
-  2026-11-10 or record an exception.
