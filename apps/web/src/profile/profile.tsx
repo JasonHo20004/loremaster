@@ -1,4 +1,5 @@
 import type { ReportingState } from '../reporting/controller.js'
+import { Glyph } from '../ui/emblems.js'
 
 interface ProfileViewProps {
   readonly state: ReportingState
@@ -14,6 +15,12 @@ function formatHundredths(value: number): string {
   return `${digits.slice(0, -2)}.${digits.slice(-2)}`
 }
 
+/** Decorative meter scale for a percentage that is also shown as text. */
+function meterScale(percentage: number): string {
+  const bounded = Math.min(100, Math.max(0, percentage))
+  return `scaleX(${bounded / 100})`
+}
+
 export function ProfileView({
   state,
   onRetry,
@@ -21,9 +28,13 @@ export function ProfileView({
   if (state.profileStatus === 'IDLE' || state.profileStatus === 'LOADING') {
     return (
       <section className="report-card" aria-labelledby="profile-title">
-        <p className="eyebrow">Investigator profile</p>
-        <h1 id="profile-title">Opening your case history</h1>
-        <p role="status">Loading profile…</p>
+        <div className="report-intro">
+          <p className="eyebrow">Investigator profile</p>
+          <h1 id="profile-title">Opening your case history</h1>
+        </div>
+        <p className="loading-line" role="status">
+          Loading profile…
+        </p>
       </section>
     )
   }
@@ -31,14 +42,18 @@ export function ProfileView({
   if (state.profileStatus === 'ERROR' || state.profile === undefined) {
     return (
       <section className="report-card" aria-labelledby="profile-title">
-        <p className="eyebrow">Investigator profile</p>
-        <h1 id="profile-title">Profile unavailable</h1>
-        <p role="alert">
-          Your case history could not be read. The current case is unaffected.
-        </p>
-        <button type="button" onClick={() => safeAction(onRetry)}>
-          Try profile again
-        </button>
+        <div className="report-intro">
+          <p className="eyebrow">Investigator profile</p>
+          <h1 id="profile-title">Profile unavailable</h1>
+        </div>
+        <div className="report-error">
+          <p role="alert">
+            Your case history could not be read. The current case is unaffected.
+          </p>
+          <button type="button" onClick={() => safeAction(onRetry)}>
+            Try profile again
+          </button>
+        </div>
       </section>
     )
   }
@@ -50,7 +65,7 @@ export function ProfileView({
       className="report-card report-stack"
       aria-labelledby="profile-title"
     >
-      <div>
+      <div className="report-intro">
         <p className="eyebrow">Investigator profile</p>
         <h1 id="profile-title">Your archive record</h1>
         <p className="muted-copy">
@@ -60,25 +75,49 @@ export function ProfileView({
       </div>
 
       <dl className="profile-summary">
-        <div>
-          <dt>Current streak</dt>
+        <div className="stat stat-feature">
+          <dt>
+            <Glyph name="flame" />
+            Current streak
+          </dt>
           <dd>{profile.currentStreak}</dd>
         </div>
-        <div>
-          <dt>Longest streak</dt>
+        <div className="stat stat-feature">
+          <dt>
+            <Glyph name="crown" />
+            Longest streak
+          </dt>
           <dd>{profile.longestStreak}</dd>
         </div>
-        <div>
-          <dt>Solved</dt>
+        <div className="stat">
+          <dt>
+            <Glyph name="seal-check" />
+            Solved
+          </dt>
           <dd>{profile.solvedCount}</dd>
         </div>
-        <div>
-          <dt>Failed</dt>
+        <div className="stat">
+          <dt>
+            <Glyph name="seal-cross" />
+            Failed
+          </dt>
           <dd>{profile.failedCount}</dd>
         </div>
-        <div>
-          <dt>Accuracy</dt>
-          <dd>{profile.accuracyPercentage}%</dd>
+        <div className="stat">
+          <dt>
+            <Glyph name="target" />
+            Accuracy
+          </dt>
+          <dd>
+            {profile.accuracyPercentage}%
+            <span className="stat-meter" aria-hidden="true">
+              <span
+                style={{
+                  transform: meterScale(profile.accuracyPercentage),
+                }}
+              />
+            </span>
+          </dd>
         </div>
       </dl>
 
@@ -95,7 +134,16 @@ export function ProfileView({
             {profile.regionalKnowledge.map((region) => (
               <li key={region.regionId}>
                 <strong>{region.regionId}</strong>
-                <span>{region.displayPercentage}% knowledge</span>
+                <span className="region-knowledge">
+                  {region.displayPercentage}% knowledge
+                </span>
+                <span className="knowledge-meter" aria-hidden="true">
+                  <span
+                    style={{
+                      transform: meterScale(region.displayPercentage),
+                    }}
+                  />
+                </span>
                 <small>
                   {region.sampleCount} observations · α{' '}
                   {formatHundredths(region.alphaHundredths)} · β{' '}

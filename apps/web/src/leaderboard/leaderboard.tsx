@@ -24,11 +24,13 @@ export function LeaderboardView({
   if (slotId === undefined) {
     return (
       <section className="report-card" aria-labelledby="leaderboard-title">
-        <p className="eyebrow">Daily ledger</p>
-        <h1 id="leaderboard-title">No daily ledger available</h1>
-        <p className="muted-copy">
-          The current projection does not contain an open daily case.
-        </p>
+        <div className="report-intro">
+          <p className="eyebrow">Daily ledger</p>
+          <h1 id="leaderboard-title">No daily ledger available</h1>
+          <p className="muted-copy">
+            The current projection does not contain an open daily case.
+          </p>
+        </div>
       </section>
     )
   }
@@ -43,7 +45,7 @@ export function LeaderboardView({
       className="report-card report-stack"
       aria-labelledby="leaderboard-title"
     >
-      <div>
+      <div className="report-intro">
         <p className="eyebrow">Daily ledger</p>
         <h1 id="leaderboard-title">Investigators for {slotId}</h1>
         <p className="muted-copy">
@@ -51,7 +53,11 @@ export function LeaderboardView({
         </p>
       </div>
 
-      {loading ? <p role="status">Loading daily ledger…</p> : null}
+      {loading ? (
+        <p className="loading-line" role="status">
+          Loading daily ledger…
+        </p>
+      ) : null}
       {state.leaderboardStatus === 'ERROR' ? (
         <div className="report-error" role="alert">
           <p>The daily ledger could not be read. Your case is unaffected.</p>
@@ -96,7 +102,10 @@ export function LeaderboardView({
               </thead>
               <tbody>
                 {entries.map((entry) => (
-                  <tr key={entry.attemptId}>
+                  <tr
+                    key={entry.attemptId}
+                    data-rank={entry.rank <= 3 ? entry.rank : undefined}
+                  >
                     <td>{entry.rank}</td>
                     <th scope="row">{entry.pseudonym}</th>
                     <td>{entry.evidenceLevel}</td>

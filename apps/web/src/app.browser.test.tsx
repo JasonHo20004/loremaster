@@ -49,4 +49,23 @@ describe('application shell', () => {
     expect(document.title).toBe('Daily Ledger | Loremaster')
     await expect.element(page.getByRole('main')).toHaveFocus()
   })
+
+  it('keeps navigation names exact while archive artwork stays decorative', async () => {
+    await act(async () => root.render(<App />))
+
+    for (const name of ['Current case', 'Profile', 'Daily ledger']) {
+      await expect
+        .element(page.getByRole('link', { name, exact: true }))
+        .toBeVisible()
+    }
+    await expect
+      .element(page.getByRole('link', { name: 'Loremaster home' }))
+      .toBeVisible()
+    expect(
+      container.querySelectorAll('svg:not([aria-hidden="true"])'),
+    ).toHaveLength(0)
+    expect(
+      container.querySelectorAll('nav [aria-current="page"]'),
+    ).toHaveLength(1)
+  })
 })
