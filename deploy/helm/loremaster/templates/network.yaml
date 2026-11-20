@@ -53,3 +53,23 @@ spec:
             matchLabels: { app.kubernetes.io/name: {{ $edge.to }} }
       ports: [{ port: {{ $edge.port }}, protocol: TCP }]
 {{- end }}
+---
+# S10: only Prometheus in the monitoring namespace may scrape private metrics.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-scrape
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app.kubernetes.io/name, operator: In, values: ["api", "observer"] }
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: {{ .Values.monitoring.namespace }} }
+          podSelector:
+            matchLabels: { app.kubernetes.io/name: prometheus }
+      ports:
+        - { port: {{ .Values.components.api.metricsPort }}, protocol: TCP }
+        - { port: {{ .Values.components.observer.port }}, protocol: TCP }

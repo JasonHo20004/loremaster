@@ -15,6 +15,8 @@ components:
   api:
     uid: 10002
     port: 3000
+    # Private Prometheus listener; only the monitoring namespace may reach it.
+    metricsPort: 9464
     replicas: 2
     grace: 20
     cpu: '1'
@@ -67,3 +69,6 @@ components:
     memory: 128Mi
     env: {}
     files: {}
+
+monitoring:
+  namespace: monitoring
