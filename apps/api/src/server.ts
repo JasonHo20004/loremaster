@@ -24,8 +24,13 @@ import {
   type Database,
 } from '@loremaster/database/runtime'
 import {
+  createPrivateHealthServer,
+  createProcessMetrics,
+  createPrometheusMetricSink,
   noOpTelemetry,
+  toStructuredLogRecord,
   type ApiTelemetry,
+  type PrometheusMetricSink,
   type RequestLogEntry,
 } from '@loremaster/observability'
 import { createWarmProducer } from '@loremaster/queue'
@@ -83,6 +88,8 @@ export interface ComposedApplicationOptions {
 export interface ApiRuntimeOptions extends ComposedApplicationOptions {
   readonly drainTimeoutMs?: number
   readonly listenPort?: number
+  /** Prometheus text served on the private metrics port, when configured. */
+  readonly metricsSource?: () => string
   readonly redis?: ApiRedisConfiguration
 }
 
@@ -304,6 +311,20 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
 
   let started = false
   let stopping: Promise<void> | undefined
+  const metricsConfig = options.config.metrics
+  const metricsSource = options.metricsSource
+  const processMetrics =
+    metricsConfig && metricsSource ? createProcessMetrics() : undefined
+  const metricsServer =
+    metricsConfig && metricsSource && processMetrics
+      ? createPrivateHealthServer({
+          port: metricsConfig.port,
+          host: metricsConfig.host,
+          ready: () => Promise.resolve(started && stopping === undefined),
+          metrics: () =>
+            Promise.resolve(`${metricsSource()}${processMetrics.render()}`),
+        })
+      : undefined
   return {
     application,
     server,
@@ -315,11 +336,13 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
         options.config.listenHost ?? '127.0.0.1',
       )
       started = true
+      await metricsServer?.start()
       producer?.start()
       return port
     },
     stop() {
       stopping ??= (async () => {
+        metricsServer?.drain()
         if (started) {
           await new Promise<void>((resolve, reject) => {
             const timer = setTimeout(() => {
@@ -334,6 +357,8 @@ export function createApiRuntime(options: ApiRuntimeOptions): ApiRuntime {
           })
           started = false
         }
+        await metricsServer?.stop()
+        processMetrics?.stop()
         await producer?.stop()
         if (producerDatabase) await closeDatabase(producerDatabase)
         cacheConnection?.close()
@@ -372,12 +397,14 @@ export function installSignalHandlers(
 
 export function createStdoutTelemetry(
   write: (entry: RequestLogEntry) => void = (entry) => {
-    process.stdout.write(`${JSON.stringify(entry)}\n`)
+    process.stdout.write(
+      `${JSON.stringify(toStructuredLogRecord(entry, 'api'))}\n`,
+    )
   },
-): ApiTelemetry {
+): ApiTelemetry & { readonly metrics: PrometheusMetricSink } {
   return {
     logs: { write },
-    metrics: noOpTelemetry.metrics,
+    metrics: createPrometheusMetricSink(),
   }
 }
 

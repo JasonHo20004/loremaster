@@ -61,6 +61,11 @@ jobs:
       - name: Verify S9 Helm and Kubernetes policy
         run: pnpm test:s9
 
+      - name: Verify S10 monitoring policy and alert rules
+        run: |
+          pnpm test:s10
+          pnpm test:s10:rules
+
       - name: Install Chromium for accessibility checks
         run: pnpm exec playwright install --with-deps chromium
 

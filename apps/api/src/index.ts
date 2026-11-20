@@ -5,6 +5,7 @@ import {
   parseApiRedisConfiguration,
   parseServerEnvironment,
 } from '@loremaster/config'
+import { classifyErrorCause } from '@loremaster/observability'
 
 import {
   createApiRuntime,
@@ -68,10 +69,33 @@ export {
   type SignalSource,
 } from './server.js'
 
+/**
+ * Logs a redacted fatal record and exits; the orchestrator restarts the
+ * process. The error message and stack are never written.
+ */
+function installFatalHandlers(): void {
+  const fatal = (event: string) => (error: unknown) => {
+    process.stderr.write(
+      `${JSON.stringify({
+        ts: new Date().toISOString(),
+        level: 'fatal',
+        service: 'api',
+        event,
+        cause: classifyErrorCause(error),
+      })}\n`,
+    )
+    process.exit(1)
+  }
+  process.once('uncaughtException', fatal('uncaught_exception'))
+  process.once('unhandledRejection', fatal('unhandled_rejection'))
+}
+
 async function runProcess(): Promise<void> {
+  installFatalHandlers()
   let runtime: ReturnType<typeof createApiRuntime> | undefined
   try {
     const config = parseServerEnvironment(process.env)
+    const telemetry = createStdoutTelemetry()
     runtime = createApiRuntime({
       config,
       redis: parseApiRedisConfiguration(process.env, [
@@ -81,7 +105,8 @@ async function runProcess(): Promise<void> {
           : [config.cursor.previous.key]),
       ]),
       database: createRuntimeDatabase(config),
-      telemetry: createStdoutTelemetry(),
+      telemetry,
+      metricsSource: () => telemetry.metrics.render(),
     })
     installSignalHandlers(runtime, {
       onFailure: () => {

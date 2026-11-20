@@ -1,0 +1,121 @@
+/*
+ * Motion uses transform, clip-path and decorative opacity only. Text never
+ * fades from transparent, so contrast stays measurable during entrances.
+ * Entrances use `backwards` fill so no transform lingers after they finish.
+ */
+@keyframes parchment-rise {
+  from {
+    transform: translateY(14px) scale(0.995);
+  }
+}
+
+@keyframes evidence-unfurl {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes guess-strike {
+  from {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes slip-in {
+  from {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes listbox-in {
+  from {
+    transform: translateY(-4px) scaleY(0.97);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    background-color: rgb(4 10 8 / 0);
+  }
+}
+
+@keyframes answer-rise {
+  from {
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@keyframes sheen {
+  from {
+    transform: translateX(-130%) skewX(-14deg);
+  }
+}
+
+@keyframes halo-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.6);
+  }
+}
+
+@keyframes seal-press {
+  from {
+    opacity: 0;
+    transform: scale(1.35) rotate(-12deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(2deg);
+  }
+}
+
+@keyframes seal-break {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes meter-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes rune-pulse {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: rotate(45deg) scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: rotate(45deg) scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-delay: 0s !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

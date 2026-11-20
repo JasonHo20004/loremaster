@@ -1,0 +1,306 @@
+/* Paper surfaces switch the shared colour roles to dark ink on parchment. */
+.archive-card,
+.gameplay,
+.report-card,
+.confirm-dialog,
+.notice,
+.recovery-panel,
+.action-error {
+  --text: var(--ink-900);
+  --text-muted: var(--ink-700);
+  --accent: var(--arcane-700);
+  --eyebrow: var(--arcane-700);
+  --line: rgb(122 98 58 / 0.3);
+  --line-strong: rgb(122 98 58 / 0.55);
+  --focus-ring: var(--arcane-700);
+  color: var(--text);
+}
+
+.archive-card ::selection,
+.gameplay ::selection,
+.report-card ::selection,
+.confirm-dialog ::selection {
+  color: var(--ink-900);
+  background: rgb(197 164 109 / 0.45);
+}
+
+/* The archive artifact: slim verdigris frame, gilt edge, aged parchment. */
+.archive-card,
+.gameplay,
+.report-card {
+  position: relative;
+  width: min(100%, var(--surface-width));
+  margin-inline: auto;
+  padding: var(--surface-padding);
+  border: var(--frame-width) solid #15271f;
+  border-image: url('../archive-frame.svg') 32 / var(--frame-width) / 0 stretch;
+  border-radius: 2px;
+  background:
+    var(--texture-paper),
+    radial-gradient(
+      ellipse 90% 55% at 50% 0%,
+      rgb(255 251 238 / 0.75),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 120% 80% at 50% 118%,
+      rgb(176 146 92 / 0.32),
+      transparent 70%
+    ),
+    linear-gradient(180deg, #efe6cc, #e8ddbf 60%, #e2d5b3);
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 0 0 1px rgb(110 84 44 / 0.4),
+    inset 0 0 70px rgb(120 90 44 / 0.22),
+    0 0 0 1px rgb(4 9 7 / 0.85),
+    0 28px 60px -12px rgb(0 0 0 / 0.7),
+    0 8px 18px rgb(0 0 0 / 0.35);
+  overflow-wrap: anywhere;
+  animation: parchment-rise var(--duration-reveal) var(--ease-out) backwards;
+}
+
+/* Inlaid hairline with restrained corner brackets. */
+.archive-card::after,
+.gameplay::after,
+.report-card::after {
+  --inlay: rgb(138 109 62 / 0.55);
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgb(138 109 62 / 0.2);
+  background:
+    linear-gradient(var(--inlay), var(--inlay)) 0 0 / 22px 1.5px,
+    linear-gradient(var(--inlay), var(--inlay)) 0 0 / 1.5px 22px,
+    linear-gradient(var(--inlay), var(--inlay)) 100% 0 / 22px 1.5px,
+    linear-gradient(var(--inlay), var(--inlay)) 100% 0 / 1.5px 22px,
+    linear-gradient(var(--inlay), var(--inlay)) 0 100% / 22px 1.5px,
+    linear-gradient(var(--inlay), var(--inlay)) 0 100% / 1.5px 22px,
+    linear-gradient(var(--inlay), var(--inlay)) 100% 100% / 22px 1.5px,
+    linear-gradient(var(--inlay), var(--inlay)) 100% 100% / 1.5px 22px;
+  background-origin: border-box;
+  background-repeat: no-repeat;
+  content: '';
+  pointer-events: none;
+}
+
+/* Short archive messages: sealed record, loading, quiet and error states. */
+.archive-card {
+  display: grid;
+  width: min(100%, 48rem);
+  min-height: 24rem;
+  align-content: center;
+  justify-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.archive-emblem {
+  width: clamp(4.5rem, 3.9rem + 2vw, 5.75rem);
+}
+
+.card-copy {
+  display: grid;
+  max-width: 34rem;
+  min-width: 0;
+  justify-items: center;
+}
+
+.card-copy .eyebrow {
+  justify-content: center;
+}
+
+.card-copy > p:not(.eyebrow) {
+  max-width: 30rem;
+  margin-top: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.card-copy > button {
+  min-width: 14rem;
+  margin-top: 1.75rem;
+}
+
+.card-copy > .reassurance {
+  margin-top: 1rem;
+  font-size: var(--text-small);
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 1.1rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--line);
+  font-family: var(--font-record);
+  font-size: var(--text-meta);
+  letter-spacing: 0.04em;
+}
+
+.status-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  background: var(--gold-700);
+  transform: rotate(45deg);
+}
+
+/* Feedback slips that sit beneath the main record. */
+.gameplay-stack {
+  display: grid;
+  width: min(100%, var(--surface-width));
+  gap: 1.25rem;
+  margin-inline: auto;
+}
+
+.notice,
+.recovery-panel,
+.action-error {
+  position: relative;
+  padding: 1rem 1.25rem 1rem 3rem;
+  background: var(--texture-paper), linear-gradient(180deg, #f3ebd5, #e9dfc3);
+  border: 1px solid var(--gold-700);
+  border-left-width: 3px;
+  border-radius: 2px;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 0.38);
+  line-height: 1.6;
+  animation: slip-in 320ms var(--ease-out) backwards;
+}
+
+.notice::before,
+.recovery-panel::before,
+.action-error::before {
+  position: absolute;
+  top: 1.35rem;
+  left: 1.2rem;
+  width: 0.6rem;
+  height: 0.6rem;
+  background: var(--gold-700);
+  content: '';
+  transform: rotate(45deg);
+}
+
+.notice-progress::before {
+  top: 1.1rem;
+  left: 1rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid rgb(138 109 62 / 0.3);
+  border-top-color: var(--arcane-700);
+  border-radius: 50%;
+  background: none;
+  animation: spin 900ms linear infinite;
+}
+
+.recovery-panel {
+  border-color: #a8823f;
+  border-left-color: var(--warning-700);
+}
+
+.recovery-panel::before {
+  background: var(--warning-700);
+}
+
+.recovery-panel h2 {
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.recovery-panel p {
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+
+.action-error {
+  border-color: rgb(168 106 97 / 0.7);
+  border-left-color: var(--failure-700);
+  background: var(--texture-paper), linear-gradient(180deg, #f4e6dd, #ecd9cd);
+}
+
+.action-error::before {
+  background: var(--failure-700);
+}
+
+.action-error strong {
+  color: var(--failure-700);
+}
+
+.action-error small {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-family: var(--font-record);
+  font-size: var(--text-meta);
+}
+
+/* Give-up confirmation. */
+.dialog-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  padding: 1rem;
+  background: rgb(4 10 8 / 0.74);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  place-items: center;
+  animation: backdrop-in 200ms ease-out backwards;
+}
+
+.confirm-dialog {
+  position: relative;
+  width: min(100%, 30rem);
+  max-height: calc(100svh - 2rem);
+  overflow-y: auto;
+  padding: clamp(1.5rem, 1.2rem + 1.5vw, 2.25rem);
+  border: 12px solid #15271f;
+  border-image: url('../archive-frame.svg') 32 / 12px / 0 stretch;
+  background: var(--texture-paper), linear-gradient(180deg, #f1e8cf, #e5d9ba);
+  background-clip: padding-box;
+  box-shadow:
+    inset 0 0 40px rgb(120 90 44 / 0.2),
+    0 30px 70px rgb(0 0 0 / 0.65);
+  text-align: center;
+  animation: dialog-in 260ms var(--ease-out) backwards;
+}
+
+.confirm-dialog .archive-seal {
+  width: 4rem;
+  margin: 0 auto 1rem;
+}
+
+.confirm-dialog h2 {
+  display: block;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+}
+
+.confirm-dialog h2::after {
+  content: none;
+}
+
+.confirm-dialog p {
+  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+}
+
+.confirm-dialog .button-row {
+  justify-content: center;
+}
+
+@media (max-width: 40rem) {
+  :root {
+    --frame-width: 10px;
+  }
+
+  .archive-card::after,
+  .gameplay::after,
+  .report-card::after {
+    inset: 5px;
+  }
+
+  .archive-card {
+    min-height: 0;
+  }
+}

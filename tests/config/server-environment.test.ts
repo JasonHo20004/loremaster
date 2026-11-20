@@ -181,6 +181,38 @@ describe('server environment configuration', () => {
     )
   })
 
+  it('configures the private metrics listener only when a distinct port is set', () => {
+    expect(parseServerEnvironment(validEnvironment())).not.toHaveProperty(
+      'metrics',
+    )
+    expect(
+      parseServerEnvironment(
+        validEnvironment({
+          LOREMASTER_API_METRICS_PORT: '9464',
+          LOREMASTER_API_METRICS_HOST: '0.0.0.0',
+        }),
+      ).metrics,
+    ).toEqual({ port: 9464, host: '0.0.0.0' })
+    expect(
+      parseServerEnvironment(
+        validEnvironment({ LOREMASTER_API_METRICS_PORT: '9464' }),
+      ).metrics,
+    ).toEqual({ port: 9464, host: '127.0.0.1' })
+
+    for (const overrides of [
+      { LOREMASTER_API_METRICS_PORT: '3000' },
+      { LOREMASTER_API_METRICS_PORT: '0' },
+      {
+        LOREMASTER_API_METRICS_PORT: '9464',
+        LOREMASTER_API_METRICS_HOST: '::',
+      },
+      { LOREMASTER_API_METRICS_HOST: '127.0.0.1' },
+    ])
+      expect(() => parseServerEnvironment(validEnvironment(overrides))).toThrow(
+        ConfigurationError,
+      )
+  })
+
   it('reports field names without secret values', () => {
     const secret = 'not-valid-secret-material'
     expect.assertions(2)

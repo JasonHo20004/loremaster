@@ -8,6 +8,7 @@ import {
 } from 'react'
 
 import type { ApiClient } from './api/client.js'
+import { romanNumeral, slotIdForProjection } from './case-format.js'
 import { GameplayExperience } from './gameplay/gameplay.js'
 import { LeaderboardView } from './leaderboard/leaderboard.js'
 import { ProfileView } from './profile/profile.js'
@@ -16,11 +17,14 @@ import {
   type ReportingState,
 } from './reporting/controller.js'
 import { routes, viewFromPath, type AppView } from './route'
-import type {
-  CaseProjection,
-  GameController,
-  GameControllerState,
-} from './state/controller.js'
+import type { GameController, GameControllerState } from './state/controller.js'
+import { ArchiveSeal, BrandSeal, Glyph, type GlyphName } from './ui/emblems.js'
+
+const navGlyph: Record<AppView, GlyphName> = {
+  case: 'case',
+  profile: 'profile',
+  leaderboard: 'ledger',
+}
 
 const viewCopy: Record<
   AppView,
@@ -65,17 +69,6 @@ const EMPTY_REPORTING_STATE: ReportingState = {
   profileStatus: 'IDLE',
   leaderboardEntries: [],
   leaderboardStatus: 'IDLE',
-}
-
-function slotIdForProjection(
-  projection: CaseProjection | undefined,
-): string | undefined {
-  if (projection === undefined || projection.view === 'NO_CASE')
-    return undefined
-  if (projection.view === 'NOT_STARTED') return projection.slotId
-  const close = Date.parse(projection.closesAt)
-  if (!Number.isFinite(close)) return undefined
-  return new Date(close - 1).toISOString().slice(0, 10)
 }
 
 export function App({ client, controller }: AppProps = {}): React.JSX.Element {
@@ -180,33 +173,10 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
           aria-label="Loremaster home"
           onClick={(event) => navigate(event, '/')}
         >
-          <svg
-            className="brand-seal"
-            viewBox="0 0 64 64"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              className="brand-seal-orbit"
-              d="M25 5 8 16v28l17 15m14-54 17 11v28L39 59M4 24v16m56-16v16"
-            />
-            <path
-              className="brand-seal-shield"
-              d="m32 5 18 15v23L32 58 14 43V20Z"
-            />
-            <path
-              className="brand-seal-book"
-              d="M21.5 25.2c4.1-.5 7.6.8 10.5 3.5 2.9-2.7 6.4-4 10.5-3.5v14.6c-4.1-.5-7.6.8-10.5 3.5-2.9-2.7-6.4-4-10.5-3.5Zm10.5 3.5v14.6"
-            />
-            <path className="brand-seal-spark" d="m32 12 4 6-4 6-4-6Z" />
-            <path
-              className="brand-seal-detail"
-              d="m19 22 13-11 13 11M19 45l13 10 13-10M25 30l4 2m6 0 4-2M25 35l4 2m6 0 4-2"
-            />
-          </svg>
+          <BrandSeal />
           <span className="brand-type">
-            <span className="brand-subtitle">The Daily Archive</span>
             <span className="brand-name">Loremaster</span>
+            <span className="brand-subtitle">The Daily Archive</span>
           </span>
         </a>
         <p className="masthead-note">
@@ -214,25 +184,19 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
           <br />
           Read closely. Find the connection.
         </p>
-        <nav aria-label="Primary navigation">
+        <nav className="primary-nav" aria-label="Primary navigation">
           <ul>
-            {routes.map((route, index) => (
+            {routes.map((route) => (
               <li key={route.view}>
                 <a
+                  className="nav-tab"
                   href={route.href}
                   aria-current={view === route.view ? 'page' : undefined}
                   onClick={(event) => navigate(event, route.href)}
                 >
-                  <span className="nav-vessel" aria-hidden="true">
-                    <span className="nav-liquid" />
-                  </span>
-                  <span className="nav-index" aria-hidden="true">
-                    0{index + 1}
-                  </span>
+                  <Glyph name={navGlyph[route.view]} className="nav-glyph" />
                   <span className="nav-label">{route.label}</span>
-                  <span className="nav-arrow" aria-hidden="true">
-                    ↗
-                  </span>
+                  <span className="nav-rune" aria-hidden="true" />
                 </a>
               </li>
             ))}
@@ -243,9 +207,9 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
       <main ref={main} id="content" tabIndex={-1}>
         <div className="section-heading" aria-hidden="true">
           <span>{copy.eyebrow}</span>
-          <span>
-            Loremaster /{' '}
-            {view === 'case' ? '01' : view === 'profile' ? '02' : '03'}
+          <span className="section-folio">
+            Folio{' '}
+            {romanNumeral(routes.findIndex((route) => route.view === view) + 1)}
           </span>
         </div>
         {view === 'case' && client !== undefined && controller !== undefined ? (
@@ -272,19 +236,7 @@ export function App({ client, controller }: AppProps = {}): React.JSX.Element {
           />
         ) : (
           <section className="archive-card" aria-labelledby="view-title">
-            <div className="archive-illustration" aria-hidden="true">
-              <svg viewBox="0 0 180 140" fill="none">
-                <path d="M43 33V17h63l27 27v58H43Z" />
-                <path d="M106 17v27h27M57 56h48M57 67h35" />
-                <path
-                  className="folder-fill"
-                  d="M22 53h49l12 13h75l-13 61H33Z"
-                />
-                <path d="M22 53h49l12 13h75l-13 61H33ZM48 88h29M48 97h46" />
-                <circle cx="125" cy="102" r="12" />
-                <path d="M125 96v12M119 102h12" />
-              </svg>
-            </div>
+            <ArchiveSeal state="quiet" className="archive-emblem" />
             <div className="card-copy">
               <p className="eyebrow">{copy.eyebrow}</p>
               <h1 id="view-title">{copy.title}</h1>

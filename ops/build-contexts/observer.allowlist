@@ -21,6 +21,7 @@ packages/config/tsconfig.json
 packages/observability/package.json
 packages/observability/src/health.ts
 packages/observability/src/index.ts
+packages/observability/src/prometheus.ts
 packages/observability/src/queue.ts
 packages/observability/tsconfig.json
 packages/queue/package.json

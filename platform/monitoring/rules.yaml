@@ -1,0 +1,149 @@
+# S10 SLOs and alerts for the local lab.
+#
+# Availability SLO: 99.5% of player-facing API requests (health probes
+# excluded) complete without a 5xx over 30 days; error budget 0.005.
+# Latency SLO: p95 of gameplay mutations under 500 ms.
+# Burn-rate alerts follow the multiwindow pattern: fast burn pages, slow burn
+# opens a ticket. Every alert links a runbook in docs/runbooks/.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: loremaster-slo
+  namespace: monitoring
+spec:
+  groups:
+    - name: loremaster-api-recording
+      interval: 30s
+      rules:
+        - record: loremaster:api_requests:rate5m
+          expr: sum(rate(loremaster_api_requests_total{operation!~"health.*"}[5m]))
+        - record: loremaster:api_error_ratio:rate5m
+          expr: |
+            sum(rate(loremaster_api_requests_total{operation!~"health.*",status_class="5xx"}[5m]))
+            / clamp_min(sum(rate(loremaster_api_requests_total{operation!~"health.*"}[5m])), 1e-9)
+        - record: loremaster:api_error_ratio:rate30m
+          expr: |
+            sum(rate(loremaster_api_requests_total{operation!~"health.*",status_class="5xx"}[30m]))
+            / clamp_min(sum(rate(loremaster_api_requests_total{operation!~"health.*"}[30m])), 1e-9)
+        - record: loremaster:api_error_ratio:rate1h
+          expr: |
+            sum(rate(loremaster_api_requests_total{operation!~"health.*",status_class="5xx"}[1h]))
+            / clamp_min(sum(rate(loremaster_api_requests_total{operation!~"health.*"}[1h])), 1e-9)
+        - record: loremaster:api_error_ratio:rate6h
+          expr: |
+            sum(rate(loremaster_api_requests_total{operation!~"health.*",status_class="5xx"}[6h]))
+            / clamp_min(sum(rate(loremaster_api_requests_total{operation!~"health.*"}[6h])), 1e-9)
+        - record: loremaster:api_mutation_latency_seconds:p95_5m
+          expr: |
+            histogram_quantile(0.95, sum by (le) (rate(
+              loremaster_api_request_duration_seconds_bucket{operation=~"createSession|startCurrentAttempt|runGameplayCommand"}[5m])))
+
+    - name: loremaster-api-alerts
+      rules:
+        - alert: LoremasterApiErrorBudgetBurnFast
+          expr: |
+            loremaster:api_error_ratio:rate1h > (14.4 * 0.005)
+            and loremaster:api_error_ratio:rate5m > (14.4 * 0.005)
+            and loremaster:api_requests:rate5m > 0.05
+          for: 2m
+          labels: { severity: page }
+          annotations:
+            summary: API is burning the 30-day error budget 14x too fast.
+            runbook_url: docs/runbooks/api-error-budget-burn.md
+        - alert: LoremasterApiErrorBudgetBurnSlow
+          expr: |
+            loremaster:api_error_ratio:rate6h > (6 * 0.005)
+            and loremaster:api_error_ratio:rate30m > (6 * 0.005)
+            and loremaster:api_requests:rate5m > 0.05
+          for: 15m
+          labels: { severity: ticket }
+          annotations:
+            summary: API is burning the 30-day error budget 6x too fast.
+            runbook_url: docs/runbooks/api-error-budget-burn.md
+        - alert: LoremasterApiMutationLatencyHigh
+          expr: loremaster:api_mutation_latency_seconds:p95_5m > 0.5
+          for: 10m
+          labels: { severity: ticket }
+          annotations:
+            summary: Gameplay mutation p95 latency is above 500 ms.
+            runbook_url: docs/runbooks/api-latency.md
+        - alert: LoremasterApiTargetDown
+          expr: |
+            absent(up{namespace="loremaster",service="api"} == 1)
+          for: 2m
+          labels: { severity: page }
+          annotations:
+            summary: No API replica is being scraped successfully.
+            runbook_url: docs/runbooks/api-unavailable.md
+        - alert: LoremasterApiNoReadyReplicas
+          expr: |
+            kube_deployment_status_replicas_available{namespace="loremaster",deployment="api"} < 1
+          for: 2m
+          labels: { severity: page }
+          annotations:
+            summary: The API deployment has no ready replicas.
+            runbook_url: docs/runbooks/api-unavailable.md
+        - alert: LoremasterMetricLabelPolicyDrops
+          expr: increase(loremaster_api_metric_points_dropped_total[15m]) > 0
+          labels: { severity: ticket }
+          annotations:
+            summary: API metric points were rejected by the label policy; check for a telemetry regression.
+            runbook_url: docs/runbooks/metric-label-drops.md
+
+    - name: loremaster-queue-alerts
+      rules:
+        - alert: LoremasterQueueWorkerDisconnected
+          expr: max(loremaster_queue_worker_connected) == 0
+          for: 5m
+          labels: { severity: ticket }
+          annotations:
+            summary: No cache-warming worker heartbeat. Gameplay continues; suggestions may be cold.
+            runbook_url: docs/runbooks/queue-worker.md
+        - alert: LoremasterQueueObserverDegraded
+          expr: max(loremaster_queue_degraded) == 1
+          for: 5m
+          labels: { severity: ticket }
+          annotations:
+            summary: The queue observer cannot read queue state from Redis.
+            runbook_url: docs/runbooks/queue-worker.md
+        - alert: LoremasterQueueBacklog
+          expr: max(loremaster_queue_waiting) > 50
+          for: 15m
+          labels: { severity: ticket }
+          annotations:
+            summary: Cache-warming jobs are waiting longer than expected.
+            runbook_url: docs/runbooks/queue-worker.md
+        - alert: LoremasterQueueFailedJobs
+          expr: max(loremaster_queue_failed) > 0
+          for: 30m
+          labels: { severity: ticket }
+          annotations:
+            summary: Failed cache-warming jobs are retained.
+            runbook_url: docs/runbooks/queue-worker.md
+
+    - name: loremaster-platform-alerts
+      rules:
+        - alert: LoremasterDataServiceNotReady
+          expr: |
+            kube_statefulset_status_replicas_ready{namespace="loremaster",statefulset=~"postgres|redis"} < 1
+          for: 2m
+          labels: { severity: page }
+          annotations:
+            summary: '{{ $labels.statefulset }} has no ready replica.'
+            runbook_url: docs/runbooks/data-service.md
+        - alert: LoremasterPodRestarting
+          expr: |
+            increase(kube_pod_container_status_restarts_total{namespace="loremaster"}[15m]) > 2
+          labels: { severity: ticket }
+          annotations:
+            summary: '{{ $labels.pod }} restarted more than twice in 15 minutes.'
+            runbook_url: docs/runbooks/pod-restarts.md
+        - alert: LoremasterContainerMemoryNearLimit
+          expr: |
+            max by (pod, container) (container_memory_working_set_bytes{namespace="loremaster",container!=""})
+            / max by (pod, container) (kube_pod_container_resource_limits{namespace="loremaster",resource="memory"}) > 0.9
+          for: 10m
+          labels: { severity: ticket }
+          annotations:
+            summary: '{{ $labels.pod }}/{{ $labels.container }} is above 90% of its memory limit. Redis runs noeviction.'
+            runbook_url: docs/runbooks/memory-pressure.md

@@ -1,0 +1,131 @@
+/* Archive seals. Every emblem is decorative and hidden from assistive tech. */
+.archive-seal {
+  --seal-wax: #1f5a48;
+  --seal-edge: var(--gold-500);
+  --seal-line: var(--gold-300);
+  --seal-gloss: rgb(255 255 255 / 0.18);
+  display: block;
+  height: auto;
+  flex: none;
+  overflow: visible;
+  filter: drop-shadow(0 3px 4px rgb(40 28 10 / 0.35));
+  animation: seal-press 700ms var(--ease-out) backwards;
+}
+
+.archive-seal .seal-wax {
+  fill: var(--seal-wax);
+  stroke: var(--seal-edge);
+  stroke-width: 1.5;
+}
+
+.archive-seal .seal-ring {
+  fill: none;
+  stroke: var(--seal-line);
+  stroke-width: 1.4;
+}
+
+.archive-seal .seal-ticks {
+  fill: none;
+  stroke: var(--seal-line);
+  stroke-dasharray: 1.1 5.45;
+  stroke-width: 2.2;
+  opacity: 0.7;
+}
+
+.archive-seal .seal-glyph {
+  fill: none;
+  stroke: var(--seal-line);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.archive-seal .seal-glyph-fill {
+  fill: var(--seal-line);
+}
+
+.archive-seal .seal-gloss {
+  fill: none;
+  stroke: var(--seal-gloss);
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.archive-seal .seal-halo {
+  fill: none;
+  stroke: var(--gold-500);
+  stroke-dasharray: 2 4;
+  stroke-width: 1;
+  opacity: 0;
+}
+
+.archive-seal[data-state='solved'] {
+  filter: drop-shadow(0 3px 4px rgb(40 28 10 / 0.35))
+    drop-shadow(0 0 14px rgb(228 198 139 / 0.6));
+}
+
+.archive-seal[data-state='solved'] .seal-halo {
+  opacity: 0.85;
+}
+
+.archive-seal[data-state='unsolved'] {
+  --seal-wax: #6f6a58;
+  --seal-edge: var(--gold-700);
+  --seal-line: #ddd2b4;
+  --seal-gloss: rgb(255 255 255 / 0.12);
+  animation: none;
+}
+
+.archive-seal .seal-half {
+  transform-origin: 48px 86px;
+}
+
+.archive-seal .seal-half-left {
+  transform: translateX(-1px) rotate(-2deg);
+  animation: seal-break 900ms var(--ease-out) 250ms backwards;
+}
+
+.archive-seal .seal-half-right {
+  transform: translate(3px, 2px) rotate(7deg);
+  animation: seal-break 900ms var(--ease-out) 250ms backwards;
+}
+
+.archive-seal .seal-outline {
+  fill: rgb(255 251 240 / 0.4);
+  stroke: var(--gold-700);
+  stroke-width: 1.4;
+}
+
+.archive-seal .seal-dashed {
+  fill: none;
+  stroke: var(--gold-700);
+  stroke-dasharray: 2 5;
+  stroke-width: 1.2;
+  opacity: 0.85;
+}
+
+.archive-seal[data-state='quiet'],
+.archive-seal[data-state='warning'],
+.archive-seal[data-state='loading'] {
+  --seal-line: var(--gold-700);
+  filter: none;
+}
+
+.archive-seal[data-state='warning'] .seal-glyph {
+  stroke: var(--failure-700);
+}
+
+.archive-seal .seal-spinner {
+  stroke: var(--arcane-700);
+  transform-origin: 48px 48px;
+  animation: spin 1.4s linear infinite;
+}
+
+.fatal-state .archive-seal .seal-outline {
+  fill: rgb(255 251 240 / 0.06);
+}
+
+.ornament-divider {
+  display: block;
+  color: var(--gold-700);
+}

@@ -115,7 +115,16 @@ export function buildContext(profile, destination, root = repositoryRoot) {
   const entries = readAllowlist(profile, root)
   const output = resolve(destination)
   const sourceRoot = resolve(root)
-  if (output === sourceRoot || output.startsWith(`${sourceRoot}${sep}`)) {
+  // Windows paths are case-insensitive; compare folded forms so `c:\` and
+  // `C:\` cannot bypass the repository guard.
+  const fold = (path) =>
+    process.platform === 'win32' ? path.toLowerCase() : path
+  const foldedOutput = fold(output)
+  const foldedRoot = fold(sourceRoot)
+  if (
+    foldedOutput === foldedRoot ||
+    foldedOutput.startsWith(`${foldedRoot}${sep}`)
+  ) {
     throw new Error('S8 context destination must be outside the repository')
   }
   mkdirSync(output)
