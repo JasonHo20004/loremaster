@@ -30,24 +30,67 @@ const snapshot = existsSync(imageValues)
   : null
 const get = (kind, name, namespace = 'loremaster') =>
   JSON.parse(kubectl(['get', '-n', namespace, kind, name, '-o', 'json']))
-async function waitFor(description, check, timeout = 180000) {
+async function waitFor(description, check, timeout = 180000, explain) {
   const start = Date.now()
   while (Date.now() - start < timeout) {
     if (await check()) return Date.now() - start
     await delay(1500)
   }
-  throw Error('Timed out: ' + description)
+  let detail
+  try {
+    detail = explain ? ': ' + JSON.stringify(explain()) : ''
+  } catch (error) {
+    detail = ': diagnostics unavailable (' + error.message + ')'
+  }
+  throw Error('Timed out: ' + description + detail)
+}
+// Non-secret Argo state: statuses, revisions, conditions and unhealthy resources.
+function argoSummary(app, desired) {
+  return {
+    step: result.checks.length,
+    desired,
+    sync: app.status?.sync?.status,
+    revision: app.status?.sync?.revision,
+    health: app.status?.health?.status,
+    operation: {
+      phase: app.status?.operationState?.phase,
+      message: app.status?.operationState?.message,
+      revision: app.status?.operationState?.syncResult?.revision,
+    },
+    conditions: (app.status?.conditions ?? []).map(
+      (condition) => condition.type + ': ' + condition.message,
+    ),
+    resources: (app.status?.resources ?? [])
+      .filter(
+        (resource) =>
+          resource.status !== 'Synced' ||
+          (resource.health && resource.health.status !== 'Healthy'),
+      )
+      .map((resource) => ({
+        kind: resource.kind,
+        name: resource.name,
+        sync: resource.status,
+        health: resource.health?.status,
+        message: resource.health?.message,
+      })),
+  }
 }
 async function synced() {
-  return waitFor('Argo desired revision healthy and synced', () => {
-    const app = get('application', 'loremaster-local', 'argocd')
-    const desired = json(resolve(state, 'gitops-source.json')).desiredRevision
-    return (
-      app.status?.sync?.status === 'Synced' &&
-      app.status?.health?.status === 'Healthy' &&
-      app.status.sync.revision === desired
-    )
-  })
+  const desired = json(resolve(state, 'gitops-source.json')).desiredRevision
+  const application = () => get('application', 'loremaster-local', 'argocd')
+  return waitFor(
+    'Argo desired revision healthy and synced',
+    () => {
+      const app = application()
+      return (
+        app.status?.sync?.status === 'Synced' &&
+        app.status?.health?.status === 'Healthy' &&
+        app.status.sync.revision === desired
+      )
+    },
+    180000,
+    () => argoSummary(application(), desired),
+  )
 }
 function execNode(deployment, source) {
   return kubectl([
