@@ -1,0 +1,90 @@
+# S10 local monitoring: kube-prometheus-stack values for the kind lab.
+# Rendered with `helm template`; every image is rewritten to the digest in
+# images.json before apply. Unpinned images fail the install.
+fullnameOverride: monitoring
+crds:
+  enabled: true
+
+# kind's control-plane components bind to localhost and cannot be scraped.
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeEtcd: { enabled: false }
+kubeProxy: { enabled: false }
+
+defaultRules:
+  create: true
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeSchedulerAlerting: false
+    kubeSchedulerRecording: false
+    kubeProxy: false
+  disabled:
+    # Docker Desktop/WSL2 boot-time drift moves process_start_time_seconds
+    # every scrape, so changes()-based crashloop detection false-fires.
+    # LoremasterPodRestarting uses the kubelet restart counter instead.
+    AlertmanagerClusterCrashlooping: true
+
+prometheusOperator:
+  admissionWebhooks:
+    # Avoids the certgen Job and its extra image; CRD validation still applies.
+    enabled: false
+  tls: { enabled: false }
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    retentionSize: 1500MB
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+    # Select every ServiceMonitor/PodMonitor/PrometheusRule, not only Helm's.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests: { cpu: 100m, memory: 384Mi }
+      limits: { cpu: '1', memory: 1Gi }
+    storageSpec:
+      emptyDir: { sizeLimit: 2Gi }
+
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests: { cpu: 10m, memory: 32Mi }
+      limits: { cpu: 200m, memory: 128Mi }
+
+grafana:
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  defaultDashboardsTimezone: utc
+  additionalDataSources:
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki.monitoring.svc:3100
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 500m, memory: 384Mi }
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: '1'
+      searchNamespace: monitoring
+  testFramework: { enabled: false }
+
+kube-state-metrics:
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { cpu: 200m, memory: 128Mi }
+
+prometheus-node-exporter:
+  resources:
+    requests: { cpu: 10m, memory: 16Mi }
+    limits: { cpu: 200m, memory: 64Mi }

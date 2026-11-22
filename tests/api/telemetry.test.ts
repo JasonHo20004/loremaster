@@ -92,6 +92,48 @@ describe('S5.3e API telemetry', () => {
     expect(JSON.stringify(setup.capture)).not.toContain(secret)
   })
 
+  it('logs the public code and a redacted cause for an internal failure', async () => {
+    const setup = dependencies()
+    const failure = Object.assign(new Error(`leaked ${secret}`), {
+      code: '40P01',
+    })
+    const response = await request(
+      createApplication({
+        ...setup.value,
+        handlers: {
+          createSession: () => {
+            throw failure
+          },
+        },
+      }),
+    )
+      .post('/api/v1/session')
+      .set('Content-Type', 'application/json')
+      .set('Origin', 'http://localhost:5173')
+      .send('{}')
+
+    expect(response.status).toBe(500)
+    expect(setup.capture.logs.entries).toEqual([
+      expect.objectContaining({
+        errorCode: 'INTERNAL_ERROR',
+        cause: 'sqlstate:40P01',
+        routeTemplate: '/api/v1/session',
+        status: 500,
+      }),
+    ])
+    expect(JSON.stringify(setup.capture)).not.toContain(secret)
+  })
+
+  it('logs only the public code for a public error', async () => {
+    const setup = dependencies()
+    await request(createApplication(setup.value)).get('/not-found')
+
+    expect(setup.capture.logs.entries[0]).toMatchObject({
+      errorCode: 'RESOURCE_NOT_FOUND',
+    })
+    expect(setup.capture.logs.entries[0]).not.toHaveProperty('cause')
+  })
+
   it('uses a constant unmatched label and never captures a raw URL', async () => {
     const setup = dependencies()
     const response = await request(createApplication(setup.value)).get(

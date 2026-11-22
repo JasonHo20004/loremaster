@@ -279,6 +279,91 @@ describe('accessible gameplay experience', () => {
     )
   })
 
+  it('structures the unsealed record into clue, deduction, and archive source', async () => {
+    renderState({
+      status: 'READY',
+      mutationStatus: 'IDLE',
+      currentCase: terminalAttempt(),
+    })
+
+    const record = container.querySelector('.terminal-case')
+    expect(record?.getAttribute('data-outcome')).toBe('solved')
+    await expect.element(page.getByText('Case solved')).toBeVisible()
+    await expect
+      .element(page.getByText('Evidence 4', { exact: true }))
+      .toBeVisible()
+    expect(
+      page.getByRole('heading', { level: 3, name: /^Evidence [1-4]$/u }).all(),
+    ).toHaveLength(4)
+    expect(
+      page.getByRole('heading', { level: 4, name: 'Deduction' }).all(),
+    ).toHaveLength(4)
+    expect(
+      page.getByRole('heading', { level: 4, name: 'Archive source' }).all(),
+    ).toHaveLength(4)
+    await expect.element(page.getByText('javascript:source-2')).toBeVisible()
+    expect(container.querySelector('a[href^="javascript"]')).toBeNull()
+    expect(
+      [...container.querySelectorAll('.case-summary dd')].map(
+        (value) => value.textContent,
+      ),
+    ).toEqual(['4 of 4', '1'])
+    await expect
+      .element(page.getByText('Daily case of December 31, 2029'))
+      .toBeVisible()
+  })
+
+  it('presents unsolved outcomes neutrally with a broken seal', async () => {
+    renderState({
+      status: 'READY',
+      mutationStatus: 'IDLE',
+      currentCase: { ...terminalAttempt(), state: 'GIVEN_UP' },
+    })
+
+    await expect
+      .element(page.getByRole('heading', { name: 'The solution is unsealed' }))
+      .toHaveFocus()
+    expect(
+      container.querySelector('.terminal-case')?.getAttribute('data-outcome'),
+    ).toBe('unsolved')
+    const seal = container.querySelector('.archive-seal')
+    expect(seal?.getAttribute('data-state')).toBe('unsolved')
+    expect(seal?.getAttribute('aria-hidden')).toBe('true')
+    expect(page.getByText('Case solved').query()).toBeNull()
+    await expect.element(page.getByText('Case closed')).toBeVisible()
+  })
+
+  it('shows active counters as text with decorative rune pips only', async () => {
+    renderState({
+      status: 'READY',
+      mutationStatus: 'IDLE',
+      currentCase: activeAttempt(2),
+    })
+
+    await expect.element(page.getByText('2 of 4')).toBeVisible()
+    await expect.element(page.getByText('1 of 3')).toBeVisible()
+    await expect
+      .element(page.getByText('Evidence 1', { exact: true }))
+      .toBeVisible()
+    const pips = [...container.querySelectorAll('.pips')]
+    expect(pips).toHaveLength(2)
+    expect(
+      pips.every((item) => item.getAttribute('aria-hidden') === 'true'),
+    ).toBe(true)
+    expect(
+      container.querySelectorAll('.pips:not(.pips-wrong) [data-on="true"]'),
+    ).toHaveLength(2)
+    expect(
+      container.querySelectorAll('.pips-wrong [data-on="true"]'),
+    ).toHaveLength(1)
+    expect(
+      container.querySelectorAll('svg:not([aria-hidden="true"])'),
+    ).toHaveLength(0)
+    expect(
+      container.querySelector('.evidence-marker')?.getAttribute('aria-hidden'),
+    ).toBe('true')
+  })
+
   it('blocks actions and explains uncertain mutation recovery honestly', async () => {
     renderState({
       status: 'READY',

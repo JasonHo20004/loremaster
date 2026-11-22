@@ -1,0 +1,160 @@
+/* Windows High Contrast and other forced-colour modes. */
+@media (forced-colors: active) {
+  :root {
+    --text: CanvasText;
+    --text-muted: CanvasText;
+    --accent: LinkText;
+    --eyebrow: CanvasText;
+    --line: CanvasText;
+    --line-strong: CanvasText;
+    --focus-ring: Highlight;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body::before,
+  body::after,
+  .archive-card::after,
+  .gameplay::after,
+  .report-card::after,
+  .primary-nav::before,
+  .primary-nav::after,
+  .primary-nav li + li::before,
+  .nav-tab::after,
+  .nav-rune,
+  .case-heading::after,
+  .result-heading::before,
+  .answer-reveal::before,
+  .stat::before,
+  .report-card tbody td:first-child::before {
+    display: none;
+  }
+
+  .brand-name {
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    background: none;
+    filter: none;
+  }
+
+  .brand-seal,
+  .nav-tab[aria-current='page'] .nav-glyph {
+    filter: none;
+  }
+
+  .archive-card,
+  .gameplay,
+  .report-card,
+  .confirm-dialog,
+  .notice,
+  .recovery-panel,
+  .action-error,
+  .primary-nav,
+  .nav-tab,
+  .nav-tab[aria-current='page'],
+  .case-dossier,
+  .case-counters,
+  .answer-reveal,
+  .stat,
+  .table-scroll,
+  .evidence-deduction,
+  .evidence-marker,
+  .guess-history > li,
+  .suggestions,
+  .reporting-links a {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+    /* Longhand on purpose: the build minifier drops `border-image: none`. */
+    border-image-source: none;
+  }
+
+  .archive-card,
+  .gameplay,
+  .report-card,
+  .confirm-dialog {
+    border-width: 2px;
+  }
+
+  .case-summary > div {
+    background: Canvas;
+    border: 1px solid CanvasText;
+    clip-path: none;
+  }
+
+  .nav-tab[aria-current='page'] {
+    outline: 2px solid Highlight;
+    outline-offset: -4px;
+  }
+
+  .suggestions li[aria-selected='true'] {
+    color: HighlightText;
+    background: Highlight;
+  }
+
+  /*
+   * Small solid indicators would be forced to Canvas and vanish, so they
+   * opt out and paint with system colours directly.
+   */
+  .pip,
+  .status-dot,
+  .live-rune,
+  .field-error::before,
+  .evidence-sources li::before,
+  .notice::before,
+  .recovery-panel::before,
+  .action-error::before,
+  .section-folio::before,
+  .stat-meter,
+  .stat-meter > span,
+  .knowledge-meter,
+  .knowledge-meter > span {
+    forced-color-adjust: none;
+    background: CanvasText;
+    border-color: CanvasText;
+  }
+
+  .pip[data-on='false'] {
+    background: Canvas;
+  }
+
+  .notice-progress::before {
+    background: Canvas;
+    border-color: CanvasText;
+    border-top-color: Highlight;
+  }
+
+  .stat-meter,
+  .knowledge-meter {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .archive-seal * {
+    fill: Canvas;
+    stroke: CanvasText;
+  }
+
+  button,
+  .secondary-button,
+  .danger-button {
+    color: ButtonText !important;
+    background: ButtonFace !important;
+    border-color: ButtonText !important;
+    filter: none;
+  }
+
+  button:disabled {
+    color: GrayText !important;
+    border-color: GrayText !important;
+  }
+
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}

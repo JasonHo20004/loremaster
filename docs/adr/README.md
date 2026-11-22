@@ -9,5 +9,6 @@ ADRs 0001-0004 were accepted on 2026-09-11 for the S1 baseline; ADR 0005 was acc
 | [0003](0003-identity-and-transactions.md) | Guest identity, synchronous transactions and disclosure |
 | [0004](0004-cloud-admission.md) | Default-deny AWS admission and independent cleanup |
 | [0005](0005-server-cache-boundary.md) | Server-only cache/limiter package; supersedes ADR 0001's package boundary |
+| [0006](0006-backup-and-restore.md) | **Proposed:** local PostgreSQL logical backup, restore and drill gate |
 
 Changes to IP, identity, integrity, admission/cleanup or migration/recovery need an adversarial review record before implementation. S1 verification is recorded in the [acceptance report](../architecture/s1-acceptance.md).

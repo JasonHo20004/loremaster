@@ -9,14 +9,21 @@ import {
 import type { GameplayCommandRequest } from '@loremaster/contracts'
 
 import type { ApiClient } from '../api/client.js'
+import {
+  formatSlotDate,
+  formatUtc,
+  slotIdForProjection,
+} from '../case-format.js'
 import type {
   AttemptProjection,
   GameController,
   GameControllerState,
 } from '../state/controller.js'
+import { ArchiveSeal, Glyph } from '../ui/emblems.js'
+import { EvidenceEntry, Pips } from './evidence.js'
+import { TerminalCase } from './terminal-case.js'
 
 type ActiveAttempt = Extract<AttemptProjection, { readonly state: 'ACTIVE' }>
-type TerminalAttempt = Exclude<AttemptProjection, ActiveAttempt>
 type Suggestion = ActiveAttempt['suggestions'][number]
 
 export interface SuggestionSearch {
@@ -45,41 +52,6 @@ interface CurrentCaseViewProps {
   readonly onSubmit: (request: GameplayCommandRequest) => Promise<void>
 }
 
-const TERMINAL_COPY = {
-  SOLVED: {
-    eyebrow: 'Case solved',
-    title: 'The record is restored',
-    detail: 'Your deduction matched the archive.',
-  },
-  GIVEN_UP: {
-    eyebrow: 'Case closed',
-    title: 'The solution is unsealed',
-    detail: 'You ended this investigation before solving it.',
-  },
-  EXHAUSTED: {
-    eyebrow: 'Attempts exhausted',
-    title: 'The solution is unsealed',
-    detail: 'The final incorrect guess closed this investigation.',
-  },
-  EXPIRED: {
-    eyebrow: 'Time expired',
-    title: 'The solution is unsealed',
-    detail: 'The UTC case window closed before the investigation finished.',
-  },
-} as const
-
-function formatUtc(value: string): string {
-  return new Intl.DateTimeFormat('en', {
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    month: 'short',
-    timeZone: 'UTC',
-    timeZoneName: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
-}
-
 function safeAction(action: () => Promise<unknown>): void {
   void action().catch(() => undefined)
 }
@@ -103,7 +75,7 @@ function MutationRecovery({
   if (state.mutationStatus === 'IDLE') return null
   if (state.mutationStatus === 'IN_FLIGHT') {
     return (
-      <p className="notice" role="status">
+      <p className="notice notice-progress" role="status">
         Recording your action…
       </p>
     )
@@ -379,10 +351,13 @@ function GuessHistory({ attempt }: { readonly attempt: ActiveAttempt }) {
       <ol className="guess-history">
         {attempt.guessHistory.map((guess) => (
           <li key={`${guess.entityId}-${guess.guessedAt}`}>
-            <span>
+            <span className="guess-name">
               {entities.get(guess.entityId)?.canonicalName ?? 'Known entity'}
             </span>
-            <span>Not the answer</span>
+            <span className="guess-verdict">
+              <Glyph name="cross" />
+              Not the answer
+            </span>
           </li>
         ))}
       </ol>
@@ -417,102 +392,131 @@ function ActiveCase({
     globalThis.setTimeout(() => giveUpButton.current?.focus(), 0)
   }
 
+  const slotId = slotIdForProjection(attempt)
+
   return (
-    <article className="gameplay" aria-labelledby="view-title">
+    <article className="gameplay case-active" aria-labelledby="view-title">
       <header className="case-heading">
-        <div>
-          <p className="eyebrow">Active daily case</p>
+        <div className="case-title">
+          <p className="eyebrow">
+            <span className="live-rune" aria-hidden="true" />
+            Active daily case
+          </p>
           <h1 ref={activeHeading} id="view-title" tabIndex={-1}>
             The investigation is open
           </h1>
+          {slotId === undefined ? null : (
+            <p className="case-meta">
+              Daily case of{' '}
+              <time dateTime={slotId}>{formatSlotDate(slotId)}</time>
+            </p>
+          )}
         </div>
         <p className="utc-time">
           Closes{' '}
           <time dateTime={attempt.closesAt}>{formatUtc(attempt.closesAt)}</time>
         </p>
       </header>
-      <section className="briefing" aria-labelledby="briefing-title">
-        <h2 id="briefing-title">Briefing</h2>
-        <p>{attempt.briefing}</p>
-      </section>
       <dl className="case-counters">
         <div>
           <dt>Evidence</dt>
-          <dd>{attempt.evidenceLevel} of 4</dd>
+          <dd>
+            <span>{attempt.evidenceLevel} of 4</span>
+            <Pips filled={attempt.evidenceLevel} total={4} />
+          </dd>
         </div>
         <div>
           <dt>Wrong at this level</dt>
-          <dd>{attempt.wrongGuessesAtLevel} of 3</dd>
+          <dd>
+            <span>{attempt.wrongGuessesAtLevel} of 3</span>
+            <Pips filled={attempt.wrongGuessesAtLevel} total={3} tone="wrong" />
+          </dd>
         </div>
         <div>
           <dt>Total wrong</dt>
           <dd>{attempt.totalWrongGuesses}</dd>
         </div>
       </dl>
-      <section aria-labelledby="evidence-title">
-        <h2 id="evidence-title">Evidence</h2>
-        {attempt.evidence.length === 0 ? (
-          <p className="muted-copy">No evidence has been revealed yet.</p>
-        ) : (
-          <ol className="evidence-list">
-            {attempt.evidence.map((evidence) => (
-              <li key={evidence.level}>
-                <span>Evidence {evidence.level}</span>
-                <p>{evidence.text}</p>
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-      <GuessHistory attempt={attempt} />
-      <EntityCombobox
-        attempt={attempt}
-        disabled={disabled}
-        searchSuggestions={searchSuggestions}
-        onGuess={(entityId) =>
-          onSubmit({
-            expectedVersion: attempt.version,
-            command: { kind: 'GUESS', entityId },
-          })
-        }
-      />
-      <section className="case-actions" aria-labelledby="case-actions-title">
-        <h2 id="case-actions-title">Other actions</h2>
-        {attempt.evidenceLevel < 4 ? (
-          <div>
-            <p>
-              Reveal the next evidence level. This does not count as
-              participation.
-            </p>
+      <div className="case-layout">
+        <div className="case-journal">
+          <section className="briefing" aria-labelledby="briefing-title">
+            <h2 id="briefing-title">Briefing</h2>
+            <p>{attempt.briefing}</p>
+          </section>
+          <section aria-labelledby="evidence-title">
+            <h2 id="evidence-title">Evidence</h2>
+            {attempt.evidence.length === 0 ? (
+              <p className="muted-copy evidence-empty">
+                No evidence has been revealed yet.
+              </p>
+            ) : (
+              <ol className="evidence-list">
+                {attempt.evidence.map((evidence) => (
+                  <EvidenceEntry
+                    key={evidence.level}
+                    level={evidence.level}
+                    text={evidence.text}
+                  />
+                ))}
+              </ol>
+            )}
+          </section>
+        </div>
+        <div className="case-dossier">
+          <GuessHistory attempt={attempt} />
+          <EntityCombobox
+            attempt={attempt}
+            disabled={disabled}
+            searchSuggestions={searchSuggestions}
+            onGuess={(entityId) =>
+              onSubmit({
+                expectedVersion: attempt.version,
+                command: { kind: 'GUESS', entityId },
+              })
+            }
+          />
+          <section
+            className="case-actions"
+            aria-labelledby="case-actions-title"
+          >
+            <h2 id="case-actions-title">Other actions</h2>
+            {attempt.evidenceLevel < 4 ? (
+              <div>
+                <p>
+                  Reveal the next evidence level. This does not count as
+                  participation.
+                </p>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  disabled={disabled}
+                  onClick={() =>
+                    safeAction(() =>
+                      onSubmit({
+                        expectedVersion: attempt.version,
+                        command: { kind: 'REVEAL' },
+                      }),
+                    )
+                  }
+                >
+                  Reveal evidence {attempt.evidenceLevel + 1}
+                </button>
+              </div>
+            ) : (
+              <p>All four evidence levels are visible.</p>
+            )}
             <button
-              className="secondary-button"
+              ref={giveUpButton}
+              className="danger-button"
               type="button"
               disabled={disabled}
-              onClick={() =>
-                safeAction(() =>
-                  onSubmit({
-                    expectedVersion: attempt.version,
-                    command: { kind: 'REVEAL' },
-                  }),
-                )
-              }
+              onClick={() => setConfirmingGiveUp(true)}
             >
-              Reveal evidence {attempt.evidenceLevel + 1}
+              Give up
             </button>
-          </div>
-        ) : (
-          <p>All four evidence levels are visible.</p>
-        )}
-        <button
-          ref={giveUpButton}
-          className="danger-button"
-          type="button"
-          disabled={disabled}
-          onClick={() => setConfirmingGiveUp(true)}
-        >
-          Give up
-        </button>
-      </section>
+          </section>
+        </div>
+      </div>
       {confirmingGiveUp ? (
         <div className="dialog-backdrop">
           <section
@@ -542,6 +546,7 @@ function ActiveCase({
               }
             }}
           >
+            <ArchiveSeal state="unsolved" />
             <h2 id="give-up-title">End this investigation?</h2>
             <p id="give-up-description">
               Giving up is final and will unseal the solution.
@@ -578,53 +583,6 @@ function ActiveCase({
   )
 }
 
-function TerminalCase({ attempt }: { readonly attempt: TerminalAttempt }) {
-  const copy = TERMINAL_COPY[attempt.state]
-  const terminalHeading = useRef<HTMLHeadingElement>(null)
-  useEffect(() => terminalHeading.current?.focus(), [])
-  return (
-    <article className="gameplay terminal-case" aria-labelledby="view-title">
-      <header className="case-heading">
-        <div>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <h1 ref={terminalHeading} id="view-title" tabIndex={-1}>
-            {copy.title}
-          </h1>
-          <p>{copy.detail}</p>
-        </div>
-      </header>
-      <section className="answer-card" aria-labelledby="answer-title">
-        <p className="eyebrow">Archive answer</p>
-        <h2 id="answer-title">{attempt.answer.canonicalName}</h2>
-        <p>{attempt.answer.publicRole}</p>
-      </section>
-      <section aria-labelledby="complete-evidence-title">
-        <h2 id="complete-evidence-title">Complete evidence record</h2>
-        <ol className="evidence-list terminal-evidence">
-          {attempt.evidence.map((evidence) => (
-            <li key={evidence.level}>
-              <span>Evidence {evidence.level}</span>
-              <p>{evidence.text}</p>
-              <h3>Explanation</h3>
-              <p>{evidence.explanation}</p>
-              <h3>Sources</h3>
-              <ul>
-                {evidence.sourceReferences.map((source, index) => (
-                  <li key={`${evidence.level}-${index}`}>{source}</li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ol>
-      </section>
-      <nav className="reporting-links" aria-label="Case reporting">
-        <a href="/profile">View investigator profile</a>
-        <a href="/leaderboard">View daily ledger</a>
-      </nav>
-    </article>
-  )
-}
-
 export function CurrentCaseView(
   props: CurrentCaseViewProps,
 ): React.JSX.Element {
@@ -636,6 +594,7 @@ export function CurrentCaseView(
         aria-labelledby="view-title"
         aria-busy="true"
       >
+        <ArchiveSeal state="loading" className="archive-emblem" />
         <div className="card-copy">
           <p className="eyebrow">Daily case</p>
           <h1 id="view-title">Opening the archive</h1>
@@ -647,6 +606,7 @@ export function CurrentCaseView(
   if (state.status === 'SESSION_LOST') {
     return (
       <section className="archive-card" aria-labelledby="view-title">
+        <ArchiveSeal state="warning" className="archive-emblem" />
         <div className="card-copy">
           <p className="eyebrow">Guest session ended</p>
           <h1 id="view-title">This identity cannot be recovered</h1>
@@ -664,6 +624,7 @@ export function CurrentCaseView(
   if (state.status === 'READ_ERROR') {
     return (
       <section className="archive-card" aria-labelledby="view-title">
+        <ArchiveSeal state="warning" className="archive-emblem" />
         <div className="card-copy">
           <p className="eyebrow">Archive unavailable</p>
           <h1 id="view-title">The record could not be loaded</h1>
@@ -683,6 +644,7 @@ export function CurrentCaseView(
   if (current === undefined || current.view === 'NO_CASE') {
     return (
       <section className="archive-card" aria-labelledby="view-title">
+        <ArchiveSeal state="quiet" className="archive-emblem" />
         <div className="card-copy">
           <p className="eyebrow">Daily case</p>
           <h1 id="view-title">The archive is quiet</h1>
@@ -701,6 +663,7 @@ export function CurrentCaseView(
     return (
       <div className="gameplay-stack">
         <section className="archive-card" aria-labelledby="view-title">
+          <ArchiveSeal state="sealed" className="archive-emblem" />
           <div className="card-copy">
             <p className="eyebrow">Daily case · {current.slotId}</p>
             <h1 id="view-title">A sealed record awaits</h1>

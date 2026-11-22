@@ -1,5 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
 
+import { ArchiveSeal } from './ui/emblems.js'
+
 interface ErrorBoundaryProps {
   readonly children: ReactNode
 }
@@ -26,6 +28,7 @@ export class ErrorBoundary extends Component<
     if (this.state.failed) {
       return (
         <main className="fatal-state">
+          <ArchiveSeal state="warning" />
           <p className="eyebrow">Archive interrupted</p>
           <h1>The record could not be opened.</h1>
           <p>Reload the page to return to the daily archive.</p>

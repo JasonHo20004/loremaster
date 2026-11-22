@@ -54,7 +54,10 @@
     "test:s9": "node scripts/s9-validate.mjs && vitest run tests/s9",
     "test:s9:runtime": "node scripts/s9-runtime-test.mjs",
     "test:s9:drain": "node scripts/s9-drain-test.mjs",
-    "test:s9:musl": "node scripts/s9-musl-test.mjs"
+    "test:s9:musl": "node scripts/s9-musl-test.mjs",
+    "s10": "node scripts/s10-monitoring.mjs",
+    "test:s10": "vitest run tests/s10",
+    "test:s10:rules": "node scripts/s10-promtool.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

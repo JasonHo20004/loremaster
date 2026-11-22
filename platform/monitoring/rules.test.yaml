@@ -1,0 +1,110 @@
+# promtool unit tests for rules.yaml; run with `pnpm test:s10:rules`.
+rule_files: [rules.json]
+evaluation_interval: 1m
+tests:
+  - name: fast burn pages when 10% of gameplay requests fail
+    interval: 1m
+    input_series:
+      - series: 'loremaster_api_requests_total{operation="runGameplayCommand",status_class="2xx"}'
+        values: '0+540x120'
+      - series: 'loremaster_api_requests_total{operation="runGameplayCommand",status_class="5xx"}'
+        values: '0+60x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: LoremasterApiErrorBudgetBurnFast
+        exp_alerts:
+          - exp_labels: { severity: page }
+            exp_annotations:
+              summary: API is burning the 30-day error budget 14x too fast.
+              runbook_url: docs/runbooks/api-error-budget-burn.md
+
+  - name: healthy traffic and failing health probes do not burn the budget
+    interval: 1m
+    input_series:
+      - series: 'loremaster_api_requests_total{operation="runGameplayCommand",status_class="2xx"}'
+        values: '0+600x120'
+      - series: 'loremaster_api_requests_total{operation="healthReady",status_class="5xx"}'
+        values: '0+600x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: LoremasterApiErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 70m
+        alertname: LoremasterApiErrorBudgetBurnSlow
+        exp_alerts: []
+
+  - name: slow mutations open a latency ticket
+    interval: 1m
+    input_series:
+      - series: 'loremaster_api_request_duration_seconds_bucket{operation="runGameplayCommand",status_class="2xx",le="0.5"}'
+        values: '0+1x30'
+      - series: 'loremaster_api_request_duration_seconds_bucket{operation="runGameplayCommand",status_class="2xx",le="2.5"}'
+        values: '0+10x30'
+      - series: 'loremaster_api_request_duration_seconds_bucket{operation="runGameplayCommand",status_class="2xx",le="+Inf"}'
+        values: '0+10x30'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: LoremasterApiMutationLatencyHigh
+        exp_alerts:
+          - exp_labels: { severity: ticket }
+            exp_annotations:
+              summary: Gameplay mutation p95 latency is above 500 ms.
+              runbook_url: docs/runbooks/api-latency.md
+
+  - name: a missing API scrape target pages
+    interval: 1m
+    input_series:
+      - series: 'up{namespace="loremaster",service="observer"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: LoremasterApiTargetDown
+        exp_alerts:
+          - exp_labels: { severity: page }
+            exp_annotations:
+              summary: No API replica is being scraped successfully.
+              runbook_url: docs/runbooks/api-unavailable.md
+
+  - name: a scraped API does not page
+    interval: 1m
+    input_series:
+      - series: 'up{namespace="loremaster",service="api",pod="api-a"}'
+        values: '1x10'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: LoremasterApiTargetDown
+        exp_alerts: []
+
+  - name: a disconnected worker opens a ticket after five minutes
+    interval: 1m
+    input_series:
+      - series: 'loremaster_queue_worker_connected{queue="loremaster-warm-v1",version="1"}'
+        values: '1 0x10'
+    alert_rule_test:
+      - eval_time: 4m
+        alertname: LoremasterQueueWorkerDisconnected
+        exp_alerts: []
+      - eval_time: 8m
+        alertname: LoremasterQueueWorkerDisconnected
+        exp_alerts:
+          - exp_labels: { severity: ticket }
+            exp_annotations:
+              summary: No cache-warming worker heartbeat. Gameplay continues; suggestions may be cold.
+              runbook_url: docs/runbooks/queue-worker.md
+
+  - name: a data service without a ready replica pages
+    interval: 1m
+    input_series:
+      - series: 'kube_statefulset_status_replicas_ready{namespace="loremaster",statefulset="postgres"}'
+        values: '0x10'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: LoremasterDataServiceNotReady
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              namespace: loremaster
+              statefulset: postgres
+            exp_annotations:
+              summary: postgres has no ready replica.
+              runbook_url: docs/runbooks/data-service.md

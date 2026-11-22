@@ -1,0 +1,63 @@
+# S10 log collection: one Alloy replica tails application pods through the
+# Kubernetes API (no host mounts) and ships them to Loki.
+# Labels stay low-cardinality: namespace, app, pod, container, level, service.
+# requestId stays in the JSON body; query it with `| json | requestId="..."`.
+fullnameOverride: alloy
+controller:
+  type: deployment
+  replicas: 1
+alloy:
+  resources:
+    requests: { cpu: 20m, memory: 64Mi }
+    limits: { cpu: 500m, memory: 256Mi }
+  configMap:
+    content: |
+      discovery.kubernetes "pods" {
+        role = "pod"
+        namespaces {
+          names = ["loremaster", "monitoring"]
+        }
+      }
+
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+      }
+
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.process.json.receiver]
+      }
+
+      loki.process "json" {
+        stage.json {
+          expressions = { level = "level", service = "service" }
+        }
+        stage.labels {
+          values = { level = "", service = "" }
+        }
+        forward_to = [loki.write.local.receiver]
+      }
+
+      loki.write "local" {
+        endpoint {
+          url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+        }
+      }
+configReloader:
+  enabled: false

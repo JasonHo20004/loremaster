@@ -1,0 +1,31 @@
+# S10 scrape targets. Labels are bounded by the application metric policy;
+# no path, query, identifier or narrative becomes a label.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: loremaster-api
+  namespace: monitoring
+spec:
+  namespaceSelector: { matchNames: [loremaster] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: api }
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 5s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: loremaster-queue-observer
+  namespace: monitoring
+spec:
+  namespaceSelector: { matchNames: [loremaster] }
+  selector:
+    matchLabels: { app.kubernetes.io/name: observer }
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+      scrapeTimeout: 5s

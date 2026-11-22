@@ -8,7 +8,7 @@ ENV VITE_API_BASE_URL=/api/v1
 RUN pnpm --filter @loremaster/contracts build && pnpm --filter @loremaster/web build
 FROM nginxinc/nginx-unprivileged:mainline-alpine@sha256:c18d735d33a1c3ccb5ef201d504e5b4aa4d003e81f034b329011267f4c4d0f58 AS gateway
 USER 0
-RUN apk add --no-cache pcre2=10.49-r0
+RUN apk add --no-cache pcre2=10.49-r0 zlib=1.4-r0
 COPY scripts/s8-rootfs.sh /build-rootfs.sh
 RUN sh /build-rootfs.sh web
 FROM scratch AS runtime
